@@ -16,3 +16,4 @@ chrome_profiles/
 
 # 가상환경
 venv/
+.venv/
