@@ -54,7 +54,7 @@ export default function CalendarDetailPage({ params }: Props) {
   ];
 
   return (
-    <div className="p-4 max-w-md mx-auto space-y-4">
+    <div className="w-full p-4 max-w-md mx-auto space-y-4">
       <h1 className="text-2xl font-bold">
         그룹 {groupId} • {date}일 일정 상세
       </h1>
