@@ -64,10 +64,10 @@ export default function AlbumPage() {
           <div className="grid grid-cols-3 gap-4">
             {dummyPhotos["월별"].photos.map((photo: MonthlyPhoto) => (
               <Flex.ColCenter key={photo.date} className="text-sm">
-                <Flex.ColCenter className="w-full aspect-square bg-gray-200 rounded-lg">
+                <Flex.RowCenter className="w-full aspect-square bg-gray-200 rounded-lg">
                   {/* 이미지 대체 */}
                   <span>📷</span>
-                </Flex.ColCenter>
+                </Flex.RowCenter>
                 <p className="mt-1">{photo.date}</p>
               </Flex.ColCenter>
             ))}
