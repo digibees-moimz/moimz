@@ -1,5 +1,6 @@
 "use client";
 
+import { Flex } from "@/components/ui-components/layout/Flex";
 import { useState } from "react";
 
 const tabs = ["인물", "월별", "지역"] as const;
@@ -31,9 +32,9 @@ export default function AlbumPage() {
   const [selectedTab, setSelectedTab] = useState<TabType>("월별");
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="w-full p-4 space-y-6">
       {/* 탭 */}
-      <div className="flex gap-2">
+      <Flex.RowStartCenter className="gap-2">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -47,31 +48,28 @@ export default function AlbumPage() {
             {tab}
           </button>
         ))}
-      </div>
+      </Flex.RowStartCenter>
 
       {/* 콘텐츠 */}
       {selectedTab === "월별" ? (
         <>
           {/* 월 선택 영역 */}
-          <div className="flex justify-between items-center text-lg font-semibold">
+          <Flex.RowCenter className="text-lg font-semibold gap-8">
             <button>{"<"}</button>
             <span>{dummyPhotos["월별"].month}</span>
             <button>{">"}</button>
-          </div>
+          </Flex.RowCenter>
 
           {/* 날짜별 썸네일 */}
           <div className="grid grid-cols-3 gap-4">
             {dummyPhotos["월별"].photos.map((photo: MonthlyPhoto) => (
-              <div
-                key={photo.date}
-                className="flex flex-col items-center text-sm"
-              >
-                <div className="w-full aspect-square bg-gray-200 rounded-lg flex items-center justify-center">
+              <Flex.ColCenter key={photo.date} className="text-sm">
+                <Flex.RowCenter className="w-full aspect-square bg-gray-200 rounded-lg">
                   {/* 이미지 대체 */}
                   <span>📷</span>
-                </div>
+                </Flex.RowCenter>
                 <p className="mt-1">{photo.date}</p>
-              </div>
+              </Flex.ColCenter>
             ))}
           </div>
         </>
@@ -79,12 +77,12 @@ export default function AlbumPage() {
         // 인물 / 지역
         <div className="grid grid-cols-3 gap-4">
           {dummyPhotos[selectedTab].map((item: string) => (
-            <div
+            <Flex.ColCenter
               key={item}
-              className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-sm font-medium"
+              className="aspect-square bg-gray-200 rounded-lg text-sm font-medium"
             >
               {item}
-            </div>
+            </Flex.ColCenter>
           ))}
         </div>
       )}
