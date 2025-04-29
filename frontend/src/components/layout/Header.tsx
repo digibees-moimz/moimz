@@ -2,13 +2,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Flex } from "@/components/ui-components/layout/Flex";
 
 export default function Header() {
   const router = useRouter();
 
   return (
-    <div className="h-12 flex items-center px-4">
+    <Flex.RowStartCenter className="h-12 px-4">
       <button onClick={() => router.back()}>←</button>
-    </div>
+    </Flex.RowStartCenter>
   );
 }

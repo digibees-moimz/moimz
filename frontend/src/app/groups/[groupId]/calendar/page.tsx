@@ -32,9 +32,9 @@ export default function CalendarPage({ params: { groupId } }: Props) {
         {days.map((day) => (
           <Link key={day} href={`/groups/${groupId}/calendar/${day}`} passHref>
             <Flex.ColCenter className="hover:bg-gray-100 rounded p-1">
-              <div className="w-8 h-8 flex items-center justify-center rounded-full">
+              <Flex.RowCenter className="w-8 h-8 rounded-full">
                 {day}
-              </div>
+              </Flex.RowCenter>
               <span className="text-xs text-blue-500">+50,000</span>
             </Flex.ColCenter>
           </Link>

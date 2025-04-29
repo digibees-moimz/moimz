@@ -1,5 +1,5 @@
 // src/components/layout/AppLayout.tsx
-import { Flex } from "../ui-components/layout/Flex";
+import { Flex } from "@/components/ui-components/layout/Flex";
 import Header from "./Header";
 import TabNav from "./TabNav";
 
@@ -8,7 +8,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="w-screen min-h-screen flex flex-col">
       <Header />
       <TabNav />
-      <Flex.ColCenter as="main" className="p-4 bg-green-50">
+      <Flex.ColCenter as="main" className="p-4 bg-#ffffff">
         {children}
       </Flex.ColCenter>
     </div>

@@ -1,4 +1,5 @@
 // src/app/groups/[groupId]/calendar/[date]/page.tsx
+import { Flex } from "@/components/ui-components/layout/Flex";
 import type { Metadata } from "next";
 
 interface Props {
@@ -60,24 +61,24 @@ export default function CalendarDetailPage({ params }: Props) {
       </h1>
       {events.map((e) => (
         <div key={e.id} className="border rounded-lg p-4 space-y-1">
-          <div className="flex justify-between items-center">
+          <Flex.RowBetweenCenter>
             <h2 className="font-semibold">{e.title}</h2>
             <button className="text-sm text-gray-500">일기장 보기</button>
-          </div>
-          <div className="flex items-center gap-1">
+          </Flex.RowBetweenCenter>
+          <Flex.RowCenter className="gap-1">
             참석한 사람:
             {e.attendees.map((a, idx) => (
               <span key={idx} className="text-xl">
                 {a}
               </span>
             ))}
-          </div>
-          <div className="flex justify-between text-sm text-gray-600">
+          </Flex.RowCenter>
+          <Flex.RowBetweenCenter className="text-sm text-gray-600">
             <span>총 지출: {e.total.toLocaleString()}원</span>
             <span>
               1인당: {(e.total / e.attendees.length).toLocaleString()}원
             </span>
-          </div>
+          </Flex.RowBetweenCenter>
         </div>
       ))}
     </div>
