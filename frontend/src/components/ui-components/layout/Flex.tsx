@@ -1,4 +1,4 @@
-import { createHTMLElementWithCurry } from "./shared/createElementWithClassName";
+import { createHTMLElementWithCurry } from "../shared/createElementWithClassName";
 
 const ColCenter = createHTMLElementWithCurry(
   "flex flex-col justify-center items-center w-full h-full"
