@@ -2,7 +2,6 @@
 import Header from "./Header";
 import TabNav from "./TabNav";
 import { Container } from "@/components/ui-components/layout/Container";
-import { Flex } from "@/components/ui-components/layout/Flex";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
