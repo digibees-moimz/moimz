@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Flex } from "@/components/ui-components/layout/Flex";
+import { IoSettingsOutline } from "react-icons/io5";
 
 export default function TabNav() {
   const pathname = usePathname();
@@ -32,7 +33,11 @@ export default function TabNav() {
           </Link>
         ))}
       </Flex.RowStartCenter>
-      <button>⚙️</button>
+
+      {/* 세팅 버튼 */}
+      <button>
+        <IoSettingsOutline size={18} color="gray" />
+      </button>
     </Flex.RowBetweenCenter>
   );
 }
