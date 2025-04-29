@@ -1,6 +1,7 @@
 "use client";
 
 import { Flex } from "@/components/ui-components/layout/Flex";
+import { Grid } from "@/components/ui-components/layout/Grid";
 import { useState } from "react";
 
 const tabs = ["인물", "월별", "지역"] as const;
@@ -61,7 +62,7 @@ export default function AlbumPage() {
           </Flex.RowCenter>
 
           {/* 날짜별 썸네일 */}
-          <div className="grid grid-cols-3 gap-4">
+          <Grid.Col3>
             {dummyPhotos["월별"].photos.map((photo: MonthlyPhoto) => (
               <Flex.ColCenter key={photo.date} className="text-sm">
                 <Flex.RowCenter className="w-full aspect-square bg-gray-200 rounded-lg">
@@ -71,11 +72,11 @@ export default function AlbumPage() {
                 <p className="mt-1">{photo.date}</p>
               </Flex.ColCenter>
             ))}
-          </div>
+          </Grid.Col3>
         </>
       ) : (
         // 인물 / 지역
-        <div className="grid grid-cols-3 gap-4">
+        <Grid.Col3>
           {dummyPhotos[selectedTab].map((item: string) => (
             <Flex.ColCenter
               key={item}
@@ -84,7 +85,7 @@ export default function AlbumPage() {
               {item}
             </Flex.ColCenter>
           ))}
-        </div>
+        </Grid.Col3>
       )}
 
       {/* 추가 버튼 */}
