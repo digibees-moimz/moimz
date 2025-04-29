@@ -5,7 +5,7 @@ export default function TestGridPage() {
   const items = Array.from({ length: 10 }, (_, idx) => idx + 1);
 
   return (
-    <div className="p-8 space-y-12">
+    <>
       {/* 기본 Grid */}
       <section>
         <h2 className="text-xl font-bold mb-4">기본 Grid (gap-4)</h2>
@@ -50,6 +50,6 @@ export default function TestGridPage() {
           ))}
         </Grid.AutoCols>
       </section>
-    </div>
+    </>
   );
 }

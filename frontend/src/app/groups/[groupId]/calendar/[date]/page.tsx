@@ -55,9 +55,9 @@ export default function CalendarDetailPage({ params }: Props) {
   ];
 
   return (
-    <div className="w-full p-4 max-w-md mx-auto space-y-4">
+    <>
       <h1 className="text-2xl font-bold">
-        그룹 {groupId} • {date}일 일정 상세
+        그룹 {groupId} - {date}일 일정 상세
       </h1>
       {events.map((e) => (
         <div key={e.id} className="border rounded-lg p-4 space-y-1">
@@ -81,6 +81,6 @@ export default function CalendarDetailPage({ params }: Props) {
           </Flex.RowBetweenCenter>
         </div>
       ))}
-    </div>
+    </>
   );
 }

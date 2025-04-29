@@ -19,9 +19,9 @@ export default async function CommunityPage({ params }: Props) {
   ];
 
   return (
-    <div className="w-full p-4">
-      <h1 className="text-2xl font-bold mb-4">그룹 {groupId} • 커뮤니티</h1>
-      <ul className="space-y-2">
+    <>
+      <h1 className="text-2xl font-bold mb-4">그룹 {groupId} - 커뮤니티</h1>
+      <ul className="space-y-4">
         {posts.map((post) => (
           <li key={post.id} className="p-3 bg-gray-100 rounded">
             <h2 className="font-semibold">{post.title}</h2>
@@ -29,6 +29,6 @@ export default async function CommunityPage({ params }: Props) {
           </li>
         ))}
       </ul>
-    </div>
+    </>
   );
 }

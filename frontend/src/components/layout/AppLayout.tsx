@@ -1,16 +1,19 @@
 // src/components/layout/AppLayout.tsx
-import { Flex } from "@/components/ui-components/layout/Flex";
 import Header from "./Header";
 import TabNav from "./TabNav";
+import { Container } from "@/components/ui-components/layout/Container";
+import { Flex } from "@/components/ui-components/layout/Flex";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-screen min-h-screen flex flex-col">
+    <div className="flex flex-col w-screen min-h-screen">
       <Header />
       <TabNav />
-      <Flex.ColCenter as="main" className="p-4 bg-#ffffff">
-        {children}
-      </Flex.ColCenter>
+      <main className="flex-1">
+        <Container as="section" className="py-6 space-y-6">
+          {children}
+        </Container>
+      </main>
     </div>
   );
 }
