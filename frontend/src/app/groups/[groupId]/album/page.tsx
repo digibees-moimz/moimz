@@ -33,7 +33,7 @@ export default function AlbumPage() {
   const [selectedTab, setSelectedTab] = useState<TabType>("월별");
 
   return (
-    <div className="w-full p-4 space-y-6">
+    <>
       {/* 탭 */}
       <Flex.RowStartCenter className="gap-2">
         {tabs.map((tab) => (
@@ -92,6 +92,6 @@ export default function AlbumPage() {
       <button className="fixed bottom-6 right-6 w-12 h-12 bg-green-400 text-white rounded-full text-2xl shadow-md">
         +
       </button>
-    </div>
+    </>
   );
 }
