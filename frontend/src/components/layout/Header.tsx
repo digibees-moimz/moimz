@@ -9,7 +9,7 @@ export default function Header() {
   const router = useRouter();
 
   return (
-    <Flex.RowStartCenter className="h-12 px-6 pt-2">
+    <Flex.RowStartCenter className="sticky top-0 z-50 h-12 px-6 pt-2 bg-white">
       <button onClick={() => router.back()}>
         <IoArrowBack size={18} color="#d1d1d1" />
       </button>

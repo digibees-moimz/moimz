@@ -16,7 +16,7 @@ export default function TabNav() {
   ];
 
   return (
-    <Flex.RowBetweenCenter className="px-6 py-2 border-b border-gray-300">
+    <Flex.RowBetweenCenter className="sticky top-12 z-40 px-6 py-2 border-b border-gray-300 bg-white/80">
       <Flex.RowStartCenter className="gap-4">
         {tabs.map((tab) => (
           <Link key={tab.href} href={tab.href}>
