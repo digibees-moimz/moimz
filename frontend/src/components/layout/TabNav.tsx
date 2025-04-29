@@ -15,17 +15,20 @@ export default function TabNav() {
   ];
 
   return (
-    <Flex.RowBetweenCenter className="px-4 py-2 border-b">
+    <Flex.RowBetweenCenter className="px-6 py-2 border-b border-gray-300">
       <Flex.RowStartCenter className="gap-4">
         {tabs.map((tab) => (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className={`text-sm ${
-              pathname.includes(tab.href) ? "font-bold underline" : ""
-            }`}
-          >
-            {tab.label}
+          <Link key={tab.href} href={tab.href}>
+            <span
+              className={`text-sm ${
+                pathname.includes(tab.href)
+                  ? "font-bold text-green-700 underline underline-offset-13"
+                  : ""
+              }`}
+              style={{ textDecorationThickness: "4px" }}
+            >
+              {tab.label}
+            </span>
           </Link>
         ))}
       </Flex.RowStartCenter>

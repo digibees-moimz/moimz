@@ -8,7 +8,7 @@ export default function Header() {
   const router = useRouter();
 
   return (
-    <Flex.RowStartCenter className="h-12 px-4">
+    <Flex.RowStartCenter className="h-12 px-6">
       <button onClick={() => router.back()}>←</button>
     </Flex.RowStartCenter>
   );
