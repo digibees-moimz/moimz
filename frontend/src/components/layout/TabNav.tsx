@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Flex } from "@/components/ui-components/layout/Flex";
 
 export default function TabNav() {
   const pathname = usePathname();
@@ -14,8 +15,8 @@ export default function TabNav() {
   ];
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-b">
-      <div className="flex gap-4">
+    <Flex.RowBetweenCenter className="px-4 py-2 border-b">
+      <Flex.RowStartCenter className="gap-4">
         {tabs.map((tab) => (
           <Link
             key={tab.href}
@@ -27,8 +28,8 @@ export default function TabNav() {
             {tab.label}
           </Link>
         ))}
-      </div>
+      </Flex.RowStartCenter>
       <button>⚙️</button>
-    </div>
+    </Flex.RowBetweenCenter>
   );
 }

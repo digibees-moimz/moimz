@@ -1,4 +1,5 @@
 import { Flex } from "@/components/ui-components/layout/Flex";
+import { Grid } from "@/components/ui-components/layout/Grid";
 import Link from "next/link";
 
 interface Props {
@@ -20,25 +21,25 @@ export default function CalendarPage({ params: { groupId } }: Props) {
       </Flex.RowCenter>
 
       {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 text-center text-sm text-gray-500">
+      <Grid.Col7 className="text-center text-sm text-gray-500 gap-1">
         {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
           <div key={d}>{d}</div>
         ))}
-      </div>
+      </Grid.Col7>
 
       {/* 날짜 & 링크 */}
-      <div className="grid grid-cols-7 gap-1">
+      <Grid.Col7 className="gap-1">
         {days.map((day) => (
           <Link key={day} href={`/groups/${groupId}/calendar/${day}`} passHref>
             <Flex.ColCenter className="hover:bg-gray-100 rounded p-1">
-              <div className="w-8 h-8 flex items-center justify-center rounded-full">
+              <Flex.RowCenter className="w-8 h-8 rounded-full">
                 {day}
-              </div>
+              </Flex.RowCenter>
               <span className="text-xs text-blue-500">+50,000</span>
             </Flex.ColCenter>
           </Link>
         ))}
-      </div>
+      </Grid.Col7>
     </div>
   );
 }
