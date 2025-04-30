@@ -59,8 +59,9 @@ def get_group_account_summary(group_id: int):
         ]
 
         # 7. 가장 적게 락인한 금액을 available_to_spend으로 계산
-        available_to_spend = min([m.locked_amount for m in members], default=0.0)
-
+        min_locked = min([m.locked_amount for m in members], default=0.0)
+        available_to_spend = min_locked * len(members)
+        
         return GroupAccountSummary(
             group_account_id=group_account.id,
             total_balance=total_balance,
@@ -85,11 +86,15 @@ def lock_in(data: LockInCreate):
             select(GroupAccount).where(GroupAccount.group_id == data.group_id)
         ).first()
         if not ga:
-            raise HTTPException(404, "그룹계좌가 없대요")
+            raise HTTPException(404, "그룹 계좌가 없어요")
 
         user_account = session.exec(
             select(UserAccount).where(UserAccount.user_id == data.user_id)
         ).first()
+
+        if user_account is None:
+            raise HTTPException(404, "유저 계좌가 없어요")
+
 
         available = user_account.balance - user_account.locked_balance
         if available < data.amount:
@@ -130,11 +135,14 @@ def lock_out(data: LockOutCreate):
             select(GroupAccount).where(GroupAccount.group_id == data.group_id)
         ).first()
         if not ga:
-            raise HTTPException(404, "GroupAccount not found")
+            raise HTTPException(404, "그룹 계좌가 없어요")
 
         user_account = session.exec(
             select(UserAccount).where(UserAccount.user_id == data.user_id)
         ).first()
+
+        if user_account is None:
+            raise HTTPException(404, "유저 계좌가 없어요")
 
         if user_account.locked_balance < data.amount:
             raise HTTPException(400, detail="락인된 금액보다 많이 출금할 수 없습니다.")
@@ -171,26 +179,26 @@ def spend(data: SpendCreate):
             select(GroupAccount).where(GroupAccount.group_id == data.group_id)
         ).first()
         if not ga:
-            raise HTTPException(404, "GroupAccount not found")
+            raise HTTPException(404, "그룹 계좌가 없어요")
 
         per_person = data.total_amount / len(data.user_ids)
 
-        # 🔸 참석자들의 계좌 한꺼번에 가져와서 dict 로 보관
         user_accounts = session.exec(
             select(UserAccount).where(UserAccount.user_id.in_(data.user_ids))
         ).all()
-        ua_map = {ua.user_id: ua for ua in user_accounts}
-        
-        # 잔액 부족 검사
-        for uid in data.user_ids:
-            user_account = session.exec(
-                select(UserAccount).where(UserAccount.user_id == uid)
-            ).first()
 
-            if user_account.balance < per_person:
+        ua_map = {ua.user_id: ua for ua in user_accounts}
+        missing = set(data.user_ids) - set(ua_map.keys())
+        if missing:
+            raise HTTPException(404, f"UserAccount(s) not found: {sorted(missing)}")
+
+        # 락인 잔액 기준 검사
+        for uid in data.user_ids:
+            ua = ua_map[uid]
+            if ua.locked_balance < per_person:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"User {uid} has insufficient balance. Required: {per_person}, Available: {user_account.balance}"
+                    400,
+                    detail=f"User {uid}의 락인 잔액이 부족합니다. 필요: {per_person}, 보유: {ua.locked_balance}"
                 )
 
         for uid in data.user_ids:
@@ -207,11 +215,9 @@ def spend(data: SpendCreate):
 
         session.commit()
 
-        # 트랜잭션으로부터 실시간 잔액 계산
         total_balance = session.exec(
             select(func.sum(GroupTransaction.amount))
             .where(GroupTransaction.group_account_id == ga.id)
         ).one() or 0.0
 
         return {"group_balance": total_balance}
-
