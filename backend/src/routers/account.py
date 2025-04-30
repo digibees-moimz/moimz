@@ -2,32 +2,35 @@ from fastapi import APIRouter, HTTPException, status
 from sqlmodel import Session, select
 from src.core.database import engine
 from src.models.user import UserAccount
-from src.schemas.account import AccountCreate, AccountRead
+from src.schemas.account import DepositWithdrawRequest
 
 router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
 @router.post(
-    "",
-    response_model=AccountRead,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create Account",
-    description="새로운 사용자 계좌(UserAccount)를 생성합니다.",
+    "/transaction",
+    status_code=status.HTTP_200_OK,
+    summary="입출금 처리",
+    description="사용자 계좌에 입금(양수) 또는 출금(음수)을 처리합니다.",
 )
-def create_account(account: AccountCreate):
+def update_account_balance(data: DepositWithdrawRequest):
     with Session(engine) as session:
-        new_account = UserAccount(**account.dict())
-        session.add(new_account)
-        session.commit()
-        session.refresh(new_account)
-        return new_account
+        account = session.exec(
+            select(UserAccount).where(UserAccount.user_id == data.user_id)
+        ).first()
 
-@router.get(
-    "",
-    response_model=list[AccountRead],
-    summary="Get All Accounts",
-    description="모든 사용자 계좌 목록을 조회합니다.",
-)
-def get_all_accounts():
-    with Session(engine) as session:
-        accounts = session.exec(select(UserAccount)).all()
-        return accounts
+        if not account:
+            raise HTTPException(404, detail="UserAccount not found")
+
+        # 출금 시 잔액 확인
+        if data.amount < 0 and account.balance + data.amount < 0:
+            raise HTTPException(400, detail="잔액 부족으로 출금할 수 없습니다.")
+
+        account.balance += data.amount
+        session.commit()
+        session.refresh(account)
+
+        return {
+            "user_account_id": account.id,
+            "new_balance": account.balance,
+            "description": data.description or ("입금" if data.amount > 0 else "출금"),
+        }
