@@ -31,6 +31,7 @@ def process_video_and_save_encodings(
             if len(faces) == 1:
                 emb = face_engine.get_embedding(faces[0])
                 encoding = FaceEncoding(
+                    user_id=face_video.user_id,
                     video_id=face_video.id,
                     embedding=pickle.dumps(emb),
                     created_at=datetime.now(timezone.utc),

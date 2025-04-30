@@ -17,6 +17,7 @@ class FaceVideo(SQLModel, table=True):
 
 class FaceEncoding(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
     video_id: int = Field(foreign_key="facevideo.id")
     embedding: bytes  # numpy ndarray → bytes 직렬화
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
