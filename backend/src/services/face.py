@@ -9,7 +9,7 @@ from src.models.face import FaceVideo
 from src.constants import BASE_DIR
 
 # 저장 위치
-VIDEO_ROOT = os.path.join(BASE_DIR, "src", "data", "users", "faces", "raw")
+VIDEO_ROOT = os.path.join(BASE_DIR, "media", "users", "faces", "raw")
 
 
 # 1. 영상 저장 + DB 기록
