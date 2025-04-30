@@ -6,3 +6,4 @@ from .event import Event
 from .board import Board
 from .photo import Photo
 from .diary import Diary
+from .face import FaceVideo, FaceEncoding

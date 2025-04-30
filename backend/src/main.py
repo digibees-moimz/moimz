@@ -9,12 +9,15 @@ from src.routers import event
 from src.routers import board
 from src.routers import photo
 from src.routers import diary
+from src.routers import face
 
 app = FastAPI()
+
 
 @app.on_event("startup")
 def on_startup():
     init_db()  # 서버 켜질 때 DB 테이블 생성 (core/database.py의 engine = ... 라고 돼 있는거 실행하는 것)
+
 
 app.include_router(user.router, prefix="/api")
 app.include_router(account.router, prefix="/api")
@@ -25,6 +28,8 @@ app.include_router(event.router, prefix="/api")
 app.include_router(board.router, prefix="/api")
 app.include_router(photo.router, prefix="/api")
 app.include_router(diary.router, prefix="/api")
+app.include_router(face.router, prefix="/api")
+
 
 @app.get("/")
 def read_root():
