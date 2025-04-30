@@ -17,3 +17,5 @@ undetected-chromedriver
 hdbscan
 anthropic
 openai
+sqlmodel
+psycopg2-binary
