@@ -1,4 +1,4 @@
-import { createHTMLElementWithCurry } from "./shared/createElementWithClassName";
+import { createHTMLElementWithCurry } from "../shared/createElementWithClassName";
 
 // 기본 Grid
 const BaseGrid = createHTMLElementWithCurry("grid gap-4");
