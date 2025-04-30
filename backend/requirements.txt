@@ -1,23 +1,38 @@
+# 기본 백엔드
 fastapi
 uvicorn
 requests
 python-dotenv
-face_recognition
-insightface
+sqlmodel
+psycopg2-binary
+
+# AI / 데이터 분석
 onnxruntime
-dlib
 numpy
 opencv-python
 pillow
-python-multipart
 scikit-learn
 matplotlib
+
+# AI API
+anthropic
+openai
+
+# 자동화
 selenium
 webdriver-manager
 pyperclip
 undetected-chromedriver
+
+# 클러스터링
 hdbscan
-anthropic
-openai
-sqlmodel
-psycopg2-binary
+
+# 필수 의존성
+setuptools
+python-multipart
+
+# 얼굴 인식
+dlib
+face_recognition
+insightface
+git+https://github.com/ageitgey/face_recognition_models
