@@ -9,10 +9,10 @@ export default function GlobalHeader() {
 
   const tabs = [
     { label: "모임통장", href: "/" },
-    { label: "내 모임비", href: "/my" },
+    { label: "내 모임비", href: "/account" },
     { label: "결제", href: "/payment" },
     { label: "일정", href: "/calendar" },
-    { label: "마이", href: "/profile" },
+    { label: "마이", href: "/my" },
   ];
 
   return (
