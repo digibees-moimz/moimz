@@ -23,7 +23,6 @@ def create_face_video(session: Session, user_id: int, file: UploadFile) -> FaceV
     with open(video_path, "wb") as f:
         f.write(file.file.read())
 
-    # 상대 경로만 저장 (클라이언트용)
     relative_path = os.path.relpath(video_path, BASE_DIR)
 
     face_video = FaceVideo(

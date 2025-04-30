@@ -8,7 +8,8 @@ class FaceVideo(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id")
     video_path: str  # 원본 영상 경로
     frame_dir: str  # 프레임 저장 경로
-    vector_dir: str  # 벡터 파일 저장 경로 or DB 연동 전 임시 사용
+    vector_dir: str  # 벡터 파일 저장 경로
+    status: str = "processing"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     embeddings: List["FaceEncoding"] = Relationship(back_populates="video")

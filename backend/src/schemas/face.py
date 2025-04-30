@@ -26,8 +26,15 @@ class FaceVideoRead(BaseModel):
     video_path: str
     frame_dir: str
     vector_dir: str
+    status: str
     created_at: datetime
     embeddings: Optional[List[FaceEncodingRead]] = []
 
     class Config:
         orm_mode = True
+
+
+# 영상 처리 상태
+class VideoStatusResponse(BaseModel):
+    video_id: int
+    status: str

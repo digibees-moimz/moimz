@@ -38,5 +38,12 @@ def process_video_and_save_encodings(
                 session.add(encoding)
                 results.append(encoding)
 
+    # 1. 벡터 저장
     session.commit()
+
+    # 2. 상태 업데이트
+    face_video.status = "done"
+    session.add(face_video)
+    session.commit()
+
     return results
