@@ -4,9 +4,14 @@ from src.core.database import engine
 from src.models.transaction import Transaction
 from src.schemas.transaction import TransactionCreate, TransactionRead
 
-router = APIRouter()
+router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
-@router.post("/transactions", response_model=list[TransactionRead])
+@router.post(
+    "",
+    response_model=list[TransactionRead],
+    summary="Create Transaction",
+    description="지정된 user_id 리스트에 대해 총 금액을 1/N 분할하여 각 사용자에게 트랜잭션을 생성합니다.",
+)
 def create_transaction(data: TransactionCreate):
     with Session(engine) as session:
         split_amount = data.total_amount / len(data.user_ids)
@@ -30,7 +35,12 @@ def create_transaction(data: TransactionCreate):
 
         return transactions
 
-@router.get("/transactions/{group_id}", response_model=list[TransactionRead])
+@router.get(
+    "/{group_id}",
+    response_model=list[TransactionRead],
+    summary="Get Group Transactions",
+    description="특정 그룹의 모든 트랜잭션 목록을 조회합니다.",
+)
 def get_transactions(group_id: int):
     with Session(engine) as session:
         transactions = session.exec(

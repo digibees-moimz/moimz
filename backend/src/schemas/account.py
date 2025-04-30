@@ -9,6 +9,6 @@ class AccountCreate(BaseModel):
 class AccountRead(BaseModel):
     id: int
     user_id: int
-    bank_name: str
+    account_name: str
     account_number: str
     balance: float
