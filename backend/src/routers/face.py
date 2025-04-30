@@ -1,4 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    Depends,
+    HTTPException,
+    status,
+    BackgroundTasks,
+)
 from sqlmodel import Session, select
 from src.core.database import get_session
 from src.services.face.service import create_face_video
@@ -18,21 +26,19 @@ router = APIRouter(prefix="/faces", tags=["Faces"])
 )
 async def upload_face_video(
     user_id: int,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     session: Session = Depends(get_session),
 ):
     # 1. 영상 저장 + DB 기록
     face_video = create_face_video(session, user_id, file)
 
-    # 2. 얼굴 벡터 추출 및 저장
-    results = process_video_and_save_encodings(session, face_video)
+    # 2. 얼굴 벡터 추출 및 저장 (백그라운드에서 비동기 처리)
+    background_tasks.add_task(
+        process_video_and_save_encodings,
+        session,
+        face_video,
+    )
 
-    # 3. 벡터 정보 다시 로딩해서 붙이기 (ORM 자동 대응)
-    face_video.embeddings = session.exec(
-        select(FaceEncoding).where(FaceEncoding.video_id == face_video.id)
-    ).all()
-
-    if not results:
-        raise HTTPException(400, detail="등록 가능한 얼굴이 감지되지 않았습니다.")
-
+    face_video.embeddings = []  # 아직 처리되지 않았으므로 비워둠
     return face_video
