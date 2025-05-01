@@ -112,7 +112,15 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
         color = (0, 255, 0) if recognized else (0, 0, 255)
         cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
         label = str(recognized) if recognized else "Unknown"
-        cv2.putText(img, label, (x1, y1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+        cv2.putText(
+            img,
+            label,
+            (x1, y1 - 20),  # y 좌표를 살짝 올려서 겹침 방지
+            cv2.FONT_HERSHEY_SIMPLEX,
+            2,  # fontScale을 2로 키움
+            color,
+            4,  # thickness를 4으로 키움
+        )
 
     # 7) 파일로 저장하고 URL 생성
     check_id = uuid.uuid4().hex
