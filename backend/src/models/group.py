@@ -6,6 +6,7 @@ class Group(SQLModel, table=True):
     name: str
     category: Optional[str] = None
     description: Optional[str] = None
+    image_url: Optional[str] = Field(default=None, description="그룹 대표 이미지 URL")
 
 class Member(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
