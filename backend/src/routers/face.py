@@ -14,8 +14,7 @@ from src.services.face.processor import process_video_and_save_encodings
 from src.schemas.face import FaceVideoRead, VideoStatusResponse
 from src.models.face import FaceVideo
 from src.services.user.clustering_state import face_db
-from src.services.user.clustering import update_user_clusters, visualize_clusters
-from src.services.user.utils import load_user_raw_vectors
+from src.services.user.clustering import visualize_clusters
 
 
 router = APIRouter(prefix="/faces", tags=["Faces"])
@@ -71,16 +70,6 @@ def get_face_video(video_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="영상 정보를 찾을 수 없습니다.")
 
     return face_video
-
-
-@router.post("/users/{user_id}/clusters", summary="유저 얼굴 클러스터링")
-def cluster_user(user_id: int, session: Session = Depends(get_session)):
-    raw = load_user_raw_vectors(user_id, session)
-    if not raw:
-        raise HTTPException(404, "완료된 영상 데이터가 없습니다.")
-    face_db[user_id] = {"raw": raw}
-    msg = update_user_clusters(face_db, user_id)
-    return {"message": msg}
 
 
 @router.get(

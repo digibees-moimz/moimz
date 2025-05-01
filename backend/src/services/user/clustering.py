@@ -11,8 +11,6 @@ from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from typing import Dict, Any
 
-from src.services.user.clustering_state import face_db
-
 
 def update_user_clusters(
     face_db: Dict[int, Dict[str, Any]],
