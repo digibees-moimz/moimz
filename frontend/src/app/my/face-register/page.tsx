@@ -26,6 +26,31 @@ export default function FaceRegisterPage() {
     { step: "smile", msg: "정면을 보며 환하게 웃어주세요!" },
   ];
 
+  const uploadVideo = useCallback(
+    async (blob?: Blob) => {
+      const videoToUpload = blob;
+      if (!videoToUpload || isUploading) return;
+
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append("file", videoToUpload, "video.webm");
+
+      const response = await fetch(
+        `http://localhost:8000/api/faces/video?user_id=${userId}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+      console.log("📤 업로드 결과:", result);
+      alert("서버 응답: " + JSON.stringify(result));
+      setIsUploading(false);
+    },
+    [isUploading]
+  );
+
   const startCamera = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
@@ -63,7 +88,7 @@ export default function FaceRegisterPage() {
 
     mediaRecorderRef.current = recorder;
     setIsCameraReady(true);
-  }, []);
+  }, [uploadVideo]);
 
   const startRecording = () => {
     if (!mediaRecorderRef.current) return;
@@ -81,28 +106,6 @@ export default function FaceRegisterPage() {
       mediaRecorderRef.current?.stop();
       setRecording(false);
     }, steps.length * 3000);
-  };
-
-  const uploadVideo = async (blob?: Blob) => {
-    const videoToUpload = blob;
-    if (!videoToUpload || isUploading) return;
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", videoToUpload, "video.webm");
-
-    const response = await fetch(
-      `http://localhost:8000/api/faces/video?user_id=${userId}`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    const result = await response.json();
-    console.log("📤 업로드 결과:", result);
-    alert("서버 응답: " + JSON.stringify(result));
-    setIsUploading(false);
   };
 
   useEffect(() => {

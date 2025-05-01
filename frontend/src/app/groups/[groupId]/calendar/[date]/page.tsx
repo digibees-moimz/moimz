@@ -2,10 +2,6 @@
 import { Flex } from "@/components/ui-components/layout/Flex";
 import type { Metadata } from "next";
 
-interface Props {
-  params: { groupId: string; date: string };
-}
-
 export const metadata: Metadata = {
   title: "일별 일정 상세",
 };
@@ -17,8 +13,12 @@ interface Event {
   total: number;
 }
 
-export default function CalendarDetailPage({ params }: Props) {
-  const { groupId, date } = params;
+export default async function CalendarDetailPage({
+  params,
+}: {
+  params: Promise<{ groupId: string; date: string }>;
+}) {
+  const { groupId, date } = await params;
 
   // 예시 데이터
   const events: Event[] = [

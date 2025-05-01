@@ -2,11 +2,12 @@ import { Flex } from "@/components/ui-components/layout/Flex";
 import { Grid } from "@/components/ui-components/layout/Grid";
 import Link from "next/link";
 
-interface Props {
-  params: { groupId: string };
-}
-
-export default function CalendarPage({ params: { groupId } }: Props) {
+export default async function CalendarPage({
+  params,
+}: {
+  params: Promise<{ groupId: string }>;
+}) {
+  const { groupId } = await params;
   const monthLabel = "2025년 5월";
   // 1일부터 31일까지 배열 생성
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
