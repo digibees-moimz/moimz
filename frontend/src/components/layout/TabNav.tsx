@@ -10,6 +10,7 @@ export default function TabNav() {
   const pathname = usePathname();
 
   const tabs = [
+    { label: "모임", href: "/groups/1" },
     { label: "커뮤니티", href: "/groups/1/community" },
     { label: "앨범", href: "/groups/1/album" },
     { label: "캘린더", href: "/groups/1/calendar" },
@@ -22,7 +23,7 @@ export default function TabNav() {
           <Link key={tab.href} href={tab.href}>
             <span
               className={`text-sm ${
-                pathname.includes(tab.href)
+                pathname === tab.href
                   ? "font-bold text-green-700 underline underline-offset-13"
                   : ""
               }`}

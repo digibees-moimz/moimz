@@ -7,8 +7,8 @@ __pycache__/
 *.pyo
 *.pyd
 
-# /src/data/ 안의 파일
-/src/data/
+# media 안의 파일
+/media
 
 # 셀리니움에 사용된 구글 계정 정보
 chrome_profiles/

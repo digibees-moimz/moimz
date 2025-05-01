@@ -1,17 +1,29 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from src.core.database import init_db  # DB 연결 함수
-from src.routers import user
-from src.routers import account
-from src.routers import group
-from src.routers import transaction
-from src.routers import group_account
-from src.routers import event
-from src.routers import board
-from src.routers import photo
-from src.routers import diary
-from src.routers import face
+from src.routers import (
+    user,
+    account,
+    group,
+    transaction,
+    group_account,
+    event,
+    board,
+    photo,
+    diary,
+    face,
+)
+
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
