@@ -14,3 +14,4 @@ class AttendanceResponse(BaseModel):
     )
     count: int = Field(..., description="출석자로 판정된 총 인원 수")
     duration: float = Field(..., description="체크에 걸린 시간(초)")
+    image_url: str = Field(..., description="박스 친 출석 사진 조회 URL")

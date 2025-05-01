@@ -1,7 +1,5 @@
 # backend/src/services/attendance.py
-import time
-import cv2
-import numpy as np
+import os, uuid, time, cv2, numpy as np
 from typing import List, Dict, Any
 
 from fastapi import UploadFile, HTTPException
@@ -10,9 +8,13 @@ from sqlalchemy.orm import Session
 
 from src.services.user.clustering_state import face_db
 from src.services.face.engine import face_engine
-from src.constants import MATCH_THRESHOLD_ATTENDANCE
+from src.constants import BASE_DIR, MATCH_THRESHOLD_ATTENDANCE
 from src.models.group import Member
 from src.core.database import engine
+
+
+ATTEND_DIR = os.path.join(BASE_DIR, "media", "attendance")
+os.makedirs(ATTEND_DIR, exist_ok=True)
 
 
 async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any]:
@@ -43,7 +45,7 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
     for uid, unk in enumerate(unknowns):
         for user_id in group_user_ids:
             data = face_db.get(user_id)
-            # print("사용자 : ", user_id)
+            print("사용자 : ", user_id)
             if not data:
                 continue  # 등록 영상이 아직 없으면 건너뛰기
 
@@ -78,6 +80,7 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
     all_matches.sort(key=lambda x: x["similarity"], reverse=True)
     seen_users, seen_faces = set(), set()
     attendees = []
+    recognition_map: dict[int, int] = {}
 
     for m in all_matches:
         if m["similarity"] < MATCH_THRESHOLD_ATTENDANCE:
@@ -86,16 +89,39 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
             continue
         seen_users.add(m["user_id"])
         seen_faces.add(m["unknown_id"])
+
+        # 1) attendees 리스트 채우기
         attendees.append(
             {
                 "user_id": m["user_id"],
                 "similarity": float(m["similarity"]),
             }
         )
+        # 2) recognition_map 에도 기록
+        recognition_map[m["unknown_id"]] = m["user_id"]
 
     duration = round(time.time() - start, 3)
+
+    # 6) 이미지에 박스·레이블 그리기
+    for idx, face in enumerate(faces):
+        x1, y1, x2, y2 = map(int, face.bbox)
+        # recognition_map 에서 꺼내기
+        recognized = recognition_map.get(idx)
+
+        # 출석자로 체크되었으면 초록, 아니면 빨강
+        color = (0, 255, 0) if recognized else (0, 0, 255)
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+        label = str(recognized) if recognized else "Unknown"
+        cv2.putText(img, label, (x1, y1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+    # 7) 파일로 저장하고 URL 생성
+    check_id = uuid.uuid4().hex
+    out_path = os.path.join(ATTEND_DIR, f"{check_id}.png")
+    cv2.imwrite(out_path, img)
+
     return {
         "attendees": attendees,
         "count": len(attendees),
         "duration": duration,
+        "image_url": f"/api/attendance/photo/{check_id}",
     }
