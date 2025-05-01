@@ -1,12 +1,12 @@
 # backend/src/services/attendance.py
-import os, uuid, time, cv2, numpy as np
+import os, uuid, time, cv2, pickle
+import numpy as np
 from typing import List, Dict, Any
 
 from fastapi import UploadFile, HTTPException
 from sqlmodel import select
 from sqlalchemy.orm import Session
 
-from src.services.user.clustering_state import face_db
 from src.services.face.engine import face_engine
 from src.constants import BASE_DIR, MATCH_THRESHOLD_ATTENDANCE
 from src.models.group import Member
@@ -15,6 +15,18 @@ from src.core.database import engine
 
 ATTEND_DIR = os.path.join(BASE_DIR, "media", "attendance")
 os.makedirs(ATTEND_DIR, exist_ok=True)
+
+
+def get_latest_cluster_dir(user_id: int) -> str:
+    base_dir = os.path.join(BASE_DIR, "media", "users", "faces", str(user_id))
+    if not os.path.exists(base_dir):
+        return ""
+    video_dirs = sorted(os.listdir(base_dir), reverse=True)
+    for vid in video_dirs:
+        cluster_dir = os.path.join(base_dir, vid, "clusters")
+        if os.path.exists(os.path.join(cluster_dir, "centroids.pkl")):
+            return cluster_dir
+    return ""
 
 
 async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any]:
@@ -37,35 +49,46 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
     if not faces:
         raise HTTPException(status_code=400, detail="사진에서 얼굴을 찾을 수 없습니다.")
 
-    unknowns = [face_engine.get_embedding(f) for f in faces] if faces else []
+    unknowns = [face_engine.get_embedding(f) for f in faces]
 
-    all_matches: List[Dict[str, Any]] = []
+    all_matches = []
 
     # 4) 그룹 멤버만 순회
     for uid, unk in enumerate(unknowns):
         for user_id in group_user_ids:
-            data = face_db.get(user_id)
+            cluster_dir = get_latest_cluster_dir(user_id)
             print("사용자 : ", user_id)
-            if not data:
+            if not cluster_dir:
                 continue  # 등록 영상이 아직 없으면 건너뛰기
 
-            clusters = data.get("clusters")
-            raw = data.get("raw", [])
+            # centroid 로드
+            try:
+                with open(os.path.join(cluster_dir, "centroids.pkl"), "rb") as f:
+                    centroids = pickle.load(f)
+            except:
+                continue
+
+            best_sim = -1
+            best_idx = -1
 
             # 1차: centroids 비교
-            if clusters and clusters.get("centroids"):
-                cents = np.array(clusters["centroids"])
-                sims = [face_engine.cosine_similarity(c, unk) for c in cents]
-                best = int(np.argmax(sims))
-                if sims[best] < MATCH_THRESHOLD_ATTENDANCE:
-                    continue
+            for i, centroid in enumerate(centroids):
+                sim = face_engine.cosine_similarity(centroid, unk)
+                if sim > best_sim:
+                    best_sim = sim
+                    best_idx = i
 
-                labels = clusters["labels"]
-                candidates = [raw[i] for i, lab in enumerate(labels) if lab == best]
-            else:
-                candidates = raw
+            if best_sim < MATCH_THRESHOLD_ATTENDANCE:
+                continue
 
             # 2차: 후보 벡터와 정밀 비교
+            cluster_file = os.path.join(cluster_dir, f"cluster_{best_idx}.pkl")
+            if not os.path.exists(cluster_file):
+                continue
+
+            with open(cluster_file, "rb") as f:
+                candidates = pickle.load(f)
+
             for known in candidates:
                 sim = face_engine.cosine_similarity(known, unk)
                 all_matches.append(
@@ -105,6 +128,7 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
     # 6) 이미지에 박스·레이블 그리기
     for idx, face in enumerate(faces):
         x1, y1, x2, y2 = map(int, face.bbox)
+
         # recognition_map 에서 꺼내기
         recognized = recognition_map.get(idx)
 
