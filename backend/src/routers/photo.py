@@ -1,40 +1,60 @@
+# backend/src/routers/photo.py
+import os
 from fastapi import APIRouter, UploadFile, File, Form
-from sqlmodel import Session
+from sqlmodel import Session, select
 from src.core.database import engine
 from src.models.photo import Photo
+from src.services.photo.service import process_faces_for_photo
+from src.services.photo.utils import (
+    generate_unique_filename,
+    get_group_photo_path,
+    get_group_photo_relpath,
+)
 
 router = APIRouter(prefix="/photos", tags=["Photos"])
 
+
 @router.post(
     "",
-    summary="Upload Photo",
+    summary="사진 업로드",
     description="사진 파일을 업로드하고 group_id 및 user_id와 함께 DB에 메타데이터를 저장합니다.",
 )
-def upload_photo(file: UploadFile = File(...), group_id: int = Form(...), user_id: int = Form(None)):
-    file_path = f"static/uploads/{file.filename}"
-    with open(file_path, "wb") as f:
+def upload_photo(
+    file: UploadFile = File(...), group_id: int = Form(...), user_id: int = Form(None)
+):
+    unique_name = generate_unique_filename(file.filename)
+    abs_path = get_group_photo_path(group_id, unique_name)
+    rel_path = get_group_photo_relpath(group_id, unique_name)
+
+    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+
+    # 절대 경로
+    with open(abs_path, "wb") as f:
         f.write(file.file.read())
 
     with Session(engine) as session:
         photo = Photo(
             group_id=group_id,
-            user_id=user_id,
-            file_name=file.filename,
+            user_id=user_id,  # 업로드한 사람의 ID
+            file_name=rel_path,  # 상대 경로
             face_processed=False,
         )
         session.add(photo)
         session.commit()
         session.refresh(photo)
+
+        # 얼굴 자동 분석
+        process_faces_for_photo(photo.id)
+
         return photo
+
 
 @router.get(
     "/groups/{group_id}",
-    summary="Get Group Photos",
+    summary="그룹 사진 목록 조회",
     description="특정 그룹의 사진 목록을 조회합니다.",
 )
 def get_group_photos(group_id: int):
     with Session(engine) as session:
-        photos = session.exec(
-            select(Photo).where(Photo.group_id == group_id)
-        ).all()
+        photos = session.exec(select(Photo).where(Photo.group_id == group_id)).all()
         return photos
