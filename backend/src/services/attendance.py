@@ -4,12 +4,14 @@ import numpy as np
 from typing import List, Dict, Any
 
 from fastapi import UploadFile, HTTPException
+from PIL import Image, ImageDraw, ImageFont
 from sqlmodel import select
 from sqlalchemy.orm import Session
 
 from src.services.face.engine import face_engine
 from src.constants import BASE_DIR, MATCH_THRESHOLD_ATTENDANCE
 from src.models.group import Member
+from src.models.user import User
 from src.core.database import engine
 
 
@@ -39,6 +41,10 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
     if not members:
         raise HTTPException(404, f"그룹 {group_id}에 멤버가 없습니다.")
     group_user_ids = {m.user_id for m in members}
+
+    # 사용자 이름 매핑 추가
+    stmt = select(User.id, User.name).where(User.id.in_(group_user_ids))
+    name_map = dict(session.execute(stmt).all())
 
     # 2) 이미지 로드
     img_bytes = await file.read()
@@ -126,25 +132,31 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
     duration = round(time.time() - start, 3)
 
     # 6) 이미지에 박스·레이블 그리기
+    # OpenCV → PIL 변환
+    img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(img_pil)
+
+    # 한글 폰트 설정
+    FONT_PATH = os.path.join(BASE_DIR, "fonts", "Pretendard-SemiBold.otf")
+    font = ImageFont.truetype(FONT_PATH, size=36)
+
     for idx, face in enumerate(faces):
         x1, y1, x2, y2 = map(int, face.bbox)
 
         # recognition_map 에서 꺼내기
         recognized = recognition_map.get(idx)
+        label = name_map.get(recognized) or "알 수 없음"
 
         # 출석자로 체크되었으면 초록, 아니면 빨강
         color = (0, 255, 0) if recognized else (0, 0, 255)
-        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
-        label = str(recognized) if recognized else "Unknown"
-        cv2.putText(
-            img,
-            label,
-            (x1, y1 - 20),  # y 좌표를 살짝 올려서 겹침 방지
-            cv2.FONT_HERSHEY_SIMPLEX,
-            2,  # fontScale을 2로 키움
-            color,
-            4,  # thickness를 4으로 키움
-        )
+        fill_color = tuple(c // 1 for c in color[::-1])
+        draw.rectangle([x1, y1, x2, y2], outline=fill_color, width=4)
+
+        # PIL로 이름 렌더링
+        draw.text((x1, y1 - 40), label, font=font, fill=color[::-1])
+
+    # PIL → OpenCV 되돌리기
+    img = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
     # 7) 파일로 저장하고 URL 생성
     check_id = uuid.uuid4().hex
