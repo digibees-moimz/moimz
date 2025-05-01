@@ -1,11 +1,13 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, HTTPException, Depends
+from typing import List
 from sqlmodel import Session, select
-from src.core.database import engine
+from src.core.database import engine, get_session
 from src.models.group import Group, Member
 from src.schemas.group import GroupCreate, GroupRead, MemberCreate
 from src.models.group_account import GroupAccount
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
+
 
 @router.post(
     "",
@@ -33,6 +35,7 @@ def create_group(group_in: GroupCreate):
             "description": new_group.description,
         }
 
+
 @router.get(
     "",
     response_model=list[GroupRead],
@@ -42,6 +45,7 @@ def create_group(group_in: GroupCreate):
 def get_groups():
     with Session(engine) as session:
         return session.exec(select(Group)).all()
+
 
 @router.post(
     "/members",
@@ -55,6 +59,7 @@ def join_group(member_in: MemberCreate):
         session.commit()
         return {"message": "모임에 가입되었습니다"}
 
+
 @router.get(
     "/{group_id}/members",
     summary="특정 모임 멤버 조회",
@@ -64,3 +69,17 @@ def get_group_members(group_id: int):
     with Session(engine) as session:
         results = session.exec(select(Member).where(Member.group_id == group_id)).all()
         return results
+
+
+@router.get(
+    "/{group_id}/members/id",
+    response_model=List[int],
+    summary="특정 모임 멤버 ID 목록 조회",
+)
+def get_group_member_ids(group_id: int, session: Session = Depends(get_session)):
+    stmt = select(Member).where(Member.group_id == group_id)
+    members = session.execute(stmt).scalars().all()
+    if not members:
+        raise HTTPException(404, detail="해당 그룹에 멤버가 없습니다.")
+    # user_id만 뽑아서 반환
+    return [m.user_id for m in members]
