@@ -3,7 +3,7 @@ import cv2
 import pickle
 import numpy as np
 from sqlmodel import Session, select
-from typing import List
+from src.core.database import engine
 from src.models.photo import Photo, Face, FaceRepresentative, Face
 from src.services.face.engine import face_engine  # 얼굴 탐지 + 임베딩
 from src.constants import BASE_DIR
@@ -20,56 +20,53 @@ def is_face_large_enough(bbox) -> bool:
     return (x2 - x1) >= MIN_FACE_WIDTH and (y2 - y1) >= MIN_FACE_HEIGHT
 
 
-def process_faces_for_photo(photo_id: int) -> int:
-    with Session() as session:
-        photo = session.get(Photo, photo_id)
-        if not photo:
-            return 0
+def process_faces_for_photo(session: Session, photo_id: int) -> int:
+    photo = session.get(Photo, photo_id)
+    if not photo:
+        return 0
 
-        # 이미지 로드
-        abs_path = os.path.join(
-            BASE_DIR, "media", photo.file_name
-        )  # 상대경로 → 절대경로
-        img = cv2.imread(abs_path)
-        if img is None:
-            return 0
+    # 이미지 로드
+    abs_path = os.path.join(BASE_DIR, "media", photo.file_name)  # 상대경로 → 절대경로
+    img = cv2.imread(abs_path)
+    if img is None:
+        return 0
 
-        # 얼굴 탐지
-        faces = face_engine.get_faces(img)
-        saved_count = 0
+    # 얼굴 탐지
+    faces = face_engine.get_faces(img)
+    saved_count = 0
 
-        for face in faces:
-            bbox = list(map(int, face.bbox))  # [x1, y1, x2, y2]
-            embedding = face_engine.get_embedding(face)
-            too_small = not is_face_large_enough(bbox)
+    for face in faces:
+        bbox = list(map(int, face.bbox))  # [x1, y1, x2, y2]
+        embedding = face_engine.get_embedding(face)
+        too_small = not is_face_large_enough(bbox)
 
-            top, right, bottom, left = bbox[1], bbox[2], bbox[3], bbox[0]
-            location = [top, right, bottom, left]
+        top, right, bottom, left = bbox[1], bbox[2], bbox[3], bbox[0]
+        location = [top, right, bottom, left]
 
-            user_id = find_most_similar_user(session, embedding)
+        person_id = classify_face(session, embedding)
 
-            face_obj = Face(
-                photo_id=photo_id,
-                location=location,
-                user_id=user_id,  # 초기에는 unknown
-                encoding=pickle.dumps(embedding),
-                too_small=too_small,
-            )
-            session.add(face_obj)
-            saved_count += 1
+        face_obj = Face(
+            photo_id=photo_id,
+            location=location,
+            person_id=person_id,  # 초기에는 unknown
+            encoding=pickle.dumps(embedding),
+            too_small=too_small,
+        )
+        session.add(face_obj)
+        saved_count += 1
 
-        photo.face_processed = True
-        session.add(photo)
-        session.commit()
+    photo.face_processed = True
+    session.add(photo)
+    session.commit()
 
-        return saved_count
+    return saved_count
 
 
 # 대표 벡터 갱신 함수 (최근 N개의 벡터를 평균)
-def update_face_representative(session: Session, user_id: int):
+def update_face_representative(session: Session, person_id: int):
     faces = session.exec(
         select(Face)
-        .where(Face.user_id == user_id)
+        .where(Face.person_id == person_id)
         .order_by(Face.id.desc())
         .limit(RECENT_FACE_LIMIT)
     ).all()
@@ -97,9 +94,9 @@ def update_face_representative(session: Session, user_id: int):
     rep_vec = mat[medoid_idx]
 
     # 저장 (없으면 새로, 있으면 덮어쓰기)
-    existing = session.get(FaceRepresentative, user_id)
+    existing = session.get(FaceRepresentative, person_id)
     if not existing:
-        rep = FaceRepresentative(user_id=user_id, vector=pickle.dumps(rep_vec))
+        rep = FaceRepresentative(person_id=person_id, vector=pickle.dumps(rep_vec))
         session.add(rep)
     else:
         existing.vector = pickle.dumps(rep_vec)
@@ -109,23 +106,94 @@ def update_face_representative(session: Session, user_id: int):
     return True
 
 
-# 대표 벡터들과 유사도 비교하여 가장 유사한 user_id 반환
-def find_most_similar_user(session: Session, embedding: np.ndarray) -> int:
+# 새 얼굴 벡터와 대표 벡터들을 비교하여 가장 유사한 person_id를 반환
+def classify_face(
+    session: Session, embedding: np.ndarray, threshold: float = MATCH_THRESHOLD
+) -> int:
     reps = session.exec(select(FaceRepresentative)).all()
 
-    best_user_id = 0
+    best_person_id = 0
     best_sim = -1.0
 
     for rep in reps:
         try:
-            vec = pickle.loads(rep.vector)
-            sim = face_engine.cosine_similarity(vec, embedding)
+            rep_vec = pickle.loads(rep.vector)
+            sim = face_engine.cosine_similarity(rep_vec, embedding)
             if sim > best_sim:
                 best_sim = sim
-                best_user_id = rep.user_id
+                best_person_id = rep.person_id
         except:
             continue
 
+    print(f"[Matching] user={best_person_id}, sim={best_sim:.4f}")
+
     if best_sim >= MATCH_THRESHOLD:
-        return best_user_id
+        return best_person_id
     return 0  # unknown
+
+
+# 새로운 person_id 부여 및 대표 벡터 생성
+def assign_new_person_ids():
+    with Session(engine) as session:
+        unknown_faces = session.exec(select(Face).where(Face.person_id == 0)).all()
+
+        if not unknown_faces:
+            print("✅ 미분류 얼굴 없음")
+            return 0
+
+        embeddings = []
+        face_refs = []
+        for face in unknown_faces:
+            try:
+                vec = pickle.loads(face.encoding)
+                embeddings.append(vec)
+                face_refs.append(face)
+            except:
+                continue
+
+        if not embeddings:
+            return 0
+
+        # next_person_id 계산
+        existing_ids = session.exec(select(FaceRepresentative.person_id)).all()
+        flattened_ids = [p[0] if isinstance(p, tuple) else p for p in existing_ids]
+        next_person_id = max(flattened_ids) + 1 if flattened_ids else 1
+
+        assigned = [False] * len(embeddings)
+        count_new = 0
+
+        for i in range(len(embeddings)):
+            if assigned[i]:
+                continue
+
+            face_refs[i].person_id = next_person_id
+            assigned[i] = True
+            group = [embeddings[i]]
+
+            for j in range(i + 1, len(embeddings)):
+                if assigned[j]:
+                    continue
+                sim = face_engine.cosine_similarity(embeddings[i], embeddings[j])
+                if sim >= MATCH_THRESHOLD:
+                    face_refs[j].person_id = next_person_id
+                    assigned[j] = True
+                    group.append(embeddings[j])
+
+            # 대표 벡터 생성
+            mat = np.vstack(group)
+            dists = np.linalg.norm(mat[:, None] - mat, axis=2)
+            medoid_idx = np.argmin(np.sum(dists, axis=1))
+            rep_vec = mat[medoid_idx]
+
+            session.add(
+                FaceRepresentative(
+                    person_id=next_person_id, vector=pickle.dumps(rep_vec)
+                )
+            )
+
+            next_person_id += 1
+            count_new += 1
+
+        session.commit()
+        print(f"🎉 새 인물 {count_new}명 분류 완료")
+        return count_new

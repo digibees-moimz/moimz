@@ -20,11 +20,11 @@ class Face(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     photo_id: int = Field(foreign_key="photo.id")
     location: list[int] = Field(sa_column=Column(JSON))  # [top, right, bottom, left]
-    user_id: int = Field(default=0, foreign_key="user.id")  # 0이면 미분류 (unknown)
+    person_id: int = Field(default=0)  # 0이면 미분류 (unknown)
     encoding: bytes
     too_small: bool = False  # 얼굴 크기가 너무 작아서 제외할지 여부
 
 
 class FaceRepresentative(SQLModel, table=True):
-    user_id: int = Field(primary_key=True, foreign_key="user.id")
+    person_id: int = Field(primary_key=True)
     vector: bytes  # 대표 벡터

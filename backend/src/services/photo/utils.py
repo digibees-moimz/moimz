@@ -1,6 +1,6 @@
 import uuid
-import datetime
 import os
+from datetime import datetime
 from src.constants import ALBUM_DIR
 
 

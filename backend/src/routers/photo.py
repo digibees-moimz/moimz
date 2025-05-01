@@ -4,7 +4,7 @@ from fastapi import APIRouter, UploadFile, File, Form
 from sqlmodel import Session, select
 from src.core.database import engine
 from src.models.photo import Photo
-from src.services.photo.service import process_faces_for_photo
+from src.services.photo.service import process_faces_for_photo, assign_new_person_ids
 from src.services.photo.utils import (
     generate_unique_filename,
     get_group_photo_path,
@@ -22,31 +22,33 @@ router = APIRouter(prefix="/photos", tags=["Photos"])
 def upload_photo(
     file: UploadFile = File(...), group_id: int = Form(...), user_id: int = Form(None)
 ):
-    unique_name = generate_unique_filename(file.filename)
-    abs_path = get_group_photo_path(group_id, unique_name)
-    rel_path = get_group_photo_relpath(group_id, unique_name)
-
-    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
-
-    # 절대 경로
-    with open(abs_path, "wb") as f:
-        f.write(file.file.read())
-
     with Session(engine) as session:
-        photo = Photo(
-            group_id=group_id,
-            user_id=user_id,  # 업로드한 사람의 ID
-            file_name=rel_path,  # 상대 경로
-            face_processed=False,
-        )
-        session.add(photo)
-        session.commit()
-        session.refresh(photo)
+        unique_name = generate_unique_filename(file.filename)
+        abs_path = get_group_photo_path(group_id, unique_name)
+        rel_path = get_group_photo_relpath(group_id, unique_name)
 
-        # 얼굴 자동 분석
-        process_faces_for_photo(photo.id)
+        os.makedirs(os.path.dirname(abs_path), exist_ok=True)
 
-        return photo
+        # 절대 경로
+        with open(abs_path, "wb") as f:
+            f.write(file.file.read())
+
+        with Session(engine) as session:
+            photo = Photo(
+                group_id=group_id,
+                user_id=user_id,  # 업로드한 사람의 ID
+                file_name=rel_path,  # 상대 경로
+                face_processed=False,
+            )
+            session.add(photo)
+            session.commit()
+            session.refresh(photo)
+
+            # 얼굴 자동 분석
+            process_faces_for_photo(session, photo.id)
+            assign_new_person_ids()  # 얼굴 감지 후, 미분류 얼굴 분류
+
+            return photo
 
 
 @router.get(
