@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional
 
 
 class FaceVideoCreate(BaseModel):
@@ -28,7 +27,6 @@ class FaceVideoRead(BaseModel):
     vector_dir: str
     status: str
     created_at: datetime
-    embeddings: Optional[List[FaceEncodingRead]] = []
 
     class Config:
         orm_mode = True

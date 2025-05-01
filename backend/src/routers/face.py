@@ -13,6 +13,9 @@ from src.services.face.service import create_face_video
 from src.services.face.processor import process_video_and_save_encodings
 from src.schemas.face import FaceVideoRead, VideoStatusResponse
 from src.models.face import FaceVideo
+from src.services.user.clustering_state import face_db
+from src.services.user.clustering import visualize_clusters
+
 
 router = APIRouter(prefix="/faces", tags=["Faces"])
 
@@ -36,11 +39,9 @@ async def upload_face_video(
     # 2. 얼굴 벡터 추출 및 저장 (백그라운드에서 비동기 처리)
     background_tasks.add_task(
         process_video_and_save_encodings,
-        session,
-        face_video,
+        face_video.id,
     )
 
-    face_video.embeddings = []  # 아직 처리되지 않았으므로 비워둠
     return face_video
 
 
@@ -62,14 +63,23 @@ def get_video_status(video_id: int, session: Session = Depends(get_session)):
     "/video/{video_id}",
     response_model=FaceVideoRead,
     summary="얼굴 등록 데이터 조회",
-    description="status가 'done'일 경우 벡터 리스트도 함께 반환됩니다.",
 )
 def get_face_video(video_id: int, session: Session = Depends(get_session)):
     face_video = session.get(FaceVideo, video_id)
     if not face_video:
         raise HTTPException(status_code=404, detail="영상 정보를 찾을 수 없습니다.")
 
-    if face_video.status != "done":
-        face_video.embeddings = []
-
     return face_video
+
+
+@router.get(
+    "/users/{user_id}/clusters/plot",
+    summary="유저 클러스터 시각화",
+    response_model=None,
+    responses={200: {"content": {"image/png": {}}}},
+)
+def plot_user_clusters(user_id: int):
+    resp = visualize_clusters(face_db, user_id)
+    if isinstance(resp, str):
+        raise HTTPException(400, resp)
+    return resp
