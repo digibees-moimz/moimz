@@ -36,8 +36,7 @@ async def upload_face_video(
     # 2. 얼굴 벡터 추출 및 저장 (백그라운드에서 비동기 처리)
     background_tasks.add_task(
         process_video_and_save_encodings,
-        session,
-        face_video,
+        face_video.id,
     )
 
     return face_video
