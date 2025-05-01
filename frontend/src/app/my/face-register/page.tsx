@@ -1,10 +1,6 @@
 "use client";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { ImArrowLeft, ImArrowRight } from "react-icons/im";
-
-interface Props {
-  userId: string;
-}
 
 const userId = 1;
 
@@ -30,7 +26,7 @@ export default function FaceRegisterPage() {
     { step: "smile", msg: "정면을 보며 환하게 웃어주세요!" },
   ];
 
-  const startCamera = async () => {
+  const startCamera = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
     if (videoRef.current) {
@@ -67,7 +63,7 @@ export default function FaceRegisterPage() {
 
     mediaRecorderRef.current = recorder;
     setIsCameraReady(true);
-  };
+  }, []);
 
   const startRecording = () => {
     if (!mediaRecorderRef.current) return;
@@ -111,7 +107,7 @@ export default function FaceRegisterPage() {
 
   useEffect(() => {
     startCamera();
-  }, []);
+  }, [startCamera]);
 
   return (
     <>
