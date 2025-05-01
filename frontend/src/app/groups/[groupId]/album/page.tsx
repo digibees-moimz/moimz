@@ -12,7 +12,16 @@ type MonthlyPhoto = {
   src: string;
 };
 
-const dummyPhotos: Record<TabType, any> = {
+type DummyPhotosType = {
+  인물: string[];
+  월별: {
+    month: string;
+    photos: MonthlyPhoto[];
+  };
+  지역: string[];
+};
+
+const dummyPhotos: DummyPhotosType = {
   인물: ["우디", "똑디", "단디", "엔디"],
   월별: {
     month: "2025년 4월",
@@ -24,7 +33,7 @@ const dummyPhotos: Record<TabType, any> = {
       { date: "19일", src: "/photo5.jpg" },
       { date: "22일", src: "/photo6.jpg" },
       { date: "25일", src: "/photo7.jpg" },
-    ] as MonthlyPhoto[],
+    ],
   },
   지역: ["서울", "부산", "대구", "샌프란시스코", "일본"],
 };
