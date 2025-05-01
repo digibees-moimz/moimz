@@ -4,6 +4,10 @@ from src.core.database import engine
 from src.models.user import UserAccount
 from src.models.group_account import GroupAccount, GroupTransaction
 from src.models.group import Group, Member
+from src.models.transaction import (
+    Transaction,               # 결제 1건
+    TransactionParticipant     # 참여자 N건
+)
 from src.schemas.group_account import GroupAccountSummary, MemberLockedAmount, LockInCreate, SpendCreate, LockOutCreate
 
 router = APIRouter(tags=["Group Account"])
@@ -171,10 +175,11 @@ def lock_out(data: LockOutCreate):
     "/spend",
     status_code=status.HTTP_201_CREATED,
     summary="1/N 정산 지출",
-    description="출석자 기준으로 총 금액을 1/N 분할하여 그룹 계좌에서 차감하고 각 사용자에게 지출 트랜잭션을 생성합니다.",
+    description="출석자 기준으로 총 금액을 1/N 분할하여 그룹 계좌에서 차감하고 결제-단위 트랜잭션을 기록합니다.",
 )
 def spend(data: SpendCreate):
     with Session(engine) as session:
+        # 1. 그룹 계좌 찾기
         ga = session.exec(
             select(GroupAccount).where(GroupAccount.group_id == data.group_id)
         ).first()
@@ -183,29 +188,40 @@ def spend(data: SpendCreate):
 
         per_person = data.total_amount / len(data.user_ids)
 
+        # 2. 출석자(UserAccount) 가져오기
         user_accounts = session.exec(
             select(UserAccount).where(UserAccount.user_id.in_(data.user_ids))
         ).all()
-
         ua_map = {ua.user_id: ua for ua in user_accounts}
         missing = set(data.user_ids) - set(ua_map.keys())
         if missing:
             raise HTTPException(404, f"UserAccount(s) not found: {sorted(missing)}")
 
-        # 락인 잔액 기준 검사
+        # 3. 락인 잔액 충분한지 검증
         for uid in data.user_ids:
-            ua = ua_map[uid]
-            if ua.locked_balance < per_person:
+            if ua_map[uid].locked_balance < per_person:
                 raise HTTPException(
                     400,
-                    detail=f"User {uid}의 락인 잔액이 부족합니다. 필요: {per_person}, 보유: {ua.locked_balance}"
+                    detail=f"User {uid}의 락인 잔액 부족. 필요 {per_person}, 보유 {ua_map[uid].locked_balance}"
                 )
 
+        # 4. Transaction(결제 1건) 생성
+        settlement = Transaction(
+            group_id=data.group_id,
+            total_amount=data.total_amount,
+            description=data.description
+        )
+        session.add(settlement)
+        session.commit()
+        session.refresh(settlement)          # settlement.id 확보
+
+        # 5. 참여자 차감·로그 기록
         for uid in data.user_ids:
             ua = ua_map[uid]
             ua.locked_balance -= per_person
             ua.balance        -= per_person
 
+            # 모임통장 로그
             session.add(GroupTransaction(
                 group_account_id=ga.id,
                 user_account_id=ua.id,
@@ -213,11 +229,23 @@ def spend(data: SpendCreate):
                 description=data.description or "공동 지출 1/N",
             ))
 
+            # 참여자 로그
+            session.add(TransactionParticipant(
+                transaction_id=settlement.id,
+                user_id=uid,
+                amount=per_person
+            ))
+
         session.commit()
 
+        # 6. 그룹 잔액 재계산
         total_balance = session.exec(
             select(func.sum(GroupTransaction.amount))
             .where(GroupTransaction.group_account_id == ga.id)
         ).one() or 0.0
 
-        return {"group_balance": total_balance}
+        return {
+            "transaction_id": settlement.id,
+            "group_balance":  total_balance,
+            "per_person":     per_person
+        }
