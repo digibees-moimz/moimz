@@ -7,11 +7,11 @@ from src.routers import (
     group,
     transaction,
     group_account,
-    event,
     board,
     photo,
     diary,
     face,
+    schedule,
     attendance,
 )
 
@@ -37,11 +37,11 @@ app.include_router(account.router, prefix="/api")
 app.include_router(group.router, prefix="/api")
 app.include_router(transaction.router, prefix="/api")
 app.include_router(group_account.router, prefix="/api")
-app.include_router(event.router, prefix="/api")
 app.include_router(board.router, prefix="/api")
 app.include_router(photo.router, prefix="/api")
 app.include_router(diary.router, prefix="/api")
 app.include_router(face.router, prefix="/api")
+app.include_router(schedule.router, prefix="/api")
 app.include_router(attendance.router, prefix="/api")
 
 
