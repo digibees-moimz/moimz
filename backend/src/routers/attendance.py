@@ -7,7 +7,7 @@ router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
 
 @router.post(
-    "/check",
+    "/photo",
     response_model=AttendanceResponse,
     summary="사진 기반 출석체크",
 )
