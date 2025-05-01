@@ -1,4 +1,3 @@
-import { Flex } from "@/components/ui-components/layout/Flex";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import Link from "next/link";
 
