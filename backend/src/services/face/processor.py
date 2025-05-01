@@ -8,6 +8,9 @@ from src.models.face import FaceEncoding, FaceVideo
 from .engine import face_engine
 from src.core.database import engine
 from .utils import extract_frames_from_video, augment_image
+from src.services.user.utils import load_user_raw_vectors
+from src.services.user.clustering_state import face_db
+from src.services.user.clustering import update_user_clusters
 
 
 # 저장된 영상에서 프레임 추출 → 벡터 추출 → DB 저장
@@ -61,5 +64,32 @@ def process_video_and_save_encodings(video_id: int) -> list[FaceEncoding]:
         face_video.status = "done"
         session.add(face_video)
         session.commit()
+
+        # 9) 자동 클러스터링
+        raw = load_user_raw_vectors(face_video.user_id, session)
+        if raw:
+            face_db[face_video.user_id] = {"raw": raw}
+            msg = update_user_clusters(face_db, face_video.user_id)
+            print(f"[Clustering] {msg}")
+
+            # 10) 클러스터 결과 pkl로 저장
+            cluster_dir = os.path.join(
+                BASE_DIR,
+                face_video.vector_dir.replace("/vectors", ""),  # base user/video 폴더
+                "clusters",
+            )
+            os.makedirs(cluster_dir, exist_ok=True)
+
+            # centroids.pkl 저장
+            centroids = face_db[face_video.user_id]["clusters"]["centroids"]
+            with open(os.path.join(cluster_dir, "centroids.pkl"), "wb") as f:
+                pickle.dump(centroids, f)
+
+            # 각 클러스터 멤버 저장
+            labels = face_db[face_video.user_id]["clusters"]["labels"]
+            for i in set(labels):
+                members = [raw[idx] for idx, lab in enumerate(labels) if lab == i]
+                with open(os.path.join(cluster_dir, f"cluster_{i}.pkl"), "wb") as f:
+                    pickle.dump(members, f)
 
     return results
