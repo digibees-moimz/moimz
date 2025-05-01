@@ -4,6 +4,7 @@ from fastapi import APIRouter, UploadFile, File, Form
 from sqlmodel import Session, select
 from src.core.database import engine
 from src.models.photo import Photo
+from src.schemas.photo import PhotoRead
 from src.services.photo.service import process_faces_for_photo, assign_new_person_ids
 from src.services.photo.utils import (
     generate_unique_filename,
@@ -16,24 +17,30 @@ router = APIRouter(prefix="/photos", tags=["Photos"])
 
 @router.post(
     "",
+    response_model=dict[str, list[PhotoRead]],
     summary="사진 업로드",
     description="사진 파일을 업로드하고 group_id 및 user_id와 함께 DB에 메타데이터를 저장합니다.",
 )
 def upload_photo(
-    file: UploadFile = File(...), group_id: int = Form(...), user_id: int = Form(None)
+    files: list[UploadFile] = File(...),
+    group_id: int = Form(...),
+    user_id: int = Form(None),
 ):
+
+    uploaded_photos = []
+
     with Session(engine) as session:
-        unique_name = generate_unique_filename(file.filename)
-        abs_path = get_group_photo_path(group_id, unique_name)
-        rel_path = get_group_photo_relpath(group_id, unique_name)
+        for file in files:
+            unique_name = generate_unique_filename(file.filename)
+            abs_path = get_group_photo_path(group_id, unique_name)
+            rel_path = get_group_photo_relpath(group_id, unique_name)
 
-        os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+            os.makedirs(os.path.dirname(abs_path), exist_ok=True)
 
-        # 절대 경로
-        with open(abs_path, "wb") as f:
-            f.write(file.file.read())
+            # 절대 경로
+            with open(abs_path, "wb") as f:
+                f.write(file.file.read())
 
-        with Session(engine) as session:
             photo = Photo(
                 group_id=group_id,
                 user_id=user_id,  # 업로드한 사람의 ID
@@ -46,9 +53,12 @@ def upload_photo(
 
             # 얼굴 자동 분석
             process_faces_for_photo(session, photo.id)
-            assign_new_person_ids()  # 얼굴 감지 후, 미분류 얼굴 분류
+            uploaded_photos.append(PhotoRead.from_orm(photo))
 
-            return photo
+        # 마지막에 한 번만 실행
+        assign_new_person_ids(session)  # 얼굴 감지 후, 미분류 얼굴 분류
+
+    return {"uploaded": uploaded_photos}
 
 
 @router.get(

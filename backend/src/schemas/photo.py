@@ -18,5 +18,4 @@ class PhotoRead(BaseModel):
     uploaded_at: datetime
     face_processed: bool
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}

@@ -133,7 +133,7 @@ def classify_face(
 
 
 # 새로운 person_id 부여 및 대표 벡터 생성
-def assign_new_person_ids():
+def assign_new_person_ids(session: Session):
     with Session(engine) as session:
         unknown_faces = session.exec(select(Face).where(Face.person_id == 0)).all()
 
