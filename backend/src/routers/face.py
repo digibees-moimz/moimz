@@ -13,7 +13,6 @@ from src.services.face.service import create_face_video
 from src.services.face.processor import process_video_and_save_encodings
 from src.schemas.face import FaceVideoRead, VideoStatusResponse
 from src.models.face import FaceVideo
-from src.services.user.clustering_state import face_db
 from src.services.user.clustering import visualize_clusters
 
 
@@ -78,8 +77,5 @@ def get_face_video(video_id: int, session: Session = Depends(get_session)):
     response_model=None,
     responses={200: {"content": {"image/png": {}}}},
 )
-def plot_user_clusters(user_id: int):
-    resp = visualize_clusters(face_db, user_id)
-    if isinstance(resp, str):
-        raise HTTPException(400, resp)
-    return resp
+def show_cluster_plot(user_id: int):
+    return visualize_clusters(user_id)
