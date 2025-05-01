@@ -11,7 +11,7 @@ router = APIRouter(prefix="/groups", tags=["Groups"])
     "",
     response_model=GroupRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Create Group",
+    summary="모임 생성",
     description="새로운 모임을 생성하고, 동시에 해당 모임 전용 그룹 계좌도 생성합니다.",
 )
 def create_group(group_in: GroupCreate):
@@ -21,17 +21,22 @@ def create_group(group_in: GroupCreate):
         session.commit()
         session.refresh(new_group)
 
-        # ✅ 그룹 계좌 생성 로직 추가
+        # 모임 계좌 생성 로직 추가
         group_account = GroupAccount(group_id=new_group.id, balance=0)
         session.add(group_account)
         session.commit()
 
-        return new_group
+        return {
+            "id": new_group.id,
+            "name": new_group.name,
+            "category": new_group.category,
+            "description": new_group.description,
+        }
 
 @router.get(
     "",
     response_model=list[GroupRead],
-    summary="Get Groups",
+    summary="전체 모임 조회",
     description="전체 모임(Group) 목록을 조회합니다.",
 )
 def get_groups():
@@ -40,7 +45,7 @@ def get_groups():
 
 @router.post(
     "/members",
-    summary="Join Group",
+    summary="모임 가입",
     description="사용자가 특정 모임에 멤버로 가입합니다.",
 )
 def join_group(member_in: MemberCreate):
@@ -52,7 +57,7 @@ def join_group(member_in: MemberCreate):
 
 @router.get(
     "/{group_id}/members",
-    summary="Get Group Members",
+    summary="특정 모임 멤버 조회",
     description="특정 그룹에 소속된 멤버들의 목록을 조회합니다.",
 )
 def get_group_members(group_id: int):

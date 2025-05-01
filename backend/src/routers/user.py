@@ -10,7 +10,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
     "",
     response_model=UserRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Create User",
+    summary="유저 생성",
     description="이메일 중복 검사를 통해 새로운 유저를 생성하고, 계좌도 자동으로 연결합니다.",
 )
 def create_user(user_in: UserCreate):
@@ -39,13 +39,17 @@ def create_user(user_in: UserCreate):
         session.add(account)
         session.commit()
 
-        return user
+        return {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+        }
 
 
 @router.get(
     "",
     response_model=list[UserRead],
-    summary="Get Users",
+    summary="전체 유저 조회",
     description="전체 사용자 목록을 조회합니다.",
 )
 def get_users():
@@ -56,7 +60,7 @@ def get_users():
 @router.get(
     "/{user_id}",
     response_model=UserDetail,
-    summary="Get User Detail",
+    summary="특정 유저 상세조회",
     description="특정 사용자(user_id)의 상세 정보와 계좌 목록을 조회합니다.",
 )
 def get_user_detail(user_id: int):
