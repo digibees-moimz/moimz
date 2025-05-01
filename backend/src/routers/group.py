@@ -1,12 +1,14 @@
-from fastapi import APIRouter, status, HTTPException  
+from fastapi import APIRouter, status, HTTPException, Depends
+from typing import List
 from sqlmodel import Session, select
-from src.core.database import engine
+from src.core.database import engine, get_session
 from src.models.group import Group, Member
-from src.schemas.group import GroupCreate, GroupRead, GroupJoin, GroupUpdate, GroupLeave  
+from src.schemas.group import GroupCreate, GroupRead, GroupJoin, GroupUpdate, GroupLeave
 from src.models.group_account import GroupAccount
 from src.models.user import User
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
+
 
 @router.post(
     "",
@@ -33,8 +35,8 @@ def create_group(group_in: GroupCreate):
             "category": new_group.category,
             "description": new_group.description,
             "image_url": new_group.image_url,
-
         }
+
 
 @router.get(
     "",
@@ -45,6 +47,7 @@ def create_group(group_in: GroupCreate):
 def get_groups():
     with Session(engine) as session:
         return session.exec(select(Group)).all()
+
 
 @router.patch(
     "/{group_id}",
@@ -68,6 +71,7 @@ def update_group(group_id: int, group_in: GroupUpdate):
 
         return group
 
+
 @router.post(
     "/members",
     summary="모임 가입",
@@ -81,15 +85,17 @@ def join_group(member_in: GroupJoin):
             raise HTTPException(status_code=404, detail="존재하지 않는 유저입니다.")
 
         # 그룹 존재 여부
-        group = session.exec(select(Group).where(Group.id == member_in.group_id)).first()
+        group = session.exec(
+            select(Group).where(Group.id == member_in.group_id)
+        ).first()
         if not group:
             raise HTTPException(status_code=404, detail="존재하지 않는 모임입니다.")
 
         # 중복 가입 검사
         existing = session.exec(
             select(Member).where(
-                (Member.user_id == member_in.user_id) &
-                (Member.group_id == member_in.group_id)
+                (Member.user_id == member_in.user_id)
+                & (Member.group_id == member_in.group_id)
             )
         ).first()
         if existing:
@@ -101,6 +107,7 @@ def join_group(member_in: GroupJoin):
         session.commit()
         return {"message": "모임에 가입되었습니다"}
 
+
 @router.delete(
     "/members",
     summary="모임 탈퇴",
@@ -110,8 +117,7 @@ def leave_group(data: GroupLeave):
     with Session(engine) as session:
         member = session.exec(
             select(Member).where(
-                (Member.user_id == data.user_id) &
-                (Member.group_id == data.group_id)
+                (Member.user_id == data.user_id) & (Member.group_id == data.group_id)
             )
         ).first()
 
@@ -122,6 +128,7 @@ def leave_group(data: GroupLeave):
         session.commit()
         return {"message": "모임에서 탈퇴되었습니다"}
 
+
 @router.get(
     "/{group_id}/members",
     summary="특정 모임 멤버 조회",
@@ -131,3 +138,17 @@ def get_group_members(group_id: int):
     with Session(engine) as session:
         results = session.exec(select(Member).where(Member.group_id == group_id)).all()
         return results
+
+
+@router.get(
+    "/{group_id}/members/id",
+    response_model=List[int],
+    summary="특정 모임 멤버 ID 목록 조회",
+)
+def get_group_member_ids(group_id: int, session: Session = Depends(get_session)):
+    stmt = select(Member).where(Member.group_id == group_id)
+    members = session.execute(stmt).scalars().all()
+    if not members:
+        raise HTTPException(404, detail="해당 그룹에 멤버가 없습니다.")
+    # user_id만 뽑아서 반환
+    return [m.user_id for m in members]
