@@ -40,7 +40,6 @@ async def upload_face_video(
         face_video,
     )
 
-    face_video.embeddings = []  # 아직 처리되지 않았으므로 비워둠
     return face_video
 
 
@@ -62,14 +61,10 @@ def get_video_status(video_id: int, session: Session = Depends(get_session)):
     "/video/{video_id}",
     response_model=FaceVideoRead,
     summary="얼굴 등록 데이터 조회",
-    description="status가 'done'일 경우 벡터 리스트도 함께 반환됩니다.",
 )
 def get_face_video(video_id: int, session: Session = Depends(get_session)):
     face_video = session.get(FaceVideo, video_id)
     if not face_video:
         raise HTTPException(status_code=404, detail="영상 정보를 찾을 수 없습니다.")
-
-    if face_video.status != "done":
-        face_video.embeddings = []
 
     return face_video
