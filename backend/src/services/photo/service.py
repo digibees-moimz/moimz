@@ -5,6 +5,7 @@ import numpy as np
 from sqlmodel import Session, select
 from src.core.database import engine
 from src.models.photo import Photo, Face, FaceRepresentative, Face, PersonInfo
+from src.models.user import User
 from src.services.face.engine import face_engine  # 얼굴 탐지 + 임베딩
 from src.constants import BASE_DIR
 
@@ -173,6 +174,60 @@ def assign_new_person_ids(session: Session, group_id: int):
         if not embeddings:
             return 0
 
+        assigned = [False] * len(embeddings)
+
+        # 등록 사용자와 비교하여 person_id 우선 반영
+        for user in session.exec(select(User)).all():
+            try:
+                cluster_dir = f"{BASE_DIR}/media/users/faces/{user.id}"
+                if not os.path.exists(cluster_dir):
+                    continue
+
+                for subdir in os.listdir(cluster_dir):
+                    centroids_path = os.path.join(
+                        cluster_dir, subdir, "clusters", "centroids.pkl"
+                    )
+                    if not os.path.exists(centroids_path):
+                        continue
+
+                    with open(centroids_path, "rb") as f:
+                        centroids = pickle.load(f)
+                    if not centroids:
+                        continue
+
+                # 첫 번째 중심값 사용
+                rep_vec = np.array(centroids[0], dtype=np.float32)
+
+                exists = session.get(FaceRepresentative, (group_id, user.id))
+                if not exists:
+                    session.add(
+                        FaceRepresentative(
+                            group_id=group_id,
+                            person_id=user.id,
+                            vector=pickle.dumps(rep_vec),
+                        )
+                    )
+                    session.add(
+                        PersonInfo(
+                            group_id=group_id,
+                            person_id=user.id,
+                            user_id=user.id,
+                            name=user.name,
+                        )
+                    )
+
+                # 등록 사용자와 유사한 얼굴이 있으면 person_id로 할당
+                for idx, vec in enumerate(embeddings):
+                    if assigned[idx]:
+                        continue
+                    sim = face_engine.cosine_similarity(rep_vec, vec)
+                    if sim >= MATCH_THRESHOLD:
+                        face_refs[idx].person_id = user.id
+                        assigned[idx] = True
+
+            except Exception as e:
+                print(f"[등록 사용자 {user.id}] 실패: {e}")
+
         # next_person_id 계산 (1000부터 시작)
         existing_ids = session.exec(
             select(FaceRepresentative.person_id).where(
@@ -183,7 +238,6 @@ def assign_new_person_ids(session: Session, group_id: int):
         auto_ids = [pid for pid in flattened_ids if pid >= 1000]
         next_person_id = max(auto_ids) + 1 if auto_ids else 1000
 
-        assigned = [False] * len(embeddings)
         count_new = 0
 
         for i in range(len(embeddings)):
