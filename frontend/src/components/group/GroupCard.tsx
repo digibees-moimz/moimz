@@ -9,7 +9,13 @@ interface GroupCardProps {
 }
 
 export default function GroupCard({ group }: GroupCardProps) {
-  const { name, category = "현재 모임", image_url, locked_amount = 0 } = group;
+  const {
+    name,
+    category = "현재 모임",
+    image_url,
+    group_balance = 0,
+    locked_amount = 0,
+  } = group;
   const displayImage = image_url || "/group-images/default.png";
 
   return (
@@ -32,7 +38,7 @@ export default function GroupCard({ group }: GroupCardProps) {
               </span>
             </Flex.RowStartCenter>
             <Typography.BodyLarge className="font-bold">
-              {locked_amount.toLocaleString()}원
+              {group_balance.toLocaleString()}원
             </Typography.BodyLarge>
           </div>
         </Flex.RowStartCenter>
