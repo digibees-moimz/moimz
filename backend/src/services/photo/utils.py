@@ -1,6 +1,7 @@
 import uuid, os, cv2
+import shutil
 from datetime import datetime
-from src.constants import ALBUM_DIR
+from src.constants import ALBUM_DIR, BASE_DIR
 
 
 def generate_unique_filename(original_filename: str) -> str:
@@ -40,3 +41,17 @@ def crop_square_face(image, bbox, margin_ratio=0.4, output_size=256):
         cropped, (output_size, output_size), interpolation=cv2.INTER_AREA
     )
     return resized
+
+
+def delete_merged_files(group_id: int, person_id: int):
+    # 썸네일 삭제
+    thumb_path = os.path.join(
+        ALBUM_DIR, str(group_id), "thumbnails", f"{person_id}.jpg"
+    )
+    if os.path.exists(thumb_path):
+        os.remove(thumb_path)
+
+    # 클러스터 디렉토리 삭제
+    face_dir = os.path.join(BASE_DIR, "media", "users", "faces", str(person_id))
+    if os.path.exists(face_dir):
+        shutil.rmtree(face_dir)

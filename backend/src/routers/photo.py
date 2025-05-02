@@ -1,8 +1,8 @@
 # backend/src/routers/photo.py
-import os, cv2, pickle
-from fastapi import APIRouter, UploadFile, File, Form
+import os, cv2, pickle, numpy as np
+from fastapi import APIRouter, UploadFile, File, Form, Query, HTTPException
 from fastapi.responses import FileResponse
-from sqlmodel import Session, select
+from sqlmodel import Session, select, delete
 from src.constants import BASE_DIR
 from src.core.database import engine
 from src.services.face.engine import face_engine
@@ -14,6 +14,7 @@ from src.services.photo.utils import (
     get_group_photo_path,
     get_group_photo_relpath,
     crop_square_face,
+    delete_merged_files,
 )
 
 router = APIRouter(prefix="/photos", tags=["Photos"])
@@ -256,3 +257,85 @@ def update_person_name(group_id: int, person_id: int, new_name: str = Form(...))
             "person_id": person_id,
             "name": info.name,
         }
+
+
+@router.post(
+    "/groups/{group_id}/merge",
+    summary="인물 병합",
+    description="인물별 앨범을 2개 선택하여 병합합니다.",
+)
+def merge_persons(
+    group_id: int, person_id_1: int = Query(...), person_id_2: int = Query(...)
+):
+    if person_id_1 == person_id_2:
+        raise HTTPException(400, detail="같은 person_id는 병합할 수 없습니다.")
+
+    with Session(engine) as session:
+        # 우선순위 판단
+        def is_registered(pid):
+            return pid < 1000
+
+        info1 = session.get(PersonInfo, (person_id_1, group_id))
+        info2 = session.get(PersonInfo, (person_id_2, group_id))
+
+        if is_registered(person_id_1) and not is_registered(person_id_2):
+            target, source = person_id_1, person_id_2
+        elif is_registered(person_id_2) and not is_registered(person_id_1):
+            target, source = person_id_2, person_id_1
+        elif info1 and info1.name and not (info2 and info2.name):
+            target, source = person_id_1, person_id_2
+        elif info2 and info2.name and not (info1 and info1.name):
+            target, source = person_id_2, person_id_1
+        else:
+            target, source = person_id_1, person_id_2
+
+        # Face.person_id 갱신
+        faces = session.exec(
+            select(Face)
+            .join(Photo)
+            .where(Photo.group_id == group_id, Face.person_id == source)
+        ).all()
+        for face in faces:
+            face.person_id = target
+            session.add(face)
+
+        # 대표 벡터 병합
+        rep_target = session.get(FaceRepresentative, (group_id, target))
+        rep_source = session.get(FaceRepresentative, (group_id, source))
+
+        vecs = []
+        if rep_target:
+            vecs.append(pickle.loads(rep_target.vector))
+        if rep_source:
+            vecs.append(pickle.loads(rep_source.vector))
+
+        if vecs:
+            new_rep = np.mean(vecs, axis=0)
+            if not rep_target:
+                rep_target = FaceRepresentative(
+                    group_id=group_id, person_id=target, vector=pickle.dumps(new_rep)
+                )
+                session.add(rep_target)
+            else:
+                rep_target.vector = pickle.dumps(new_rep)
+                session.add(rep_target)
+
+        # 병합 대상 썸네일 및 클러스터 파일 삭제
+        delete_merged_files(group_id, source)
+
+        # 병합 대상 DB 삭제
+        session.exec(
+            delete(FaceRepresentative).where(
+                FaceRepresentative.group_id == group_id,
+                FaceRepresentative.person_id == source,
+            )
+        )
+        session.exec(
+            delete(PersonInfo).where(
+                PersonInfo.group_id == group_id, PersonInfo.person_id == source
+            )
+        )
+
+        session.commit()
+
+    return {"message": f"{source} → {target} 병합 완료", "final_person_id": target}
