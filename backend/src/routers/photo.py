@@ -7,7 +7,7 @@ router = APIRouter(prefix="/photos", tags=["Photos"])
 
 @router.post(
     "",
-    summary="Upload Photo",
+    summary="사진 업로드드",
     description="사진 파일을 업로드하고 group_id 및 user_id와 함께 DB에 메타데이터를 저장합니다.",
 )
 def upload_photo(file: UploadFile = File(...), group_id: int = Form(...), user_id: int = Form(None)):
@@ -29,7 +29,7 @@ def upload_photo(file: UploadFile = File(...), group_id: int = Form(...), user_i
 
 @router.get(
     "/groups/{group_id}",
-    summary="Get Group Photos",
+    summary="그룹의 사진 목록 조회회",
     description="특정 그룹의 사진 목록을 조회합니다.",
 )
 def get_group_photos(group_id: int):

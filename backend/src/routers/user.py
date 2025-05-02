@@ -1,10 +1,20 @@
+# FastAPI & SQLModel
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import Session, select
+from sqlalchemy import func, case
+# DB 연결
 from src.core.database import engine
+# Models
 from src.models.user import User, UserAccount
+from src.models.group import Group, Member
+from src.models.group_account import GroupAccount, GroupTransaction, LockIn
+# Schemas
 from src.schemas.user import UserCreate, UserRead, UserDetail
 from src.schemas.account import LockInSummary
-from sqlalchemy.orm import selectinload
+from src.schemas.group import UserGroupSummary
+# ORM 옵션 (only used in get_user_detail)
+from sqlalchemy.orm import selectinload, aliased
+# 유틸
 from collections import defaultdict
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -108,3 +118,73 @@ def get_user_detail(user_id: int):
                 "lockins": lockins_summary,
             },
         }
+
+@router.get("/{user_id}/groups", response_model=list[UserGroupSummary])
+def get_user_groups(user_id: int):
+    with Session(engine) as session:
+
+        user_account = session.exec(
+            select(UserAccount).where(UserAccount.user_id == user_id)
+        ).first()
+        if not user_account:
+            raise HTTPException(404, "유저 계좌 없음")
+
+        member_group_ids = session.exec(
+            select(Member.group_id).where(Member.user_id == user_id)
+        ).all()
+        if not member_group_ids:
+            return []
+
+        member_cnt_subq = (
+            select(func.count())
+            .where(Member.group_id == Group.id)          # Group.id 를 외부에서 참조
+            .correlate(Group)
+            .scalar_subquery()
+        )
+
+        balance_subq = (
+            select(func.coalesce(func.sum(GroupTransaction.amount), 0))
+            .join(GroupAccount, GroupAccount.id == GroupTransaction.group_account_id)
+            .where(GroupAccount.group_id == Group.id)
+            .correlate(Group)
+            .scalar_subquery()
+        )
+
+        locked_subq = (
+            select(func.coalesce(func.sum(GroupTransaction.amount), 0))
+            .join(GroupAccount, GroupAccount.id == GroupTransaction.group_account_id)
+            .where(
+                GroupAccount.group_id == Group.id,
+                GroupTransaction.user_account_id == user_account.id,
+            )
+            .correlate(Group)
+            .scalar_subquery()
+        )
+
+        stmt = (
+            select(
+                Group.id,
+                Group.name,
+                Group.category,
+                Group.image_url,
+                member_cnt_subq.label("member_count"),
+                balance_subq.label("group_balance"),
+                locked_subq.label("locked_amount"),
+            )
+            .where(Group.id.in_(member_group_ids))
+        )
+
+        rows = session.exec(stmt).all()
+
+        return [
+            UserGroupSummary(
+                id=row.id,
+                name=row.name,
+                category=row.category,
+                image_url=row.image_url,
+                group_balance=row.group_balance,
+                locked_amount=row.locked_amount,
+                member_count=row.member_count,
+            )
+            for row in rows
+        ]

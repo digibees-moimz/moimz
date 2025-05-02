@@ -10,7 +10,7 @@ router = APIRouter(prefix="/diaries", tags=["Diary"])
     "",
     response_model=DiaryRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Save Diary",
+    summary="일기 저장장",
     description="AI가 생성한 모임 일기를 저장합니다.",
 )
 def save_diary(data: DiaryCreate):
@@ -24,7 +24,7 @@ def save_diary(data: DiaryCreate):
 @router.get(
     "/group/{group_id}",
     response_model=list[DiaryRead],
-    summary="Get Group Diaries",
+    summary="해당 모임 일기 목록 조회",
     description="특정 그룹의 모든 AI 모임 일기 목록을 조회합니다.",
 )
 def get_group_diaries(group_id: int):

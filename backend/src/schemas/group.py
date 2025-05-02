@@ -5,7 +5,7 @@ class GroupCreate(BaseModel):
     name: str
     category: Optional[str] = None
     description: Optional[str] = None
-    image_url: Optional[str] = "/group-images/default.png"
+    image_url: Optional[str] = "/images/groups/default.png"
 
 class GroupRead(BaseModel):
     id: int
@@ -28,3 +28,16 @@ class GroupUpdate(BaseModel):
     category: Optional[str] = None
     description: Optional[str] = None
     image_url: Optional[str] = None
+
+# User가 보는 개인 모임 정보 요약, 메인에 해당유저 가입된 모임 다 가져오려고 쓰는거
+class UserGroupSummary(BaseModel):
+    id: int
+    name: str
+    category: str | None = None
+    image_url: str | None = None
+    locked_amount: float = 0.0
+    group_balance: float = 0.0
+    member_count: int = 0
+    
+    class Config:
+        orm_mode = True
