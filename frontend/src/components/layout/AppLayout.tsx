@@ -10,14 +10,12 @@ import { Container } from "@/components/ui-components/layout/Container";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMoimMain = !pathname.startsWith("/groups/");
-  const isGroupDetail = pathname.startsWith("/groups/");
 
   return (
     <div className="flex flex-col w-screen min-h-screen">
-      {isMoimMain && <MainTab />}
-      {isGroupDetail && <Header />}
-      {isGroupDetail && <TabNav />}
-      <main className="flex-1 mt-12">
+      <Header />
+      {isMoimMain ? <MainTab /> : <TabNav />}
+      <main className="flex-1">
         <Container as="section" className="py-6 space-y-6">
           {children}
         </Container>
