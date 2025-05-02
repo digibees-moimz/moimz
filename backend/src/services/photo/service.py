@@ -173,14 +173,15 @@ def assign_new_person_ids(session: Session, group_id: int):
         if not embeddings:
             return 0
 
-        # next_person_id 계산
+        # next_person_id 계산 (1000부터 시작)
         existing_ids = session.exec(
             select(FaceRepresentative.person_id).where(
                 FaceRepresentative.group_id == group_id
             )
         ).all()
         flattened_ids = [p[0] if isinstance(p, tuple) else p for p in existing_ids]
-        next_person_id = max(flattened_ids) + 1 if flattened_ids else 1
+        auto_ids = [pid for pid in flattened_ids if pid >= 1000]
+        next_person_id = max(auto_ids) + 1 if auto_ids else 1000
 
         assigned = [False] * len(embeddings)
         count_new = 0
