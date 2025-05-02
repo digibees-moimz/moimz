@@ -1,5 +1,7 @@
-from fastapi.middleware.cors import CORSMiddleware
+import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from src.core.database import init_db  # DB 연결 함수
 from src.routers import (
     user,
@@ -25,6 +27,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 정적 파일 제공 - backend/media 디렉토리
+os.makedirs("backend/media", exist_ok=True)
+app.mount("/files", StaticFiles(directory="media"), name="media")
 
 
 @app.on_event("startup")
