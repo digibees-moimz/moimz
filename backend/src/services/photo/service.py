@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 from sqlmodel import Session, select
 from src.core.database import engine
-from src.models.photo import Photo, Face, FaceRepresentative, Face
+from src.models.photo import Photo, Face, FaceRepresentative, Face, PersonInfo
 from src.services.face.engine import face_engine  # 얼굴 탐지 + 임베딩
 from src.constants import BASE_DIR
 
@@ -144,7 +144,7 @@ def classify_face(
 
 
 # 새로운 person_id 부여 및 대표 벡터 생성
-def assign_new_person_ids(session: Session):
+def assign_new_person_ids(session: Session, group_id: int):
     with Session(engine) as session:
         unknown_faces = session.exec(select(Face).where(Face.person_id == 0)).all()
 
@@ -199,6 +199,13 @@ def assign_new_person_ids(session: Session):
             session.add(
                 FaceRepresentative(
                     person_id=next_person_id, vector=pickle.dumps(rep_vec)
+                )
+            )
+            session.add(
+                PersonInfo(
+                    person_id=next_person_id,
+                    group_id=group_id,
+                    name="",
                 )
             )
 

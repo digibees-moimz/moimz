@@ -28,3 +28,10 @@ class Face(SQLModel, table=True):
 class FaceRepresentative(SQLModel, table=True):
     person_id: int = Field(primary_key=True)
     vector: bytes  # 대표 벡터
+
+
+class PersonInfo(SQLModel, table=True):
+    group_id: int = Field(primary_key=True)
+    person_id: int = Field(primary_key=True)
+    name: str = ""
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id")

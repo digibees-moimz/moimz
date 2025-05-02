@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 from src.constants import BASE_DIR
 from src.core.database import engine
 from src.services.face.engine import face_engine
-from src.models.photo import Photo, Face, FaceRepresentative
+from src.models.photo import Photo, Face, FaceRepresentative, PersonInfo
 from src.schemas.photo import PhotoRead
 from src.services.photo.service import process_faces_for_photo, assign_new_person_ids
 from src.services.photo.utils import (
@@ -58,7 +58,7 @@ def upload_photo(
             uploaded_photos.append(PhotoRead.from_orm(photo))
 
         # 마지막에 한 번만 실행
-        assign_new_person_ids(session)  # 얼굴 감지 후, 미분류 얼굴 분류
+        assign_new_person_ids(session, group_id)  # 얼굴 감지 후, 미분류 얼굴 분류
 
     return {"uploaded": uploaded_photos}
 
@@ -90,17 +90,18 @@ def get_persons_in_group(group_id: int):
         )
 
         person_ids = session.exec(stmt).all()  # -> List[int]
-
-        return {
-            "group_id": group_id,
-            "persons": [
+        persons = []
+        for person_id in person_ids:
+            info = session.get(PersonInfo, (person_id, group_id))
+            persons.append(
                 {
                     "person_id": person_id,
+                    "name": info.name if info else "",
                     "thumbnail_url": f"/api/photos/groups/{group_id}/thumbnails/{person_id}",
                 }
-                for person_id in person_ids
-            ],
-        }
+            )
+
+        return {"group_id": group_id, "persons": persons}
 
 
 @router.get(
@@ -232,3 +233,21 @@ def get_face_thumbnail(person_id: int, group_id: int):
         cv2.imwrite(thumb_path, cropped)
 
         return FileResponse(thumb_path)
+
+
+@router.patch("/groups/{group_id}/persons/{person_id}/name", summary="인물 이름 변경")
+def update_person_name(group_id: int, person_id: int, new_name: str = Form(...)):
+    with Session(engine) as session:
+        info = session.get(PersonInfo, (person_id, group_id))
+        if not info:
+            info = PersonInfo(person_id=person_id, group_id=group_id, name=new_name)
+        else:
+            info.name = new_name
+        session.add(info)
+        session.commit()
+        return {
+            "message": "이름이 변경되었습니다",
+            "group_id": group_id,
+            "person_id": person_id,
+            "name": info.name,
+        }
