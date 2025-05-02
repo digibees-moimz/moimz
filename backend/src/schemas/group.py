@@ -35,6 +35,7 @@ class UserGroupSummary(BaseModel):
     name: str
     category: str | None = None
     image_url: str | None = None
+    account_number: str | None = None
     locked_amount: float = 0.0
     group_balance: float = 0.0
     member_count: int = 0

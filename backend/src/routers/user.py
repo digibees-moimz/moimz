@@ -161,12 +161,19 @@ def get_user_groups(user_id: int):
             .scalar_subquery()
         )
 
+        account_num_subq = (
+            select(GroupAccount.account_number)
+            .where(GroupAccount.group_id == Group.id)
+            .correlate(Group).scalar_subquery()
+        )
+
         stmt = (
             select(
                 Group.id,
                 Group.name,
                 Group.category,
                 Group.image_url,
+                account_num_subq.label("account_number"),
                 member_cnt_subq.label("member_count"),
                 balance_subq.label("group_balance"),
                 locked_subq.label("locked_amount"),
@@ -182,6 +189,7 @@ def get_user_groups(user_id: int):
                 name=row.name,
                 category=row.category,
                 image_url=row.image_url,
+                 account_number=row.account_number, 
                 group_balance=row.group_balance,
                 locked_amount=row.locked_amount,
                 member_count=row.member_count,
