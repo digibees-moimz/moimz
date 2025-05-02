@@ -5,8 +5,16 @@ from src.models.group import Group, Member
 from src.schemas.group import GroupCreate, GroupRead, GroupJoin, GroupUpdate, GroupLeave  
 from src.models.group_account import GroupAccount
 from src.models.user import User
+import random
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
+
+def generate_account_number() -> str:
+    yyy = f"{random.randint(0, 999):03d}"
+    zz = f"{random.randint(0, 99):02d}"
+    zzzzzz = f"{random.randint(0, 999999):06d}"
+    c = str(random.randint(0, 9))
+    return f"{yyy}-{zz}-{zzzzzz}-{c}"
 
 @router.post(
     "",
@@ -23,7 +31,10 @@ def create_group(group_in: GroupCreate):
         session.refresh(new_group)
 
         # 모임 계좌 생성 로직 추가
-        group_account = GroupAccount(group_id=new_group.id, balance=0)
+        group_account = GroupAccount(
+            group_id=new_group.id, 
+            account_number=generate_account_number()
+            )
         session.add(group_account)
         session.commit()
 

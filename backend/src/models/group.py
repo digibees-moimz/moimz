@@ -8,8 +8,11 @@ class Group(SQLModel, table=True):
     description: Optional[str] = None
     image_url: Optional[str] = Field(default=None, description="그룹 대표 이미지 URL")
 
+    account: Optional["GroupAccount"] = Relationship(back_populates="group")
+    lockins: list["LockIn"] = Relationship(back_populates="group")
+
 class Member(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     group_id: int = Field(foreign_key="group.id")
-    role: str = "MEMBER"  # 예: LEADER, MEMBER 등
+    role: str = Field(default="MEMBER", description="예: LEADER, MEMBER 등")

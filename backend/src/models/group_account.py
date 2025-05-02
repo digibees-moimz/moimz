@@ -1,11 +1,13 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional
 from datetime import datetime
 
 class GroupAccount(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     group_id: int = Field(foreign_key="group.id")
-    # balance: float = 0.0  # 모임통장 잔액 -> 쿼리로 계산하면 됨
+    account_number: str = Field(..., unique=True, description="모임 계좌번호")
+
+    group: Optional["Group"] = Relationship(back_populates="account")
 
 class GroupTransaction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
