@@ -26,6 +26,7 @@ class Face(SQLModel, table=True):
 
 
 class FaceRepresentative(SQLModel, table=True):
+    group_id: int = Field(primary_key=True)
     person_id: int = Field(primary_key=True)
     vector: bytes  # 대표 벡터
 

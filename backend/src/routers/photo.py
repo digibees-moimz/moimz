@@ -54,7 +54,7 @@ def upload_photo(
             session.refresh(photo)
 
             # 얼굴 자동 분석
-            process_faces_for_photo(session, photo.id)
+            process_faces_for_photo(session, group_id, photo.id)
             uploaded_photos.append(PhotoRead.from_orm(photo))
 
         # 마지막에 한 번만 실행
@@ -92,7 +92,7 @@ def get_persons_in_group(group_id: int):
         person_ids = session.exec(stmt).all()  # -> List[int]
         persons = []
         for person_id in person_ids:
-            info = session.get(PersonInfo, (person_id, group_id))
+            info = session.get(PersonInfo, (group_id, person_id))
             persons.append(
                 {
                     "person_id": person_id,
@@ -165,7 +165,7 @@ def get_face_thumbnail(person_id: int, group_id: int):
             return
 
         # 대표 벡터 기반 유사 얼굴 탐색
-        rep = session.get(FaceRepresentative, person_id)
+        rep = session.get(FaceRepresentative, (group_id, person_id))
         photo = None
         top = right = bottom = left = None
 
@@ -173,7 +173,11 @@ def get_face_thumbnail(person_id: int, group_id: int):
             rep_vec = pickle.loads(rep.vector)
 
             # 해당 person_id의 얼굴들 조회
-            faces = session.exec(select(Face).where(Face.person_id == person_id)).all()
+            faces = session.exec(
+                select(Face)
+                .join(Photo, Face.photo_id == Photo.id)
+                .where(Face.person_id == person_id, Photo.group_id == group_id)
+            ).all()
 
             best_face = None
             best_sim = -1.0
@@ -201,8 +205,12 @@ def get_face_thumbnail(person_id: int, group_id: int):
         else:
             # 최근 얼굴
             face = session.exec(
-                select(Face).where(Face.person_id == person_id).order_by(Face.id.desc())
+                select(Face)
+                .join(Photo, Face.photo_id == Photo.id)
+                .where(Face.person_id == person_id, Photo.group_id == group_id)
+                .order_by(Face.id.desc())
             ).first()
+
             if not face:
                 return FileResponse(fallback_path, media_type="image/png")
 
@@ -238,7 +246,7 @@ def get_face_thumbnail(person_id: int, group_id: int):
 @router.patch("/groups/{group_id}/persons/{person_id}/name", summary="인물 이름 변경")
 def update_person_name(group_id: int, person_id: int, new_name: str = Form(...)):
     with Session(engine) as session:
-        info = session.get(PersonInfo, (person_id, group_id))
+        info = session.get(PersonInfo, (group_id, person_id))
         if not info:
             info = PersonInfo(person_id=person_id, group_id=group_id, name=new_name)
         else:
