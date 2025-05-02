@@ -1,5 +1,4 @@
-import uuid
-import os
+import uuid, os, cv2
 from datetime import datetime
 from src.constants import ALBUM_DIR
 
@@ -19,3 +18,25 @@ def get_group_photo_path(group_id: int, filename: str) -> str:
 # DB 저장용 상대경로 반환
 def get_group_photo_relpath(group_id: int, filename: str) -> str:
     return f"groups/{group_id}/photos/{filename}"
+
+
+def crop_square_face(image, bbox, margin_ratio=0.4, output_size=256):
+    top, right, bottom, left = bbox
+    h, w = bottom - top, right - left
+    cx, cy = (left + right) // 2, (top + bottom) // 2
+
+    # 가장 긴 쪽 기준 정사각형 사이즈 계산 (마진 포함)
+    side = int(max(w, h) * (1 + margin_ratio))
+
+    # 정사각형 영역 좌표 계산
+    x1 = max(0, cx - side // 2)
+    y1 = max(0, cy - side // 2)
+    x2 = min(image.shape[1], cx + side // 2)
+    y2 = min(image.shape[0], cy + side // 2)
+
+    # 잘라내고 resize
+    cropped = image[y1:y2, x1:x2]
+    resized = cv2.resize(
+        cropped, (output_size, output_size), interpolation=cv2.INTER_AREA
+    )
+    return resized

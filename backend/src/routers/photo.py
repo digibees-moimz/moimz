@@ -13,6 +13,7 @@ from src.services.photo.utils import (
     generate_unique_filename,
     get_group_photo_path,
     get_group_photo_relpath,
+    crop_square_face,
 )
 
 router = APIRouter(prefix="/photos", tags=["Photos"])
@@ -231,19 +232,9 @@ def get_face_thumbnail(person_id: int, group_id: int):
             return FileResponse(fallback_path, media_type="image/png")
 
         image = cv2.imread(abs_path)
-        height, width, _ = image.shape
 
-        # 확장 비율
-        margin = 0.4
-        h, w = bottom - top, right - left
+        cropped = crop_square_face(image, [top, right, bottom, left])
 
-        expand_top = max(0, int(top - h * margin))
-        expand_bottom = min(height, int(bottom + h * margin))
-        expand_left = max(0, int(left - w * margin))
-        expand_right = min(width, int(right + w * margin))
-
-        cropped = image[expand_top:expand_bottom, expand_left:expand_right]
-        cropped = cv2.resize(cropped, (256, 256), interpolation=cv2.INTER_AREA)
         cv2.imwrite(thumb_path, cropped)
 
         return FileResponse(thumb_path)
