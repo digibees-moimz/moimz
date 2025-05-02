@@ -3,7 +3,7 @@ import os
 from fastapi import APIRouter, UploadFile, File, Form
 from sqlmodel import Session, select
 from src.core.database import engine
-from src.models.photo import Photo
+from src.models.photo import Photo, Face
 from src.schemas.photo import PhotoRead
 from src.services.photo.service import process_faces_for_photo, assign_new_person_ids
 from src.services.photo.utils import (
@@ -26,7 +26,6 @@ def upload_photo(
     group_id: int = Form(...),
     user_id: int = Form(None),
 ):
-
     uploaded_photos = []
 
     with Session(engine) as session:
@@ -70,3 +69,55 @@ def get_group_photos(group_id: int):
     with Session(engine) as session:
         photos = session.exec(select(Photo).where(Photo.group_id == group_id)).all()
         return photos
+
+
+@router.get(
+    "/groups/{group_id}/persons",
+    summary="그룹의 인물별 앨범 목록 조회",
+    description="특정 그룹의 인물별 사진 목록을 조회합니다.",
+)
+def get_persons_in_group(group_id: int):
+    with Session(engine) as session:
+        # 이 그룹의 모든 person_id 추출
+        stmt = (
+            select(Face.person_id)
+            .join(Photo, Photo.id == Face.photo_id)
+            .where(Photo.group_id == group_id)
+            .distinct()
+            .where(Face.person_id != 0)  # 미분류 제외
+        )
+        person_ids = session.exec(stmt).all()  # -> List[int]
+        return {"group_id": group_id, "persons": person_ids}
+
+
+@router.get(
+    "/groups/{group_id}/persons/{person_id}",
+    summary="특정 인물의 얼굴 사진 조회",
+    description="특정 그룹의 인물별 사진 목록을 조회합니다.",
+)
+def get_faces_by_person(group_id: int, person_id: int):
+    with Session(engine) as session:
+        stmt = (
+            select(Face, Photo)
+            .join(Photo, Photo.id == Face.photo_id)
+            .where(Photo.group_id == group_id, Face.person_id == person_id)
+        )
+        results = session.exec(stmt).all()
+
+        faces = []
+        for face, photo in results:
+            faces.append(
+                {
+                    "face_id": face.id,
+                    "photo_id": photo.id,
+                    "location": face.location,
+                    "image_url": f"/files/{photo.file_name}",
+                }
+            )
+
+        return {
+            "group_id": group_id,
+            "person_id": person_id,
+            "count": len(faces),
+            "faces": faces,
+        }
