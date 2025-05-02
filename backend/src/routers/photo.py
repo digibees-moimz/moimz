@@ -3,6 +3,7 @@ import os, cv2, pickle, numpy as np
 from fastapi import APIRouter, UploadFile, File, Form, Query, HTTPException
 from fastapi.responses import FileResponse
 from sqlmodel import Session, select, delete
+from sqlalchemy import func
 from src.constants import BASE_DIR
 from src.core.database import engine
 from src.services.face.engine import face_engine
@@ -88,7 +89,8 @@ def get_persons_in_group(group_id: int):
             select(Face.person_id)
             .join(Photo, Photo.id == Face.photo_id)
             .where(Photo.group_id == group_id, Face.person_id != 0)  # 미분류 제외
-            .distinct()
+            .group_by(Face.person_id)
+            .having(func.count(Face.id) >= 5)
         )
 
         person_ids = session.exec(stmt).all()  # -> List[int]
