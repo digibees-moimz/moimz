@@ -1,11 +1,12 @@
 # backend/src/routers/photo.py
-import os, cv2
+import os, cv2, pickle
 from fastapi import APIRouter, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from sqlmodel import Session, select
 from src.constants import BASE_DIR
 from src.core.database import engine
-from src.models.photo import Photo, Face
+from src.services.face.engine import face_engine
+from src.models.photo import Photo, Face, FaceRepresentative
 from src.schemas.photo import PhotoRead
 from src.services.photo.service import process_faces_for_photo, assign_new_person_ids
 from src.services.photo.utils import (
@@ -137,45 +138,89 @@ def get_faces_by_person(group_id: int, person_id: int):
 
 @router.get(
     "/groups/{group_id}/thumbnails/{person_id}",
-    summary="인물별 얼굴 크롭 썸네일 반환",
-    description="인물별 앨범의 썸네일(인물 얼굴 크롭)을 반환합니다.",
+    summary="인물별  대표벡터 기반 썸네일 반환",
+    description="대표 벡터와 가장 유사한 얼굴을 기준으로 썸네일을 생성합니다.",
 )
 def get_face_thumbnail(person_id: int, group_id: int):
     thumb_path = os.path.join(
-        BASE_DIR, "media", "groups", f"{group_id}", "thumbnails", f"{person_id}.jpg"
+        BASE_DIR, "media", "groups", str(group_id), "thumbnails", f"{person_id}.jpg"
     )
+    fallback_path = os.path.join(BASE_DIR, "media", "static", "default-thumbnail.png")
     os.makedirs(os.path.dirname(thumb_path), exist_ok=True)
 
     # 이미 썸네일이 존재하면 바로 반환 (캐싱)
     if os.path.exists(thumb_path):
-        return FileResponse(thumb_path)
+        return FileResponse(thumb_path, media_type="image/jpeg")
 
     # 없으면 새로 생성
     with Session(engine) as session:
-        # 최근 얼굴 하나 기준으로 crop
-        face = session.exec(
-            select(Face).where(Face.person_id == person_id).order_by(Face.id.desc())
+        valid = session.exec(
+            select(Face)
+            .join(Photo, Photo.id == Face.photo_id)
+            .where(Face.person_id == person_id, Photo.group_id == group_id)
         ).first()
-        if not face:
+
+        if not valid:
             return
 
-        photo = session.get(Photo, face.photo_id)
-        if not photo:
-            return
+        # 대표 벡터 기반 유사 얼굴 탐색
+        rep = session.get(FaceRepresentative, person_id)
+        photo = None
+        top = right = bottom = left = None
+
+        if rep:
+            rep_vec = pickle.loads(rep.vector)
+
+            # 해당 person_id의 얼굴들 조회
+            faces = session.exec(select(Face).where(Face.person_id == person_id)).all()
+
+            best_face = None
+            best_sim = -1.0
+
+            # 가장 유사한 얼굴 찾기
+            for face in faces:
+                try:
+                    vec = pickle.loads(face.encoding)
+                    sim = face_engine.cosine_similarity(rep_vec, vec)
+                    if sim > best_sim:
+                        best_sim = sim
+                        best_face = face
+                except Exception:
+                    continue
+
+            if not best_face:
+                return FileResponse(fallback_path, media_type="image/png")
+
+            photo = session.get(Photo, best_face.photo_id)
+            if not photo:
+                return FileResponse(fallback_path, media_type="image/png")
+
+            top, right, bottom, left = best_face.location
+
+        else:
+            # 최근 얼굴
+            face = session.exec(
+                select(Face).where(Face.person_id == person_id).order_by(Face.id.desc())
+            ).first()
+            if not face:
+                return FileResponse(fallback_path, media_type="image/png")
+
+            photo = session.get(Photo, face.photo_id)
+            if not photo:
+                return FileResponse(fallback_path, media_type="image/png")
+
+            top, right, bottom, left = face.location
 
         abs_path = os.path.join(BASE_DIR, "media", photo.file_name)
         if not os.path.exists(abs_path):
-            return
+            return FileResponse(fallback_path, media_type="image/png")
 
-        top, right, bottom, left = face.location
         image = cv2.imread(abs_path)
         height, width, _ = image.shape
 
         # 확장 비율
-        margin = 0.4  # 20% 확장
-
-        h = bottom - top
-        w = right - left
+        margin = 0.4
+        h, w = bottom - top, right - left
 
         expand_top = max(0, int(top - h * margin))
         expand_bottom = min(height, int(bottom + h * margin))
@@ -183,7 +228,7 @@ def get_face_thumbnail(person_id: int, group_id: int):
         expand_right = min(width, int(right + w * margin))
 
         cropped = image[expand_top:expand_bottom, expand_left:expand_right]
-
-        # 썸네일 저장
+        cropped = cv2.resize(cropped, (256, 256), interpolation=cv2.INTER_AREA)
         cv2.imwrite(thumb_path, cropped)
+
         return FileResponse(thumb_path)
