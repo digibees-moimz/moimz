@@ -118,9 +118,15 @@ def get_faces_by_person(group_id: int, person_id: int):
         )
         results = session.exec(stmt).all()
 
-        faces = []
+        seen_photo_ids = set()
+        filtered_faces = []
+
         for face, photo in results:
-            faces.append(
+            # 같은 사진 중복 제거
+            if photo.id in seen_photo_ids:
+                continue
+            seen_photo_ids.add(photo.id)
+            filtered_faces.append(
                 {
                     "face_id": face.id,
                     "photo_id": photo.id,
@@ -132,8 +138,8 @@ def get_faces_by_person(group_id: int, person_id: int):
         return {
             "group_id": group_id,
             "person_id": person_id,
-            "count": len(faces),
-            "faces": faces,
+            "count": len(filtered_faces),
+            "faces": filtered_faces,
         }
 
 
