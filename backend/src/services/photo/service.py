@@ -35,6 +35,9 @@ def process_faces_for_photo(session: Session, photo_id: int) -> int:
     faces = face_engine.get_faces(img)
     saved_count = 0
 
+    # 대표 벡터 갱신 대상
+    updated_person_ids = set()
+
     for face in faces:
         bbox = list(map(int, face.bbox))  # [x1, y1, x2, y2]
         embedding = face_engine.get_embedding(face)
@@ -55,9 +58,17 @@ def process_faces_for_photo(session: Session, photo_id: int) -> int:
         session.add(face_obj)
         saved_count += 1
 
+        # 기존 인물이라면 대표 벡터 갱신 대상에 추가
+        if person_id != 0:
+            updated_person_ids.add(person_id)
+
     photo.face_processed = True
     session.add(photo)
     session.commit()
+
+    # 대표 벡터 갱신
+    for person_id in updated_person_ids:
+        update_face_representative(session, person_id)
 
     return saved_count
 
