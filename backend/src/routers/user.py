@@ -3,6 +3,9 @@ from sqlmodel import Session, select
 from src.core.database import engine
 from src.models.user import User, UserAccount
 from src.schemas.user import UserCreate, UserRead, UserDetail
+from src.schemas.account import LockInSummary
+from sqlalchemy.orm import selectinload
+from collections import defaultdict
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -69,13 +72,39 @@ def get_user_detail(user_id: int):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        accounts = session.exec(
-            select(UserAccount).where(UserAccount.user_id == user_id)
-        ).first()  # 하나만 가져오기, 왜냐면 아이디당 통장 1개로 수정했으니까
+        account = session.exec(
+            select(UserAccount)
+            .where(UserAccount.user_id == user_id)
+            .options(selectinload(UserAccount.lockins))
+        ).first()
+
+        if not account:
+            raise HTTPException(404, "Account not found")
+
+        # group_id 기준으로 금액 합산
+        grouped = defaultdict(float)
+        for li in account.lockins:
+            grouped[li.group_id] += li.amount
+
+        lockins_summary = [
+            LockInSummary(group_id=gid, amount=amt)
+            for gid, amt in grouped.items()
+            if amt > 0  # 잔액이 0 이하인 건 제외 (원하면 제거 조건 없애도 됨)
+        ]
+
+        total_locked = sum(grouped.values())
 
         return {
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            "account": accounts
+            "account": {
+                "id": account.id,
+                "user_id": account.user_id,
+                "account_name": account.account_name,
+                "account_number": account.account_number,
+                "balance": account.balance,
+                "locked_balance": total_locked,
+                "lockins": lockins_summary,
+            },
         }

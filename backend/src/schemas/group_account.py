@@ -10,6 +10,7 @@ class MemberLockedAmount(BaseModel):
 
 class GroupAccountSummary(BaseModel):
     group_account_id: int
+    account_number:str
     total_balance: float
     members: List[MemberLockedAmount]
     available_to_spend: float
