@@ -32,7 +32,7 @@ export default function GroupCard({ group }: GroupCardProps) {
               </span>
             </Flex.RowStartCenter>
             <Typography.BodyLarge className="font-bold">
-              {(locked_amount * 7).toLocaleString()}원
+              {locked_amount.toLocaleString()}원
             </Typography.BodyLarge>
           </div>
         </Flex.RowStartCenter>
