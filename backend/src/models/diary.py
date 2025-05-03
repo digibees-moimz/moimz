@@ -1,3 +1,5 @@
+# src/models/diary.py
+
 from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime

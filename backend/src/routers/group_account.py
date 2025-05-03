@@ -1,17 +1,32 @@
-from fastapi import APIRouter , HTTPException, status
-from sqlmodel import Session, select, func
+# src/routers/group_account.py
+from fastapi import APIRouter, HTTPException, status
+from sqlmodel import Session, select
 from src.core.database import engine
-from src.models.user import UserAccount
+from src.models.user import User, UserAccount
 from src.models.group_account import GroupAccount, GroupTransaction, LockIn
-from src.models.group import Group, Member
-from src.models.transaction import (
-    Transaction,               # 결제 1건
-    TransactionParticipant     # 참여자 N건
+from src.models.group import Member
+from src.models.transaction import Transaction, TransactionParticipant
+from src.schemas.group_account import (
+    GroupAccountSummary,
+    MemberLockedAmount,
+    LockInCreate,
+    LockOutCreate,
+    SpendCreate,
 )
-from src.schemas.group_account import GroupAccountSummary, MemberLockedAmount, LockInCreate, SpendCreate, LockOutCreate
+from src.routers._helpers import (
+    get_group,
+    get_group_account,
+    get_user_account,
+    group_balance,
+    locked_amounts_by_accounts,
+)
 
 router = APIRouter(tags=["Group Account"])
 
+
+# ────────────────────────────────────────────────────────────
+#  모임통장 요약
+# ────────────────────────────────────────────────────────────
 @router.get(
     "/groups/{group_id}/account/summary",
     response_model=GroupAccountSummary,
@@ -19,272 +34,221 @@ router = APIRouter(tags=["Group Account"])
     description="특정 그룹의 계좌 잔액과 사용자별 락인 금액을 포함한 요약 정보를 반환합니다.",
 )
 def get_group_account_summary(group_id: int):
-    with Session(engine) as session:
-        # 1. 그룹 존재 확인
-        group = session.get(Group, group_id)
-        if not group:
-            raise HTTPException(404, "Group not found")
+    with Session(engine) as s:
+        grp = get_group(s, group_id)
+        ga = get_group_account(s, group_id)
+        if not ga:
+            raise HTTPException(404, "GroupAccount not found")
 
-        # 2. 해당 그룹의 그룹 계좌 가져오기
-        group_account = session.exec(
-            select(GroupAccount).where(GroupAccount.group_id == group_id)
-        ).first()
+        # ① 멤버의 UserAccount-id / 이름 한꺼번에
+        ua_rows = s.exec(
+            select(UserAccount.id, User.name)
+            .join(Member, Member.user_id == UserAccount.user_id)
+            .join(User, User.id == UserAccount.user_id)
+            .where(Member.group_id == group_id)
+        ).all()  # → [(ua_id, name), …]
 
-        # 3. 그룹 계좌의 총 잔액 계산 (트랜잭션 합산 기준)
-        total_balance = session.exec(
-            select(func.sum(GroupTransaction.amount)).where(
-                GroupTransaction.group_account_id == group_account.id
-            )
-        ).one() or 0.0
+        ua_ids = [row[0] for row in ua_rows]
+        locked_map = locked_amounts_by_accounts(s, ua_ids, group_id)
 
-        # 4. 이 그룹에 소속된 모든 유저 ID 가져오기
-        member_ids = session.exec(
-            select(Member.user_id).where(Member.group_id == group_id)
-        ).all()
-
-        # 5. 각 유저의 락인 금액 계산
-        locked_rows = session.exec(
-            select(
-                GroupTransaction.user_account_id,
-                func.sum(GroupTransaction.amount)
-            )
-            .where(GroupTransaction.group_account_id == group_account.id)
-            .group_by(GroupTransaction.user_account_id)
-        ).all()
-        locked_dict = {uid: amt for uid, amt in locked_rows}
-
-        # 6. 모든 멤버에 대해 locked_amount 없으면 0으로 설정
         members = [
             MemberLockedAmount(
-                user_account_id=user_id,
-                locked_amount=locked_dict.get(user_id, 0.0)
+                user_account_id=ua_id,
+                name=name,
+                locked_amount=locked_map.get(ua_id, 0.0),
             )
-            for user_id in member_ids
+            for ua_id, name in ua_rows
         ]
 
-        # 7. 가장 적게 락인한 금액을 available_to_spend으로 계산
-        min_locked = min([m.locked_amount for m in members], default=0.0)
-        available_to_spend = min_locked * len(members)
-        
+        min_locked = min((m.locked_amount for m in members), default=0.0)
+
         return GroupAccountSummary(
-            group_account_id=group_account.id,
-            account_number=group_account.account_number,  # 이거 추가
-            total_balance=total_balance,
+            group_account_id=ga.id,
+            account_number=ga.account_number,
+            total_balance=group_balance(s, ga.id),
             members=members,
-            available_to_spend=available_to_spend
+            available_to_spend=min_locked * len(members),
         )
 
-# 락인 — 개인 입금
+
+# ────────────────────────────────────────────────────────────
+#  락인 — 개인 입금
+# ────────────────────────────────────────────────────────────
 @router.post(
     "/lockin",
     status_code=status.HTTP_201_CREATED,
     summary="락인하기",
     description="사용자가 자신의 개인 락인 계좌에 금액을 입금하고, 그룹 계좌의 잔액을 증가시킵니다.",
 )
-def lock_in(data: LockInCreate):
-    with Session(engine) as session:
-        if data.amount <= 0:
-            raise HTTPException(400, detail="입금 금액은 0보다 커야 합니다.")
+def lock_in(dto: LockInCreate):
+    if dto.amount <= 0:
+        raise HTTPException(400, "입금 금액은 0보다 커야 합니다.")
 
-        # 사용자 계좌
-        user_account = session.exec(
-            select(UserAccount).where(UserAccount.user_id == data.user_id)
-        ).first()
-        if not user_account:
-            raise HTTPException(404, "유저 계좌가 없어요")
-
-        # 그룹 계좌
-        group_account = session.exec(
-            select(GroupAccount).where(GroupAccount.group_id == data.group_id)
-        ).first()
-        if not group_account:
+    with Session(engine) as s:
+        ua = get_user_account(s, dto.user_id)
+        ga = get_group_account(s, dto.group_id)
+        if not ga:
             raise HTTPException(404, "그룹 계좌가 없어요")
 
-        # 락인 가능한 금액 확인
-        total_locked = session.exec(
-            select(func.sum(LockIn.amount)).where(
-                LockIn.user_account_id == user_account.id
-            )
-        ).one() or 0.0
-
-        available = user_account.balance - total_locked
-        if available < data.amount:
+        prev_locked = locked_amounts_by_accounts(s, [ua.id], dto.group_id).get(ua.id, 0.0)
+        if ua.balance - prev_locked < dto.amount:
             raise HTTPException(400, "락인가능 금액이 부족합니다.")
 
-        # LockIn 기록 추가
-        session.add(LockIn(
-            user_account_id=user_account.id,
-            group_id=data.group_id,
-            amount=data.amount,
-            description=data.description
-        ))
-
-        # GroupTransaction 기록도 추가
-        session.add(GroupTransaction(
-            group_account_id=group_account.id,
-            user_account_id=user_account.id,
-            amount=data.amount,
-            description=data.description or "락인 입금",
-        ))
-
-        session.commit()
+        s.add_all(
+            [
+                LockIn(
+                    user_account_id=ua.id,
+                    group_id=dto.group_id,
+                    amount=dto.amount,
+                    description=dto.description,
+                ),
+                GroupTransaction(
+                    group_account_id=ga.id,
+                    user_account_id=ua.id,
+                    amount=dto.amount,
+                    description=dto.description or "락인 입금",
+                ),
+            ]
+        )
+        s.commit()
 
         return {
-            "balance": user_account.balance,
-            "locked_balance": total_locked + data.amount,
-            "withdrawable": available - data.amount,
+            "balance": ua.balance,
+            "locked_balance": prev_locked + dto.amount,
+            "withdrawable": ua.balance - (prev_locked + dto.amount),
         }
 
-# 락인 해제제
+
+# ────────────────────────────────────────────────────────────
+#  락인 해제
+# ────────────────────────────────────────────────────────────
 @router.post(
     "/lockout",
     status_code=status.HTTP_201_CREATED,
     summary="락인 해제",
     description="사용자가 락인된 금액 중 일부를 해제하고 그룹 계좌 잔액에서 출금합니다.",
 )
-def lock_out(data: LockOutCreate):
-    with Session(engine) as session:
-        if data.amount <= 0:
-            raise HTTPException(400, detail="출금 금액은 0보다 커야 합니다.")
+def lock_out(dto: LockOutCreate):
+    if dto.amount <= 0:
+        raise HTTPException(400, "출금 금액은 0보다 커야 합니다.")
 
-        # 그룹 계좌 확인
-        ga = session.exec(
-            select(GroupAccount).where(GroupAccount.group_id == data.group_id)
-        ).first()
+    with Session(engine) as s:
+        ua = get_user_account(s, dto.user_id)
+        ga = get_group_account(s, dto.group_id)
         if not ga:
             raise HTTPException(404, "그룹 계좌가 없어요")
 
-        # 사용자 계좌 확인
-        ua = session.exec(
-            select(UserAccount).where(UserAccount.user_id == data.user_id)
-        ).first()
-        if not ua:
-            raise HTTPException(404, "유저 계좌가 없어요")
+        prev_locked = locked_amounts_by_accounts(s, [ua.id], dto.group_id).get(ua.id, 0.0)
+        if prev_locked < dto.amount:
+            raise HTTPException(400, "락인된 금액보다 많이 출금할 수 없습니다.")
 
-        # 현재 락인 총액 확인
-        total_locked = session.exec(
-            select(func.sum(LockIn.amount)).where(
-                LockIn.user_account_id == ua.id,
-                LockIn.group_id == data.group_id
-            )
-        ).one() or 0.0
+        s.add_all(
+            [
+                LockIn(
+                    user_account_id=ua.id,
+                    group_id=dto.group_id,
+                    amount=-dto.amount,
+                    description=dto.description or "락인 해제 출금",
+                ),
+                GroupTransaction(
+                    group_account_id=ga.id,
+                    user_account_id=ua.id,
+                    amount=-dto.amount,
+                    description=dto.description or "락인 해제 출금",
+                ),
+            ]
+        )
+        s.commit()
 
-        if total_locked < data.amount:
-            raise HTTPException(400, detail="락인된 금액보다 많이 출금할 수 없습니다.")
-
-        # LockIn 테이블에 음수 락인 추가
-        session.add(LockIn(
-            user_account_id=ua.id,
-            group_id=data.group_id,
-            amount=-data.amount,
-            description=data.description or "락인 해제 출금"
-        ))
-
-        # GroupTransaction 기록
-        session.add(GroupTransaction(
-            group_account_id=ga.id,
-            user_account_id=ua.id,
-            amount=-data.amount,
-            description=data.description or "락인 해제 출금"
-        ))
-
-        session.commit()
-
+        new_locked = prev_locked - dto.amount
         return {
             "balance": ua.balance,
-            "locked_balance": total_locked - data.amount,
-            "withdrawable": ua.balance - (total_locked - data.amount)
+            "locked_balance": new_locked,
+            "withdrawable": ua.balance - new_locked,
         }
 
-# 지출 — 출석자 1/N 차감
+
+# ────────────────────────────────────────────────────────────
+#  지출 — 출석자 1/N 차감
+# ────────────────────────────────────────────────────────────
 @router.post(
     "/spend",
     status_code=status.HTTP_201_CREATED,
     summary="1/N 정산 지출",
     description="출석자 기준으로 총 금액을 1/N 분할하여 그룹 계좌에서 차감하고 결제-단위 트랜잭션을 기록합니다.",
 )
-def spend(data: SpendCreate):
-    with Session(engine) as session:
-        ga = session.exec(
-            select(GroupAccount).where(GroupAccount.group_id == data.group_id)
-        ).first()
+def spend(dto: SpendCreate):
+    if dto.total_amount <= 0 or not dto.user_ids:
+        raise HTTPException(400, "지출 금액과 참여자는 필수입니다.")
+
+    per_person = dto.total_amount / len(dto.user_ids)
+
+    with Session(engine) as s:
+        ga = get_group_account(s, dto.group_id)
         if not ga:
             raise HTTPException(404, "그룹 계좌가 없어요")
 
-        per_person = data.total_amount / len(data.user_ids)
-
-        user_accounts = session.exec(
-            select(UserAccount).where(UserAccount.user_id.in_(data.user_ids))
+        # 참여자 계정 한 번에 조회
+        ua_rows = s.exec(
+            select(UserAccount)
+            .where(UserAccount.user_id.in_(dto.user_ids))
         ).all()
-        ua_map = {ua.user_id: ua for ua in user_accounts}
-        missing = set(data.user_ids) - set(ua_map.keys())
+        ua_map = {ua.user_id: ua for ua in ua_rows}
+
+        missing = set(dto.user_ids) - ua_map.keys()
         if missing:
             raise HTTPException(404, f"UserAccount(s) not found: {sorted(missing)}")
 
-        # 🔸 락인 잔액 검증
-        for uid in data.user_ids:
-            ua = ua_map[uid]
-            total_locked = session.exec(
-                select(func.sum(LockIn.amount)).where(
-                    LockIn.user_account_id == ua.id,
-                    LockIn.group_id == data.group_id
-                )
-            ).one() or 0.0
+        # 락인 잔액 검증 (집계 쿼리로 N+1 제거)
+        locked_map = locked_amounts_by_accounts(s, [ua.id for ua in ua_rows], dto.group_id)
+        for uid, ua in ua_map.items():
+            if locked_map.get(ua.id, 0.0) < per_person:
+                raise HTTPException(400, f"User {uid}의 락인 잔액 부족")
 
-            if total_locked < per_person:
-                raise HTTPException(
-                    400,
-                    detail=f"User {uid}의 락인 잔액 부족. 필요 {per_person}, 보유 {total_locked}"
-                )
-
-        # 🔸 결제 1건 생성
+        # 결제 1건 생성
         settlement = Transaction(
-            group_id=data.group_id,
-            total_amount=data.total_amount,
-            description=data.description
+            group_id=dto.group_id,
+            total_amount=dto.total_amount,
+            description=dto.description,
         )
-        session.add(settlement)
-        session.commit()
-        session.refresh(settlement)
+        s.add(settlement)
+        s.commit()
+        s.refresh(settlement)
 
-        # 🔸 참여자별 차감 처리
-        for uid in data.user_ids:
-            ua = ua_map[uid]
-            ua.balance -= per_person  # 사용자의 총 계좌 잔액 차감
+        # 참여자별 차감 기록
+        tx_parts: list[TransactionParticipant] = []
+        gtx: list[GroupTransaction] = []
+        lock_updates: list[LockIn] = []
 
-            # 🔹 LockIn 테이블에 음수 기록 추가
-            session.add(LockIn(
-                user_account_id=ua.id,
-                group_id=data.group_id,
-                amount=-per_person,
-                description=data.description or "공동 지출 1/N"
-            ))
-
-            # 🔹 모임 통장 거래 기록
-            session.add(GroupTransaction(
-                group_account_id=ga.id,
-                user_account_id=ua.id,
-                amount=-per_person,
-                description=data.description or "공동 지출 1/N"
-            ))
-
-            # 🔹 참여자 트랜잭션 기록
-            session.add(TransactionParticipant(
-                transaction_id=settlement.id,
-                user_id=uid,
-                amount=per_person
-            ))
-
-        session.commit()
-
-        total_balance = session.exec(
-            select(func.sum(GroupTransaction.amount)).where(
-                GroupTransaction.group_account_id == ga.id
+        for uid, ua in ua_map.items():
+            ua.balance -= per_person
+            tx_parts.append(
+                TransactionParticipant(
+                    transaction_id=settlement.id, user_id=uid, amount=per_person
+                )
             )
-        ).one() or 0.0
+            gtx.append(
+                GroupTransaction(
+                    group_account_id=ga.id,
+                    user_account_id=ua.id,
+                    amount=-per_person,
+                    description=dto.description or "공동 지출 1/N",
+                )
+            )
+            lock_updates.append(
+                LockIn(
+                    user_account_id=ua.id,
+                    group_id=dto.group_id,
+                    amount=-per_person,
+                    description=dto.description or "공동 지출 1/N",
+                )
+            )
+
+        s.add_all(tx_parts + gtx + lock_updates)
+        s.commit()
 
         return {
             "transaction_id": settlement.id,
-            "group_balance": total_balance,
-            "per_person": per_person
+            "group_balance": group_balance(s, ga.id),
+            "per_person": per_person,
         }

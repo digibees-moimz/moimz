@@ -1,3 +1,5 @@
+# src/models/face.py
+
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime, timezone
 from typing import Optional, List

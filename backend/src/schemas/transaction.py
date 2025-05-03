@@ -1,4 +1,4 @@
-# schemas/transaction.py
+# src/schemas/transaction.py
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime

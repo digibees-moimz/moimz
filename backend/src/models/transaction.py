@@ -1,3 +1,5 @@
+# src/models/transaction.py
+
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from datetime import datetime

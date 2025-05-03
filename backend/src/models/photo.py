@@ -1,4 +1,5 @@
 # backend/src/models/photo.py
+
 from sqlmodel import SQLModel, Field, Column
 from sqlalchemy import JSON
 from typing import Optional

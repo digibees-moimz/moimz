@@ -1,8 +1,11 @@
+# src/schemas/group_account.py
+
 from pydantic import BaseModel, computed_field
 from typing import List
 
 class MemberLockedAmount(BaseModel):
     user_account_id: int
+    name: str
     locked_amount: float
 
     class Config:
