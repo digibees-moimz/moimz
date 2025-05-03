@@ -48,3 +48,14 @@ export function usePersons(groupId: number) {
 
   return { persons, loading, error };
 }
+
+export function useAlbumData(tab: string, groupId: number) {
+  const { persons, loading: l1 } = usePersons(tab === "인물" ? groupId : 0);
+  // const { events, loading: l2 } = useEvents(tab === "일정" ? groupId : 0);
+  // const { places, loading: l3 } = usePlaces(tab === "지역" ? groupId : 0);
+
+  if (tab === "인물") return { data: persons, loading: l1 };
+  // if (tab === "일정") return { data: events, loading: l2 };
+  // if (tab === "지역") return { data: places, loading: l3 };
+  return { data: [], loading: false };
+}
