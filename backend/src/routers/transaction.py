@@ -15,9 +15,9 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
     summary="특정 모임 거래내역 조회",
 )
 def get_transactions(group_id: int, session: Session = Depends(get_session)):
-    rows = session.exec(
+    rows = session.execute(
         select(Transaction)
         .where(Transaction.group_id == group_id)
         .options(selectinload(Transaction.participants))
-    ).all()
+    ).scalars().all()
     return rows

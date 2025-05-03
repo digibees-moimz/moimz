@@ -31,7 +31,7 @@ def save_diary(data: DiaryCreate):
 )
 def get_group_diaries(group_id: int):
     with Session(engine) as session:
-        diaries = session.exec(
+        diaries = session.execute(
             select(Diary).where(Diary.group_id == group_id)
-        ).all()
+        ).scalars().all()
         return diaries

@@ -10,7 +10,7 @@ def create_event(db: Session, event_data: EventCreate) -> Event:
     return new_event
 
 def get_group_events(db: Session, group_id: int):
-    return db.exec(select(Event).where(Event.group_id == group_id)).all()
+    return db.execute(select(Event).where(Event.group_id == group_id)).scalars().all()
 
 def update_event(db: Session, event_id: int, update_data: dict):
     event = db.get(Event, event_id)

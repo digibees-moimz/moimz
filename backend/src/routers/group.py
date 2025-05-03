@@ -93,18 +93,15 @@ def update_group(group_id: int, dto: GroupUpdate):
 def join_group(dto: GroupJoin):
     with Session(engine) as s:
         # 유저·그룹 존재 검사
-        if not s.exec(select(exists().where(User.id == dto.user_id))).one():
+        if not s.execute(select(exists().where(User.id == dto.user_id))).scalar_one():
             raise HTTPException(404, "존재하지 않는 유저입니다.")
-        if not s.exec(select(exists().where(Group.id == dto.group_id))).one():
+        if not s.execute(select(exists().where(Group.id == dto.group_id))).scalar_one():
             raise HTTPException(404, "존재하지 않는 모임입니다.")
 
         # 중복 가입 검사
-        dup = s.exec(
-            select(exists().where(
-                Member.user_id == dto.user_id,
-                Member.group_id == dto.group_id,
-            ))
-        ).one()
+        dup = s.execute(
+            select(exists().where(Member.user_id == dto.user_id, Member.group_id == dto.group_id))
+        ).scalar_one()
         if dup:
             raise HTTPException(400, "이미 가입한 모임입니다.")
 
@@ -121,10 +118,10 @@ def join_group(dto: GroupJoin):
 )
 def leave_group(dto: GroupLeave):
     with Session(engine) as s:
-        member = s.exec(
+        member = s.execute(
             select(Member)
             .where(Member.user_id == dto.user_id, Member.group_id == dto.group_id)
-        ).first()
+        ).scalars().first()
         if not member:
             raise HTTPException(404, "가입된 모임이 없습니다.")
 
@@ -140,7 +137,8 @@ def leave_group(dto: GroupLeave):
     description="특정 그룹에 소속된 멤버들의 목록을 조회합니다.",
 )
 def get_group_members(group_id: int, session: Session = Depends(get_session)):
-    return session.exec(select(Member).where(Member.group_id == group_id)).all()
+    get_group(session, group_id) 
+    return session.execute(select(Member).where(Member.group_id == group_id)).scalars().all()
 
 
 # ───────────────────────── 멤버 ID만 조회
@@ -151,7 +149,7 @@ def get_group_members(group_id: int, session: Session = Depends(get_session)):
     description="특정 그룹의 멤버 user_id 목록을 조회합니다.",
 )
 def get_member_ids(group_id: int, session: Session = Depends(get_session)):
-    ids = session.exec(
+    ids = session.execute(
         select(Member.user_id).where(Member.group_id == group_id)
     ).scalars().all()
     if not ids:

@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 from sqlmodel import Session, select
 from src.core.database import engine
-from src.models.photo import Photo, Face, FaceRepresentative, Face, PersonInfo
+from src.models.photo import Photo, Face, FaceRepresentative, PersonInfo
 from src.models.user import User
 from src.services.face.engine import face_engine  # 얼굴 탐지 + 임베딩
 from src.constants import BASE_DIR
@@ -76,13 +76,13 @@ def process_faces_for_photo(session: Session, group_id: int, photo_id: int) -> i
 
 # 대표 벡터 갱신 함수 (최근 N개의 벡터를 평균)
 def update_face_representative(session: Session, group_id: int, person_id: int):
-    faces = session.exec(
+    faces = session.execute(
         select(Face)
         .join(Photo, Photo.id == Face.photo_id)
         .where(Face.person_id == person_id, Photo.group_id == group_id)
         .order_by(Face.id.desc())
         .limit(RECENT_FACE_LIMIT)
-    ).all()
+    ).scalars().all()
 
     if not faces:
         return False
@@ -128,9 +128,9 @@ def classify_face(
     embedding: np.ndarray,
     threshold: float = MATCH_THRESHOLD,
 ) -> int:
-    reps = session.exec(
+    reps = session.execute(
         select(FaceRepresentative).where(FaceRepresentative.group_id == group_id)
-    ).all()
+    ).scalars().all()
 
     best_person_id = 0
     best_sim = -1.0
@@ -155,7 +155,7 @@ def classify_face(
 # 새로운 person_id 부여 및 대표 벡터 생성
 def assign_new_person_ids(session: Session, group_id: int):
     with Session(engine) as session:
-        unknown_faces = session.exec(select(Face).where(Face.person_id == 0)).all()
+        unknown_faces = session.execute(select(Face).where(Face.person_id == 0)).scalars().all()
 
         if not unknown_faces:
             print("✅ 미분류 얼굴 없음")
@@ -177,7 +177,7 @@ def assign_new_person_ids(session: Session, group_id: int):
         assigned = [False] * len(embeddings)
 
         # 등록 사용자와 비교하여 person_id 우선 반영
-        for user in session.exec(select(User)).all():
+        for user in session.execute(select(User)).scalars().all():
             try:
                 cluster_dir = f"{BASE_DIR}/media/users/faces/{user.id}"
                 if not os.path.exists(cluster_dir):
@@ -229,11 +229,11 @@ def assign_new_person_ids(session: Session, group_id: int):
                 print(f"[등록 사용자 {user.id}] 실패: {e}")
 
         # next_person_id 계산 (1000부터 시작)
-        existing_ids = session.exec(
+        existing_ids = session.execute(
             select(FaceRepresentative.person_id).where(
                 FaceRepresentative.group_id == group_id
             )
-        ).all()
+        ).scalars().all()
         flattened_ids = [p[0] if isinstance(p, tuple) else p for p in existing_ids]
         auto_ids = [pid for pid in flattened_ids if pid >= 1000]
         next_person_id = max(auto_ids) + 1 if auto_ids else 1000
