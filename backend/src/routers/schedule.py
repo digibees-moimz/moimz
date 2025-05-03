@@ -1,9 +1,18 @@
 # src/routers/schedule.py
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from datetime import datetime
 from sqlmodel import Session, select
 from src.core.database import get_session
-from src.models.schedule import Schedule
-from src.schemas.schedule import ScheduleCreate, ScheduleRead, ScheduleUpdate
+from sqlalchemy.orm import selectinload
+from src.models.schedule import Schedule, ScheduleComment
+from src.schemas.schedule import (
+    ScheduleCreate, 
+    ScheduleRead, 
+    ScheduleUpdate, 
+    ScheduleCommentCreate, 
+    ScheduleCommentRead,
+    ScheduleCalendarRead,
+)
 
 router = APIRouter(prefix="/schedules", tags=["Schedules"])
 
@@ -37,13 +46,46 @@ def get_schedules_by_group(group_id: int, session: Session = Depends(get_session
     return session.execute(select(Schedule).where(Schedule.group_id == group_id)).scalars().all()
 
 @router.get(
+    "/group/{group_id}/monthly",
+    response_model=list[ScheduleCalendarRead],
+    summary="월별 일정 조회",
+    description="특정 그룹의 특정 연/월에 해당하는 일정들을 조회합니다.",
+)
+def get_monthly_schedules(
+    group_id: int,
+    year: int = Query(..., description="조회할 연도"),
+    month: int = Query(..., description="조회할 월"),
+    session: Session = Depends(get_session),
+):
+    start_date = datetime(year, month, 1)
+    end_date = datetime(year + int(month == 12), month % 12 + 1, 1)
+
+    stmt = (
+        select(Schedule)
+        .where(Schedule.group_id == group_id)
+        .where(Schedule.date >= start_date)
+        .where(Schedule.date < end_date)
+    )
+
+    schedules = session.execute(stmt).scalars().all()
+    return schedules
+
+@router.get(
     "/{schedule_id}",
     response_model=ScheduleRead,
     summary="단일 일정 상세 조회",
     description="단일 모임 일정의 상세 정보를 조회합니다.",
 )
 def get_schedule(schedule_id: int, session: Session = Depends(get_session)):
-    return get_schedule_or_404(session, schedule_id)
+    stmt = (
+        select(Schedule)
+        .where(Schedule.id == schedule_id)
+        .options(selectinload(Schedule.comments))
+    )
+    schedule = session.execute(stmt).scalars().first()
+    if not schedule:
+        raise HTTPException(404, "일정이 존재하지 않습니다.")
+    return schedule
 
 @router.patch(
     "/{schedule_id}",
@@ -84,3 +126,45 @@ def mark_schedule_done(schedule_id: int, session: Session = Depends(get_session)
     session.commit()
     session.refresh(schedule)
     return {"message": "일정을 완료 처리했습니다.", "schedule_id": schedule.id}
+
+
+@router.post(
+    "/{schedule_id}/comments",
+    response_model=ScheduleCommentRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="댓글 등록",
+    description="해당 일정에 댓글을 작성합니다.",
+)
+def add_comment(
+    schedule_id: int,
+    comment_in: ScheduleCommentCreate,
+    session: Session = Depends(get_session),
+):
+    # 일정 존재 확인
+    schedule = get_schedule_or_404(session, schedule_id)
+
+    # 댓글 저장
+    comment = ScheduleComment(
+        schedule_id=schedule_id,
+        user_id=comment_in.user_id,
+        content=comment_in.content,
+    )    
+    session.add(comment)
+    session.commit()
+    session.refresh(comment)
+    return comment
+
+@router.get(
+    "/{schedule_id}/comments",
+    response_model=list[ScheduleCommentRead],
+    summary="댓글 목록 조회",
+    description="특정 일정에 달린 댓글들을 모두 조회합니다.",
+)
+def get_comments(schedule_id: int, session: Session = Depends(get_session)):
+    return (
+        session.execute(
+            select(ScheduleComment).where(ScheduleComment.schedule_id == schedule_id)
+        )
+        .scalars()
+        .all()
+    )

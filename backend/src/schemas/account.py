@@ -11,7 +11,7 @@ class AccountCreate(BaseModel):
     balance: float = 0.0
 
 class LockInSummary(BaseModel):
-    group_id: int
+    group_account_id: int
     amount: float  # 합산된 금액만
 
     class Config:

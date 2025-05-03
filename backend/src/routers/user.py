@@ -73,11 +73,11 @@ def get_user_detail(user_id: int):
             raise HTTPException(404, "Account not found")
 
         rows = s.execute(
-            select(LockIn.group_id, func.sum(LockIn.amount))
+            select(LockIn.group_account_id, func.sum(LockIn.amount))
             .where(LockIn.user_account_id == ua.id)
-            .group_by(LockIn.group_id)
+            .group_by(LockIn.group_account_id)
         ).all()
-        locked_map = {gid: amt for gid, amt in rows}
+        locked_map = {ga_id: amt for ga_id, amt in rows}
         total_locked = sum(locked_map.values())
 
         return UserDetail(
@@ -92,8 +92,8 @@ def get_user_detail(user_id: int):
                 balance=ua.balance,
                 locked_balance=total_locked,
                 lockins=[
-                    LockInSummary(group_id=gid, amount=amt)
-                    for gid, amt in locked_map.items()
+                LockInSummary(group_account_id=ga_id, amount=amt)
+                for ga_id, amt in locked_map.items()
                     if amt > 0
                 ],
             ),

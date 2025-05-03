@@ -11,7 +11,6 @@ class Group(SQLModel, table=True):
     image_url: Optional[str] = Field(default=None, description="그룹 대표 이미지 URL")
 
     account: Optional["GroupAccount"] = Relationship(back_populates="group")
-    lockins: list["LockIn"] = Relationship(back_populates="group")
 
 class Member(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

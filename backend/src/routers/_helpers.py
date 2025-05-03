@@ -25,16 +25,17 @@ def get_user_account(session: Session, user_id: int) -> UserAccount:
         raise HTTPException(404, "유저 계좌가 없어요")
     return ua
 
-def locked_amounts_by_accounts(session: Session, ua_ids: list[int], group_id: int):
-    # 계좌별 락인 총합을 한 방에!
-    rows = session.execute(
-        select(LockIn.user_account_id, func.sum(LockIn.amount))
-        .where(
-            LockIn.user_account_id.in_(ua_ids),
-            LockIn.group_id == group_id
-        )
-        .group_by(LockIn.user_account_id)
-    ).all()
+def locked_amounts_by_accounts(session: Session, user_account_ids: list[int], group_account_id: int) -> dict[int, float]:
+    rows = (
+        session.execute(
+            select(LockIn.user_account_id, func.sum(LockIn.amount))
+            .where(
+                LockIn.user_account_id.in_(user_account_ids),
+                LockIn.group_account_id == group_account_id,
+            )
+            .group_by(LockIn.user_account_id)
+        ).all()
+    )
     return {uid: amt for uid, amt in rows}
 
 def group_balance(session: Session, group_account_id: int) -> float:
