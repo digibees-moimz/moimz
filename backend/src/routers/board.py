@@ -31,9 +31,9 @@ def create_board_post(data: BoardCreate):
 )
 def get_group_board_posts(group_id: int):
     with Session(engine) as session:
-        posts = session.exec(
+        posts = session.execute(
             select(Board).where(Board.group_id == group_id)
-        ).all()
+        ).scalars().all()
         return posts
 
 @router.get(

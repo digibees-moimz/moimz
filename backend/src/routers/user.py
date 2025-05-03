@@ -24,7 +24,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 )
 def create_user(dto: UserCreate):
     with Session(engine) as s:
-        if s.exec(select(exists().where(User.email == dto.email))).one():
+        if s.execute(select(exists().where(User.email == dto.email))).scalar_one():
             raise HTTPException(400, "Email already registered")
 
         user = User(name=dto.name, email=dto.email)
@@ -68,11 +68,11 @@ def get_user_detail(user_id: int):
         if not user:
             raise HTTPException(404, "User not found")
 
-        ua = s.exec(select(UserAccount).where(UserAccount.user_id == user_id)).first()
+        ua = s.execute(select(UserAccount).where(UserAccount.user_id == user_id)).scalars().first()
         if not ua:
             raise HTTPException(404, "Account not found")
 
-        rows = s.exec(
+        rows = s.execute(
             select(LockIn.group_id, func.sum(LockIn.amount))
             .where(LockIn.user_account_id == ua.id)
             .group_by(LockIn.group_id)

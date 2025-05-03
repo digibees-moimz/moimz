@@ -41,7 +41,7 @@ def get_group_account_summary(group_id: int):
             raise HTTPException(404, "GroupAccount not found")
 
         # ① 멤버의 UserAccount-id / 이름 한꺼번에
-        ua_rows = s.exec(
+        ua_rows = s.execute(
             select(UserAccount.id, User.name)
             .join(Member, Member.user_id == UserAccount.user_id)
             .join(User, User.id == UserAccount.user_id)
@@ -189,10 +189,10 @@ def spend(dto: SpendCreate):
             raise HTTPException(404, "그룹 계좌가 없어요")
 
         # 참여자 계정 한 번에 조회
-        ua_rows = s.exec(
+        ua_rows = s.execute(
             select(UserAccount)
             .where(UserAccount.user_id.in_(dto.user_ids))
-        ).all()
+        ).scalars().all()
         ua_map = {ua.user_id: ua for ua in ua_rows}
 
         missing = set(dto.user_ids) - ua_map.keys()

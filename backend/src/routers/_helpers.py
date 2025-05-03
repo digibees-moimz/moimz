@@ -1,4 +1,5 @@
 # src/routers/_helpers.py  (한 파일에 같이 둬도 OK)
+from fastapi import HTTPException
 from sqlmodel import Session, select, func
 from src.models import (
     Group, GroupAccount, UserAccount,
@@ -12,21 +13,21 @@ def get_group(session: Session, group_id: int) -> Group:
     return grp
 
 def get_group_account(session: Session, group_id: int) -> GroupAccount:
-    return session.exec(
+    return session.execute(
         select(GroupAccount).where(GroupAccount.group_id == group_id)
-    ).first()
+    ).scalars().first()
 
 def get_user_account(session: Session, user_id: int) -> UserAccount:
-    ua = session.exec(
+    ua = session.execute(
         select(UserAccount).where(UserAccount.user_id == user_id)
-    ).first()
+    ).scalars().first()
     if not ua:
         raise HTTPException(404, "유저 계좌가 없어요")
     return ua
 
 def locked_amounts_by_accounts(session: Session, ua_ids: list[int], group_id: int):
     # 계좌별 락인 총합을 한 방에!
-    rows = session.exec(
+    rows = session.execute(
         select(LockIn.user_account_id, func.sum(LockIn.amount))
         .where(
             LockIn.user_account_id.in_(ua_ids),
@@ -37,7 +38,7 @@ def locked_amounts_by_accounts(session: Session, ua_ids: list[int], group_id: in
     return {uid: amt for uid, amt in rows}
 
 def group_balance(session: Session, group_account_id: int) -> float:
-    return session.exec(
+    return session.execute(
         select(func.coalesce(func.sum(GroupTransaction.amount), 0))
         .where(GroupTransaction.group_account_id == group_account_id)
-    ).one()
+    ).scalars().one()

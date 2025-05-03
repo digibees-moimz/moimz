@@ -74,7 +74,7 @@ def upload_photo(
 )
 def get_group_photos(group_id: int):
     with Session(engine) as session:
-        photos = session.exec(select(Photo).where(Photo.group_id == group_id)).all()
+        photos = session.execute(select(Photo).where(Photo.group_id == group_id)).scalars().all()
         return photos
 
 
@@ -94,7 +94,7 @@ def get_persons_in_group(group_id: int):
             .having(func.count(Face.id) >= 5)
         )
 
-        person_ids = session.exec(stmt).all()  # -> List[int]
+        person_ids = session.execute(stmt).scalars().all()  # -> List[int]
         persons = []
         for person_id in person_ids:
             info = session.get(PersonInfo, (group_id, person_id))
@@ -121,7 +121,7 @@ def get_faces_by_person(group_id: int, person_id: int):
             .join(Photo, Photo.id == Face.photo_id)
             .where(Photo.group_id == group_id, Face.person_id == person_id)
         )
-        results = session.exec(stmt).all()
+        results = session.execute(stmt).all()
 
         seen_photo_ids = set()
         filtered_faces = []
@@ -166,11 +166,11 @@ def get_face_thumbnail(person_id: int, group_id: int):
 
     # 없으면 새로 생성
     with Session(engine) as session:
-        valid = session.exec(
+        valid = session.execute(
             select(Face)
             .join(Photo, Photo.id == Face.photo_id)
             .where(Face.person_id == person_id, Photo.group_id == group_id)
-        ).first()
+        ).scalars().first()
 
         if not valid:
             return
@@ -184,11 +184,11 @@ def get_face_thumbnail(person_id: int, group_id: int):
             rep_vec = pickle.loads(rep.vector)
 
             # 해당 person_id의 얼굴들 조회
-            faces = session.exec(
+            faces = session.execute(
                 select(Face)
                 .join(Photo, Face.photo_id == Photo.id)
                 .where(Face.person_id == person_id, Photo.group_id == group_id)
-            ).all()
+            ).scalars().all()
 
             best_face = None
             best_sim = -1.0
@@ -215,12 +215,12 @@ def get_face_thumbnail(person_id: int, group_id: int):
 
         else:
             # 최근 얼굴
-            face = session.exec(
+            face = session.execute(
                 select(Face)
                 .join(Photo, Face.photo_id == Photo.id)
                 .where(Face.person_id == person_id, Photo.group_id == group_id)
                 .order_by(Face.id.desc())
-            ).first()
+            ).scalars().first()
 
             if not face:
                 return FileResponse(fallback_path, media_type="image/png")
@@ -293,11 +293,11 @@ def merge_persons(
             target, source = person_id_1, person_id_2
 
         # Face.person_id 갱신
-        faces = session.exec(
+        faces = session.execute(
             select(Face)
             .join(Photo)
             .where(Photo.group_id == group_id, Face.person_id == source)
-        ).all()
+        ).scalars().all()
         for face in faces:
             face.person_id = target
             session.add(face)
@@ -327,13 +327,13 @@ def merge_persons(
         delete_merged_files(group_id, source)
 
         # 병합 대상 DB 삭제
-        session.exec(
+        session.execute(
             delete(FaceRepresentative).where(
                 FaceRepresentative.group_id == group_id,
                 FaceRepresentative.person_id == source,
             )
         )
-        session.exec(
+        session.execute(
             delete(PersonInfo).where(
                 PersonInfo.group_id == group_id, PersonInfo.person_id == source
             )
