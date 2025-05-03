@@ -1,15 +1,21 @@
 "use client";
 
-import { FilterToggleGroup } from "@/components/album/FilterToggleGroup";
-import { AddButton } from "@/components/album/AddButton";
 import { useState } from "react";
+import { useParams } from "next/navigation";
+import { useUserStore } from "@/stores/userStore";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { FilterToggleGroup } from "@/components/album/FilterToggleGroup";
+import { AddUploadButton } from "@/components/album/AddUploadButton";
 
 const tabs = ["인물", "일정", "지역"] as const;
 type TabType = (typeof tabs)[number];
 
 export default function AlbumPage() {
+  const { groupId } = useParams(); // URL에서 가져옴 → string
+  const { userId } = useUserStore();
+
   const [selectedTab, setSelectedTab] = useState<TabType>("인물");
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
@@ -22,7 +28,7 @@ export default function AlbumPage() {
       />
 
       {/* 추가 버튼 */}
-      <AddButton />
+      <AddUploadButton groupId={Number(groupId)} userId={userId} />
     </>
   );
 }
