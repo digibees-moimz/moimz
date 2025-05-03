@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Photo, Person } from "@/types/album";
-import { uploadPhotos, fetchPersons } from "@/api/album";
+import { Photo, Person, Face, PersonFacesResult } from "@/types/album";
+import { uploadPhotos, fetchPersons, fetchPersonFaces } from "@/api/album";
 
 export function usePhotoUpload() {
   const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
@@ -58,4 +58,28 @@ export function useAlbumData(tab: string, groupId: number) {
   // if (tab === "일정") return { data: events, loading: l2 };
   // if (tab === "지역") return { data: places, loading: l3 };
   return { data: [], loading: false };
+}
+
+export function usePersonFaces(
+  groupId: number,
+  personId: number
+): PersonFacesResult {
+  const [faces, setFaces] = useState<Face[]>([]);
+  const [count, setCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!groupId || !personId) return;
+
+    fetchPersonFaces(groupId, personId)
+      .then((res) => {
+        setFaces(res.faces);
+        setCount(res.count);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [groupId, personId]);
+
+  return { faces, count, loading, error };
 }

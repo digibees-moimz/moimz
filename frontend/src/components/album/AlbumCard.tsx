@@ -14,9 +14,13 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
   thumbnail_url,
 }) => {
   return (
-    <Link href={`/groups/${group_id}/album/persons/${person_id}`}>
+    <Link
+      href={`/groups/${group_id}/album/${person_id}?name=${encodeURIComponent(
+        name
+      )}`}
+    >
       <div className="cursor-pointer">
-        <div className="bg-white h-25 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white h-25 rounded-xl shadow-md overflow-hidden">
           <div className="w-full h-25 relative">
             <img
               alt={name}

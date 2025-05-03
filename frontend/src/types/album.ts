@@ -14,9 +14,22 @@ export interface Face {
   image_url: string;
 }
 
+export interface PersonFacesResponse {
+  group_id: number;
+  person_id: number;
+  count: number;
+  faces: Face[];
+}
+
+export interface PersonFacesResult {
+  faces: Face[];
+  count: number;
+  loading: boolean;
+  error: string | null;
+}
+
 export interface Person {
   person_id: number;
   name: string;
   thumbnail_url: string;
 }
-

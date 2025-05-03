@@ -13,7 +13,7 @@ interface UploadPhotsProps {
 
 export const AddUploadButton = ({ userId, groupId }: UploadPhotsProps) => {
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const { upload, loading } = usePhotoUpload();
+  const { upload } = usePhotoUpload();
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
