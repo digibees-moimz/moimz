@@ -1,5 +1,9 @@
 import { useRef } from "react";
 import { usePhotoUpload } from "@/hooks/useAlbum";
+import {
+  showSuccessToast,
+  showErrorToast,
+} from "@/components/ui-components/ui/Toast";
 import { ImPlus } from "react-icons/im";
 
 interface UploadPhotsProps {
@@ -14,8 +18,18 @@ export const AddUploadButton = ({ userId, groupId }: UploadPhotsProps) => {
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const files = Array.from(e.target.files);
-    await upload(groupId, userId, files);
-    e.target.value = ""; // 같은 파일 또 올릴 수 있도록 초기화
+
+    try {
+      await upload(groupId, userId, files);
+      showSuccessToast(`사진 ${files.length}장을 앨범에 추가했어요`);
+    } catch (err) {
+      showErrorToast(
+        `업로드 중에 문제가 발생했습니다.
+        잠시 후 다시 시도해주세요.`
+      );
+    } finally {
+      e.target.value = ""; // 같은 파일 또 올릴 수 있도록 초기화
+    }
   };
 
   return (

@@ -4,7 +4,7 @@ import axios from "axios";
 // baseURL은 환경변수에서 가져오되 fallback 도 설정
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
-  timeout: 5000,
+  timeout: 15000, // 15초
   withCredentials: true, // 필요시 쿠키/세션 인증 처리
   headers: {
     "Content-Type": "application/json",
