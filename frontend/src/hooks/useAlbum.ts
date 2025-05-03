@@ -1,9 +1,9 @@
 // src/hooks/usePhotoUpload.ts
 "use client";
 
-import { useState } from "react";
-import { Photo } from "@/types/album";
-import { uploadPhotos } from "@/api/album";
+import { useState, useEffect } from "react";
+import { Photo, Person } from "@/types/album";
+import { uploadPhotos, fetchPersons } from "@/api/album";
 
 export function usePhotoUpload() {
   const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
@@ -30,4 +30,21 @@ export function usePhotoUpload() {
   };
 
   return { uploadedPhotos, upload, loading, error };
+}
+
+export function usePersons(groupId: number) {
+  const [persons, setPersons] = useState<Person[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!groupId) return;
+
+    fetchPersons(groupId)
+      .then(setPersons)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [groupId]);
+
+  return { persons, loading, error };
 }

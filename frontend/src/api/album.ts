@@ -1,5 +1,5 @@
 import axios from "@/lib/axios";
-import { Photo } from "@/types/album";
+import { Photo, Person } from "@/types/album";
 
 export async function uploadPhotos(
   groupId: number,
@@ -24,4 +24,11 @@ export async function uploadPhotos(
   );
 
   return response.data.uploaded;
+}
+
+export async function fetchPersons(groupId: number): Promise<Person[]> {
+  const response = await axios.get<{ group_id: number; persons: Person[] }>(
+    `/api/photos/groups/${groupId}/persons`
+  );
+  return response.data.persons;
 }

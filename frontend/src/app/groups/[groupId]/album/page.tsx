@@ -11,11 +11,9 @@ const tabs = ["인물", "일정", "지역"] as const;
 type TabType = (typeof tabs)[number];
 
 export default function AlbumPage() {
-  const { groupId } = useParams(); // URL에서 가져옴 → string
+  const { groupId } = useParams();
   const { userId } = useUserStore();
-
   const [selectedTab, setSelectedTab] = useState<TabType>("인물");
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
@@ -26,7 +24,7 @@ export default function AlbumPage() {
         selected={selectedTab}
         onChange={(val) => setSelectedTab(val)}
       />
-
+      
       {/* 추가 버튼 */}
       <AddUploadButton groupId={Number(groupId)} userId={userId} />
     </>
