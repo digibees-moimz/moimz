@@ -1,3 +1,5 @@
+# src/routers/diary.py
+
 from fastapi import APIRouter, status
 from src.models.diary import Diary
 from src.schemas.diary import DiaryCreate, DiaryRead

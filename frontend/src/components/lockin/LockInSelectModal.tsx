@@ -2,6 +2,7 @@
 import { GroupType } from "@/types/group";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { Button } from "../ui-components/ui/Button";
 
 export interface LockInSelectModalProps {
   groups: GroupType[];
@@ -45,14 +46,15 @@ export default function LockInSelectModal({
               </Typography.Caption>
             </button>
           ))}
+          <Button
+            variant="white"
+            size="md"
+            onClick={onClose}
+            className="mt-4 bg-gray-200 text-gray-700 hover:bg-gray-300"
+          >
+            닫기
+          </Button>
         </Flex.ColStartCenter>
-
-        <button
-          onClick={onClose}
-          className="mt-4 w-full text-sm bg-gray-200 py-2 rounded-lg"
-        >
-          닫기
-        </button>
       </div>
     </Flex.ColCenter>
   );

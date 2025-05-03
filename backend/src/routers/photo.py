@@ -1,4 +1,5 @@
-# backend/src/routers/photo.py
+# src/routers/photo.py
+
 import os, cv2, pickle, numpy as np
 from fastapi import APIRouter, UploadFile, File, Form, Query, HTTPException
 from fastapi.responses import FileResponse

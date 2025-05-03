@@ -5,6 +5,7 @@ import { useState } from "react";
 import { GroupType } from "@/types/group";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { Button } from "../ui-components/ui/Button";
 
 export interface LockInActionModalProps {
   group: GroupType;
@@ -22,6 +23,7 @@ export default function LockInActionModal({
   onLockOut,
 }: LockInActionModalProps) {
   const [amount, setAmount] = useState<string>("");
+  const numericAmount = Number(amount);
 
   return (
     <Flex.RowCenter className="fixed inset-0 bg-black/50 z-50">
@@ -54,23 +56,26 @@ export default function LockInActionModal({
 
         {/* 액션 버튼 */}
         <Flex.RowBetweenCenter className="gap-2">
-          <button
-            onClick={() => onLockIn(Number(amount))}
-            disabled={Number(amount) <= 0}
-            className="flex-1 bg-blue-500 text-white py-2 rounded-md disabled:opacity-40"
+          <Button
+            variant="primary"
+            size="md"
+            className="flex-1"
+            onClick={() => onLockIn(numericAmount)}
+            isDisabled={numericAmount <= 0}
           >
             추가 락인
-          </button>
-
-          <button
-            onClick={() => onLockOut(Number(amount))}
-            disabled={
-              Number(amount) <= 0 || Number(amount) > currentLockedAmount
+          </Button>
+          <Button
+            variant="destructive"
+            size="md"
+            className="flex-1"
+            onClick={() => onLockOut(numericAmount)}
+            isDisabled={
+              numericAmount <= 0 || numericAmount > currentLockedAmount
             }
-            className="flex-1 bg-gray-300 text-black py-2 rounded-md disabled:opacity-40"
           >
             락인 해제
-          </button>
+          </Button>
         </Flex.RowBetweenCenter>
 
         {/* 닫기 */}
