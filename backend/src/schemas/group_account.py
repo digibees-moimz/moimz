@@ -22,13 +22,13 @@ class GroupAccountSummary(BaseModel):
         orm_mode = True
 
 class LockInCreate(BaseModel):
-    group_id: int
+    group_account_id: int
     user_id: int         # 누가 락인했는지
     amount: float        # 락인 금액 (양수)
     description: str = "락인"
 
 class LockOutCreate(BaseModel):
-    group_id: int
+    group_account_id: int  
     user_id: int
     amount: float
     description: str = "락인 해제"

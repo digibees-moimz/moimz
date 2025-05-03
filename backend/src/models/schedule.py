@@ -1,6 +1,6 @@
 # src/models/schedule.py
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional
 from datetime import datetime
 
@@ -14,3 +14,14 @@ class Schedule(SQLModel, table=True):
     is_done: bool = False          # 완료 여부
     description: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    comments: list["ScheduleComment"] = Relationship(back_populates="schedule")
+
+class ScheduleComment(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    schedule_id: int = Field(foreign_key="schedule.id")  # 어느 일정의 댓글인지
+    user_id: int = Field(foreign_key="user.id")           # 누가 썼는지
+    content: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    schedule: Optional["Schedule"] = Relationship(back_populates="comments")

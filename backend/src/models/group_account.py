@@ -11,6 +11,7 @@ class GroupAccount(SQLModel, table=True):
     account_number: str = Field(..., unique=True, description="모임 계좌번호")
 
     group: Optional["Group"] = Relationship(back_populates="account")
+    lockins: list["LockIn"] = Relationship(back_populates="group_account")
 
 class GroupTransaction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -23,9 +24,9 @@ class GroupTransaction(SQLModel, table=True):
 class LockIn(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_account_id: int = Field(foreign_key="useraccount.id")
-    group_id: int = Field(foreign_key="group.id")
+    group_account_id: int = Field(foreign_key="groupaccount.id")
     amount: float
     description: str = Field(default="락인")  
 
     user_account: Optional["UserAccount"] = Relationship(back_populates="lockins")
-    group: Optional["Group"] = Relationship(back_populates="lockins")
+    group_account: Optional["GroupAccount"] = Relationship(back_populates="lockins")
