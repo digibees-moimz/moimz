@@ -1,5 +1,11 @@
 import axios from "@/lib/axios";
-import { Photo, Person, PersonFacesResponse } from "@/types/album";
+import {
+  Photo,
+  Person,
+  PersonFacesResponse,
+  UpdatePersonNamePayload,
+  UpdatePersonNameResponse,
+} from "@/types/album";
 
 export async function uploadPhotos(
   groupId: number,
@@ -40,5 +46,24 @@ export async function fetchPersonFaces(
   const response = await axios.get<PersonFacesResponse>(
     `/api/photos/groups/${groupId}/persons/${personId}`
   );
+  return response.data;
+}
+
+export async function updatePersonName({
+  group_id,
+  person_id,
+  new_name,
+}: UpdatePersonNamePayload): Promise<UpdatePersonNameResponse> {
+  const formData = new FormData();
+  formData.append("new_name", new_name);
+
+  const response = await axios.patch<UpdatePersonNameResponse>(
+    `/api/photos/groups/${group_id}/persons/${person_id}/name`,
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    }
+  );
+
   return response.data;
 }

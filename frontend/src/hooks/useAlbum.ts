@@ -2,8 +2,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Photo, Person, Face, PersonFacesResult } from "@/types/album";
-import { uploadPhotos, fetchPersons, fetchPersonFaces } from "@/api/album";
+import {
+  Photo,
+  Person,
+  Face,
+  PersonFacesResult,
+  UpdatePersonNamePayload,
+  UpdatePersonNameResponse,
+} from "@/types/album";
+import {
+  uploadPhotos,
+  fetchPersons,
+  fetchPersonFaces,
+  updatePersonName,
+} from "@/api/album";
 
 export function usePhotoUpload() {
   const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
@@ -82,4 +94,26 @@ export function usePersonFaces(
   }, [groupId, personId]);
 
   return { faces, count, loading, error };
+}
+
+export function useUpdatePersonName() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const update = async (
+    payload: UpdatePersonNamePayload
+  ): Promise<UpdatePersonNameResponse | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await updatePersonName(payload);
+    } catch (err: any) {
+      setError(err.message || "이름 수정 중 오류 발생");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { update, loading, error };
 }

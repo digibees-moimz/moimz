@@ -33,3 +33,16 @@ export interface Person {
   name: string;
   thumbnail_url: string;
 }
+
+export interface UpdatePersonNamePayload {
+  group_id: number;
+  person_id: number;
+  new_name: string;
+}
+
+export interface UpdatePersonNameResponse {
+  message: string;
+  group_id: number;
+  person_id: number;
+  name: string;
+}
