@@ -11,12 +11,7 @@ interface Props {
   schedules: ScheduleItem[];
 }
 
-export default function CalendarGrid({
-  groupId,
-  year,
-  month,
-  schedules,
-}: Props) {
+export default function CalendarGrid({ year, month, schedules }: Props) {
   // 1) 해당 달의 일 수
   const daysInMonth = new Date(year, month, 0).getDate();
   // 2) 1일의 요일 인덱스 (0=일,1=월,...6=토)

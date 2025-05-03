@@ -8,14 +8,12 @@ import {
   endOfMonth,
   format,
   getDay,
-  isEqual,
   isToday,
   parse,
   startOfToday,
   isBefore,
   parseISO,
 } from "date-fns";
-import { ko } from "date-fns/locale";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { useMonthlySchedules } from "@/hooks/useMonthlySchedules";
 import type { ScheduleItem } from "@/types/schedule";
