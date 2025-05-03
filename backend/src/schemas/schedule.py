@@ -4,6 +4,7 @@ from datetime import datetime
 
 class ScheduleCreate(BaseModel):
     group_id: int
+    user_id: int
     title: str
     date: datetime
     location: Optional[str] = None
@@ -12,6 +13,7 @@ class ScheduleCreate(BaseModel):
 class ScheduleRead(BaseModel):
     id: int
     group_id: int
+    user_id: int
     title: str
     date: datetime
     location: Optional[str]

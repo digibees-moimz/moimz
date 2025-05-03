@@ -10,7 +10,7 @@ router = APIRouter(prefix="/board", tags=["Board"])
     "",
     response_model=BoardRead,
     status_code=status.HTTP_201_CREATED,
-    summary="Create Board Post",
+    summary="커뮤니티 게시글 작성",
     description="새 게시글을 작성합니다.",
 )
 def create_board_post(data: BoardCreate):
@@ -24,7 +24,7 @@ def create_board_post(data: BoardCreate):
 @router.get(
     "/group/{group_id}",
     response_model=list[BoardRead],
-    summary="Get Group Board Posts",
+    summary="해당 모임 커뮤니티 게시글 조회",
     description="특정 그룹에 속한 게시글 목록을 조회합니다.",
 )
 def get_group_board_posts(group_id: int):
@@ -37,7 +37,7 @@ def get_group_board_posts(group_id: int):
 @router.get(
     "/{post_id}",
     response_model=BoardRead,
-    summary="Get Board Post",
+    summary="특정 게시글 조회",
     description="게시글 ID를 기준으로 특정 게시글의 상세 내용을 조회합니다.",
 )
 def get_board_post(post_id: int):
@@ -50,7 +50,7 @@ def get_board_post(post_id: int):
 @router.patch(
     "/{post_id}",
     response_model=BoardRead,
-    summary="Update Board Post",
+    summary="게시글 수정",
     description="게시글 ID를 기준으로 게시글 내용을 수정합니다.",
 )
 def update_board_post(post_id: int, update_data: dict):
@@ -66,7 +66,7 @@ def update_board_post(post_id: int, update_data: dict):
 
 @router.delete(
     "/{post_id}",
-    summary="Delete Board Post",
+    summary="게시글 삭제",
     description="게시글 ID를 기준으로 게시글을 삭제합니다.",
 )
 def delete_board_post(post_id: int):

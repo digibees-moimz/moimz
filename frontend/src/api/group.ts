@@ -1,8 +1,7 @@
-// src/api/group.ts
-// import axios from "@/lib/axios";
+import axios from "@/lib/axios";
 import { GroupType } from "@/types/group";
-import { mockGroups } from "@/mocks/group"; // mock 데이터 import
 
-export async function fetchGroups(): Promise<GroupType[]> {
-  return new Promise((resolve) => setTimeout(() => resolve(mockGroups), 300));
+export async function fetchGroups(userId: number): Promise<GroupType[]> {
+  const response = await axios.get<GroupType[]>(`api/users/${userId}/groups`);
+  return response.data;
 }
