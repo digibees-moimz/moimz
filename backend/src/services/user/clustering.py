@@ -2,58 +2,73 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-import io
+import os, io, pickle
 import numpy as np
 
 import matplotlib.pyplot as plt
 from fastapi.responses import StreamingResponse
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from src.constants import BASE_DIR
 
 
-def update_user_clusters(
-    face_db: Dict[int, Dict[str, Any]],
-    user_id: int,
-    threshold: int = 5,  # 클러스터링에 필요한 최소 데이터 수(임계치)
-    n_clusters: int = 6,  # 클러스터의 개수(k)
-):
-    # 사용자 원본 벡터 리스트(raw 데이터) 가져오기
-    user_data = face_db.get(user_id)
+def get_latest_cluster_dir(user_id: int) -> Optional[str]:
+    base_dir = os.path.join(BASE_DIR, "media", "users", "faces", str(user_id))
+    if not os.path.exists(base_dir):
+        return None
+    video_dirs = sorted(os.listdir(base_dir), reverse=True)
+    for vid in video_dirs:
+        cluster_dir = os.path.join(base_dir, vid, "clusters")
+        if os.path.exists(os.path.join(cluster_dir, "centroids.pkl")):
+            return cluster_dir
+    return None
 
-    if not user_data or "raw" not in user_data:
-        return f"사용자 {user_id}의 raw 데이터가 없습니다."
 
-    raw = user_data["raw"]
-    if len(raw) < threshold:
-        return f"사용자 {user_id}의 raw 벡터 수가 {threshold}개 미만이므로 클러스터링 중단."
-
+def cluster_raw_vectors(raw: list[np.ndarray], n_clusters: int = 6) -> dict:
     # 사용자 등록 데이터가 임계치(5개 이상)을 넘어가면 클러스터링 수행
     X = np.array(raw)
     kmeans = KMeans(n_clusters=n_clusters, random_state=42)
     kmeans.fit(X)
-
-    face_db[user_id]["clusters"] = {
+    return {
         "centroids": kmeans.cluster_centers_.tolist(),  # 각 클러스터의 중심 벡터
         "labels": kmeans.labels_.tolist(),  # 각 벡터가 어떤 클러스터에 속하는지 (0, 1, 2 등)
     }
-    return f"사용자 {user_id} 클러스터링 완료: {n_clusters}개 클러스터 생성."
 
 
 # 클러스터링 시각화
-def visualize_clusters(face_db: Dict[int, Dict[str, Any]], user_id: int):
-    user_data = face_db.get(user_id)
-    if not user_data or "clusters" not in user_data or "raw" not in user_data:
-        return "시각화할 클러스터링 데이터가 없습니다."
+def visualize_clusters(user_id: int):
+    cluster_dir = get_latest_cluster_dir(user_id)
+    if not cluster_dir:
+        return "사용자의 클러스터링 결과가 존재하지 않습니다."
 
-    raw = np.array(user_data["raw"])
-    labels = np.array(user_data["clusters"]["labels"])
-    centroids = np.array(user_data["clusters"]["centroids"])
+    # 1. 중심 벡터 로딩
+    with open(os.path.join(cluster_dir, "centroids.pkl"), "rb") as f:
+        centroids = pickle.load(f)  # List[np.ndarray]
+
+    # 2. 클러스터별 벡터 로딩
+    raw = []
+    labels = []
+    for i in range(len(centroids)):
+        path = os.path.join(cluster_dir, f"cluster_{i}.pkl")
+        if os.path.exists(path):
+            with open(path, "rb") as f:
+                vecs = pickle.load(f)
+                raw.extend(vecs)
+                labels.extend([i] * len(vecs))
+
+    if not raw:
+        return "벡터 데이터가 없습니다."
+
+    raw = np.array(raw)
+    centroids = np.array(centroids)
 
     combined = np.vstack([raw, centroids])
     perp = max(2, min(30, (len(combined) - 1) // 3))
+    emb2d = TSNE(n_components=2, random_state=42, perplexity=perp).fit_transform(
+        combined
+    )
     tsne = TSNE(n_components=2, random_state=42, perplexity=perp)
-    emb2d = tsne.fit_transform(combined)
 
     raw2d = emb2d[: len(raw)]
     cent2d = emb2d[len(raw) :]

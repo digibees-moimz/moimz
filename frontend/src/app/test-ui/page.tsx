@@ -1,12 +1,51 @@
+"use client";
+
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { Grid } from "@/components/ui-components/layout/Grid";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { Button } from "@/components/ui-components/ui/Button";
+import { IoSettingsOutline } from "react-icons/io5";
 
 export default function TestGridPage() {
   const items = Array.from({ length: 10 }, (_, idx) => idx + 1);
 
   return (
     <>
+      <Flex.RowCenter className="gap-3">
+        <Button>기본 + Flex</Button>
+        <Button>기본 + Flex</Button>
+        <Button>기본 + Flex</Button>
+      </Flex.RowCenter>
+      <div className="space-y-3">
+        <Button>기본 버튼</Button>
+        <Button variant="secondary">세컨더리 버튼</Button>
+        <Button variant="destructive">삭제</Button>
+        <Button variant="white" className="border border-gray-200">
+          흰색 (원래는 테두리 없음)
+        </Button>
+
+        <Flex.RowCenter className="gap-3">
+          <Button size="sm" className="">
+            sm
+          </Button>
+          <Button size="md">md</Button>
+          <Button size="lg">lg</Button>
+        </Flex.RowCenter>
+
+        <Button fullWidth={false}>fullWidth=false</Button>
+        <Button isDisabled onClick={() => alert("버튼이 클릭됐습니다!")}>
+          isDisabled
+        </Button>
+        <Button
+          leftIcon={<IoSettingsOutline size={24} />}
+          onClick={() => alert("버튼이 클릭됐습니다!")}
+        >
+        왼쪽 아이콘
+        </Button>
+        <Button onClick={() => alert("버튼이 클릭됐습니다!")}>
+          <IoSettingsOutline size={24} />
+        </Button>
+      </div>
       <section>
         <div className="space-y-6">
           <Typography.Display>메인 타이틀</Typography.Display>

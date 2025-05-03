@@ -17,3 +17,6 @@ chrome_profiles/
 # 가상환경
 venv/
 .venv/
+
+# Fonts (임시로 충돌 피하기)
+backend/fonts/
