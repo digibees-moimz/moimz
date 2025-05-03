@@ -63,7 +63,7 @@ def create_group(dto: GroupCreate):
     description="전체 모임(Group) 목록을 조회합니다.",
 )
 def get_groups(session: Session = Depends(get_session)):
-    rows = session.exec(select(Group)).all()
+    rows = session.execute(select(Group)).scalars().all()
     return [GroupRead.model_validate(r, from_attributes=True) for r in rows]
 
 

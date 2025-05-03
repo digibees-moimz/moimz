@@ -109,13 +109,21 @@ def get_user_detail(user_id: int):
 )
 def get_user_groups(user_id: int):
     with Session(engine) as s:
-        ua = s.exec(select(UserAccount).where(UserAccount.user_id == user_id)).first()
+        ua = s.execute(select(UserAccount).where(UserAccount.user_id == user_id)).scalars().first()
         if not ua:
             raise HTTPException(404, "유저 계좌 없음")
 
         GA = GroupAccount
         GT = GroupTransaction
-
+        
+        # 멤버 카운트를 위한 서브쿼리
+        member_count_subq = (
+            select(func.count(Member.id))
+            .where(Member.group_id == Group.id)
+            .correlate(Group)
+            .scalar_subquery()
+        )
+        
         stmt = (
             select(
                 Group.id,
@@ -123,7 +131,7 @@ def get_user_groups(user_id: int):
                 Group.category,
                 Group.image_url,
                 GA.account_number,
-                func.count(Member.id).label("member_count"),
+                member_count_subq.label("member_count"),  # 서브쿼리로 정확한 멤버 수 계산
                 func.coalesce(func.sum(GT.amount), 0).label("group_balance"),
                 func.coalesce(
                     func.sum(
@@ -142,7 +150,7 @@ def get_user_groups(user_id: int):
             .group_by(Group.id, GA.account_number)
         )
 
-        rows = s.exec(stmt).all()
+        rows = s.execute(stmt).all()
         return [
             UserGroupSummary(
                 id=r.id,
