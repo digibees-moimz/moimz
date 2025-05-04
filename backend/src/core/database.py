@@ -23,8 +23,3 @@ def get_session():
         yield db
     finally:
         db.close()
-
-
-def get_sqlmodel_session():
-    with SQLModelSession(engine) as session:
-        yield session

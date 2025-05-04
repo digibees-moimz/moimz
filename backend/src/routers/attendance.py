@@ -5,17 +5,19 @@ from fastapi import APIRouter, UploadFile, HTTPException, File, Query, Depends
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session
 
-from src.core.database import get_sqlmodel_session, get_session
+from src.core.database import get_session
 from src.schemas.attendance import (
     AttendanceResponse,
     ManualAttendanceRequest,
     ManualAttendanceResponse,
     AttendanceCompleteRequest,
+    AttendanceRecordRead,
 )
 from src.services.attendance.services import (
     run_photo_attendance,
     run_manual_attendance,
     save_attendance,
+    get_attendance_record,
 )
 from src.constants import BASE_DIR
 
@@ -53,16 +55,30 @@ def get_attendance_image(check_id: str):
 )
 def manual_attendance(
     data: ManualAttendanceRequest,
-    session: Session = Depends(get_sqlmodel_session),
+    session: Session = Depends(get_session),
 ):
     return run_manual_attendance(session, data)
 
 
-@router.post("/attendance/complete")
+@router.post(
+    "/attendance/complete",
+    summary="참석자 명단 DB 저장",
+)
 def complete_attendance(
     dto: AttendanceCompleteRequest,
     session: Session = Depends(get_session),
-    summary="참석자 명단 DB 저장",
 ):
     attendance_id = save_attendance(session, dto)
     return {"attendance_id": attendance_id}
+
+
+@router.get(
+    "/attendance/{attendance_id}",
+    response_model=AttendanceRecordRead,
+    summary="출석 완료 정보 조회",
+)
+def read_attendance_record(
+    attendance_id: int,
+    session: Session = Depends(get_session),
+):
+    return get_attendance_record(session, attendance_id)

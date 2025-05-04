@@ -50,3 +50,18 @@ class AttendanceCompleteRequest(BaseModel):
     user_ids: List[int]
     check_type: str  # "photo" 또는 "manual"
     image_url: Optional[str] = None
+
+
+class SavedAttendanceItem(BaseModel):
+    user_id: int
+    name: str
+    locked_amount: float
+
+
+class AttendanceRecordRead(BaseModel):
+    attendance_id: int
+    attendees: List[SavedAttendanceItem]
+    count: int
+    available_to_spend: float
+    check_type: str
+    image_url: Optional[str] = None
