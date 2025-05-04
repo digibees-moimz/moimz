@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 import os
 
 from src.schemas.attendance import AttendanceResponse
-from src.services.attendance import run_attendance_check
+from src.services.attendance.services import run_attendance_check
 from src.constants import BASE_DIR
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
