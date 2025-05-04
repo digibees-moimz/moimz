@@ -11,3 +11,7 @@ class AttendanceRecord(SQLModel, table=True):
     attendee_user_ids: List[int] = Field(default_factory=list, sa_column=Column(JSON))
     check_type: str = Field(..., description="출석 체크 방식 (photo/manual)")
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    qrcode_token: Optional[str] = Field(default=None, description="QR 고유 토큰")
+    qrcode_created_at: Optional[datetime] = Field(
+        default=None, description="QR 생성 시간"
+    )
