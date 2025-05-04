@@ -8,6 +8,7 @@ from src.routers import (
     account,
     group,
     transaction,
+    spend,
     group_account,
     board,
     photo,
@@ -42,6 +43,7 @@ app.include_router(user.router, prefix="/api")
 app.include_router(account.router, prefix="/api")
 app.include_router(group.router, prefix="/api")
 app.include_router(transaction.router, prefix="/api")
+app.include_router(spend.router, prefix="/api")
 app.include_router(group_account.router, prefix="/api")
 app.include_router(board.router, prefix="/api")
 app.include_router(photo.router, prefix="/api")
