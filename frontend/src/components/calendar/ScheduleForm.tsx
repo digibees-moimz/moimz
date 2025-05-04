@@ -9,7 +9,6 @@ import type { ScheduleItem } from "@/types/schedule";
 import { Typography } from "../ui-components/typography/Typography";
 import { Grid } from "../ui-components/layout/Grid";
 import { Flex } from "../ui-components/layout/Flex";
-import CalendarSelector from "./CalendarSelector";
 import CalendarSelectorModal from "./CalendarSelectorModal";
 import TimePickerModal from "./TimePickerModal";
 
@@ -60,8 +59,12 @@ export default function ScheduleForm({ onCreated }: ScheduleFormProps) {
           onCreated?.(item);
           router.push(`/groups/${groupId}/calendar`);
         },
-        onError: (err: any) => {
-          alert(err.message || "일정 등록 실패");
+        onError: (err: unknown) => {
+          if (err instanceof Error) {
+            alert(err.message);
+          } else {
+            alert("일정 등록 실패");
+          }
         },
       }
     );
@@ -126,8 +129,6 @@ export default function ScheduleForm({ onCreated }: ScheduleFormProps) {
               <TimePickerModal
                 onClose={() => setShowTimePicker(false)}
                 onSelect={(hour, minute) => {
-                  const meridiem = hour >= 12 ? "오후" : "오전";
-                  const h = hour % 12 === 0 ? 12 : hour % 12;
                   const formatted = `${String(hour).padStart(2, "0")}:${String(
                     minute
                   ).padStart(2, "0")}`;

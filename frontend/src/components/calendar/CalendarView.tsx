@@ -56,15 +56,15 @@ export default function CalendarView({ groupId }: { groupId: number }) {
   });
 
   // 요일별 클래스 관리
-  const colStartClasses = [
-    "",
-    "col-start-2",
-    "col-start-3",
-    "col-start-4",
-    "col-start-5",
-    "col-start-6",
-    "col-start-7",
-  ];
+  // const colStartClasses = [
+  //   "",
+  //   "col-start-2",
+  //   "col-start-3",
+  //   "col-start-4",
+  //   "col-start-5",
+  //   "col-start-6",
+  //   "col-start-7",
+  // ];
 
   const previousMonth = () => {
     const firstDayPrevMonth = add(firstDayCurrentMonth, { months: -1 });

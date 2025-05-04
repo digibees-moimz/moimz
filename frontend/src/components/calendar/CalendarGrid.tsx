@@ -1,5 +1,5 @@
 // src/components/calendar/CalendarGrid.tsx
-import { getDay, format, isSameDay } from "date-fns";
+import { getDay, format } from "date-fns";
 
 interface CalendarGridProps {
   days: Date[];
@@ -22,7 +22,6 @@ const colStartClasses = [
 
 export default function CalendarGrid({
   days,
-  selectedDate,
   isLoading,
   onSelect,
   isDateHasEvent,

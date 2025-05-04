@@ -22,7 +22,8 @@ export const AddUploadButton = ({ userId, groupId }: UploadPhotsProps) => {
     try {
       await upload(groupId, userId, files);
       showSuccessToast(`사진 ${files.length}장을 앨범에 추가했어요`);
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error("업로드 실패:", err); // ✅ err 사용
       showErrorToast(
         `업로드 중에 문제가 발생했습니다.
         잠시 후 다시 시도해주세요.`
