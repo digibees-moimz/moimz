@@ -11,12 +11,14 @@ from src.services.face.engine import face_engine
 from src.constants import BASE_DIR, MATCH_THRESHOLD_ATTENDANCE
 from src.core.database import engine
 from src.routers._helpers import locked_amounts_by_accounts
+from src.models.attendance import AttendanceRecord
 from src.models.group import Member
 from src.models.user import User, UserAccount
 from src.schemas.attendance import (
     ManualAttendanceRequest,
     ManualAttendanceResponse,
     ManualAttendanceItem,
+    AttendanceCompleteRequest,
 )
 
 ATTEND_DIR = os.path.join(BASE_DIR, "media", "attendance")
@@ -236,3 +238,15 @@ def run_manual_attendance(
         count=len(attendees),
         available_to_spend=available_to_spend,
     )
+
+
+def save_attendance(session: Session, dto: AttendanceCompleteRequest) -> int:
+    record = AttendanceRecord(
+        group_id=dto.group_id,
+        attendee_user_ids=dto.user_ids,
+        check_type=dto.check_type,
+    )
+    session.add(record)
+    session.commit()
+    session.refresh(record)
+    return record.id

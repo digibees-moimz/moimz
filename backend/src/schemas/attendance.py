@@ -1,6 +1,6 @@
 # backend/src/schemas/attendance.py
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 
 class BaseAttendanceItem(BaseModel):
@@ -42,3 +42,11 @@ class ManualAttendanceResponse(BaseModel):
     available_to_spend: float = Field(
         ..., description="참석자 기준 1/N 가능한 최대 지출 금액"
     )
+
+
+# 출석 완료 시 정보 저장
+class AttendanceCompleteRequest(BaseModel):
+    group_id: int
+    user_ids: List[int]
+    check_type: str  # "photo" 또는 "manual"
+    image_url: Optional[str] = None
