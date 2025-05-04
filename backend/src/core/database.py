@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, create_engine
+from sqlmodel import Session as SQLModelSession
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
@@ -22,3 +23,8 @@ def get_session():
         yield db
     finally:
         db.close()
+
+
+def get_sqlmodel_session():
+    with SQLModelSession(engine) as session:
+        yield session
