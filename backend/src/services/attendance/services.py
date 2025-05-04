@@ -1,4 +1,6 @@
 # backend/src/services/attendance/services.py
+import qrcode
+from datetime import datetime
 import os, uuid, time, cv2, pickle
 import numpy as np
 from typing import Dict, Any, List
@@ -25,6 +27,9 @@ from src.schemas.attendance import (
 
 ATTEND_DIR = os.path.join(BASE_DIR, "media", "attendance")
 os.makedirs(ATTEND_DIR, exist_ok=True)
+
+QR_DIR = os.path.join(BASE_DIR, "media", "qrcodes")
+os.makedirs(QR_DIR, exist_ok=True)
 
 
 def get_latest_cluster_dir(user_id: int) -> str:
@@ -309,3 +314,28 @@ def update_attendance(
     return record
 
 
+def generate_qr_for_attendance(session: Session, attendance_id: int) -> str:
+    record = session.get(AttendanceRecord, attendance_id)
+    if not record:
+        raise HTTPException(404, "출석 정보가 없습니다.")
+
+    # 이미 QR이 생성되어 있고 아직 유효하면 그대로 사용
+    if record.qrcode_token and record.qrcode_created_at:
+        elapsed = datetime.utcnow() - record.qrcode_created_at
+        if elapsed.total_seconds() < 1800:  # 30분
+            return record.qrcode_token  # 재사용
+
+    # 새 QR 토큰 생성
+    token = uuid.uuid4().hex
+    record.qrcode_token = token
+    record.qrcode_created_at = datetime.utcnow()
+    session.add(record)
+    session.commit()
+
+    # QR 이미지 생성
+    qr_data = f"moiMz|{record.group_id}|{token}"
+    qr_img = qrcode.make(qr_data)
+    qr_path = os.path.join(QR_DIR, f"{token}.png")
+    qr_img.save(qr_path)
+
+    return token

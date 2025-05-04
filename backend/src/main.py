@@ -29,7 +29,7 @@ app.add_middleware(
 )
 
 # 정적 파일 제공 - backend/media 디렉토리
-os.makedirs("backend/media", exist_ok=True)
+os.makedirs("src/backend/media", exist_ok=True)
 app.mount("/files", StaticFiles(directory="media"), name="media")
 
 
