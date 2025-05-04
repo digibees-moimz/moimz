@@ -154,8 +154,9 @@ async def run_photo_attendance(file: UploadFile, group_id: int) -> Dict[str, Any
             )
         duration = round(time.time() - start, 3)
 
-        # 총 결제 가능 금액 계산
-        total_available_amount = sum(att["locked_amount"] for att in attendees)
+        # 결제 가능 금액 계산
+        min_locked = min((att["locked_amount"] for att in attendees), default=0.0)
+        available_to_spend = min_locked * len(attendees)
 
         # 6) 이미지에 박스·레이블 그리기
         # OpenCV → PIL 변환
@@ -188,7 +189,7 @@ async def run_photo_attendance(file: UploadFile, group_id: int) -> Dict[str, Any
         return {
             "attendees": attendees,
             "count": len(attendees),
-            "total_available_amount": total_available_amount,
+            "available_to_spend": available_to_spend,
             "duration": duration,
             "image_url": f"/api/attendance/photo/{check_id}",
         }
@@ -226,8 +227,12 @@ def run_manual_attendance(
             )
         )
 
+    # 결제 가능 금액
+    min_locked = min((att.locked_amount for att in attendees), default=0.0)
+    available_to_spend = min_locked * len(attendees)
+
     return ManualAttendanceResponse(
         attendees=attendees,
         count=len(attendees),
-        total_available_amount=sum(a.locked_amount for a in attendees),
+        available_to_spend=available_to_spend,
     )
