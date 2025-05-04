@@ -17,3 +17,5 @@ class AttendanceRecord(SQLModel, table=True):
     qrcode_created_at: Optional[datetime] = Field(
         default=None, description="QR 생성 시간"
     )
+    qrcode_used: bool = Field(default=False, description="QR 사용 여부")
+    is_closed: bool = Field(default=False, description="출석 세션 종료 여부 (QR 재생성 차단용)")

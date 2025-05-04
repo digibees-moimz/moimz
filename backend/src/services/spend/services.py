@@ -105,13 +105,35 @@ def spend_via_token(session: Session, qr_token: str, dto: SpendByTokenRequest):
         .first()
     )
     if not record:
-        raise HTTPException(404, "QR 토큰이 유효하지 않습니다.")
+        raise HTTPException(404, "유효하지 않은 QR 코드입니다.")
 
+    # 중복 방지
+    if record.qrcode_used:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "이미 사용된 QR 코드입니다. 다시 생성해 주세요.",
+                "next": f"/api/attendance/{record.id}/qr",
+            },
+        )
+
+    # 유효 시간 체크
     if (
         not record.qrcode_created_at
         or (datetime.utcnow() - record.qrcode_created_at).total_seconds() > 1800
     ):
-        raise HTTPException(400, "QR 토큰이 만료되었습니다.")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "만료된 QR 코드입니다. 다시 생성해 주세요.",
+                "next": f"/api/attendance/{record.id}/qr",
+            },
+        )
+
+    # 사용 처리 (락 처리로 race condition 방지)
+    record.qrcode_used = True
+    session.add(record)
+    session.commit()
 
     spend_dto = SpendCreate(
         group_id=record.group_id,

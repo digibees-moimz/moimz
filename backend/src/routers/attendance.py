@@ -106,7 +106,7 @@ def update_attendance_route(
 
 
 @router.post(
-    "/attendance/{attendance_id}/qr",
+    "/{attendance_id}/qr",
     summary="출석 정보 기반 QR 코드 생성",
     description="출석 완료(attendance_id 기준) 정보를 바탕으로 QR 코드 토큰을 생성하고, URL을 반환합니다.",
 )
