@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { useScheduleDetail } from "@/hooks/useScheduleDetail";
-import type { ScheduleDetail as DetailType } from "@/types/schedule";
 
 export default function ScheduleDetail() {
   const { scheduleId } = useParams();
@@ -59,7 +58,7 @@ export default function ScheduleDetail() {
       {/* 장소 및 지도 */}
       <div className="w-full space-y-2">
         <Typography.BodyLarge>
-          {schedule.description || "모임 일정입니다다"}
+          {schedule.description || "모임 일정입니다"}
         </Typography.BodyLarge>
         <Typography.BodySmall>
           일시:{" "}
@@ -83,9 +82,9 @@ export default function ScheduleDetail() {
       {/* 댓글 */}
       <div className="w-full space-y-4">
         <Typography.Heading3>댓글</Typography.Heading3>
-        {schedule.comments.length === 0 ? (
+        {schedule.comments && schedule.comments.length === 0 ? (
           <Typography.BodySmall>댓글이 없습니다.</Typography.BodySmall>
-        ) : (
+        ) : schedule.comments ? (
           schedule.comments.map((c) => (
             <Flex.RowStartCenter key={c.id} className="gap-3">
               {/* <img src={`/api/users/${c.user_id}/avatar`} alt="user avatar" className="w-8 h-8 rounded-full" /> */}
@@ -105,6 +104,10 @@ export default function ScheduleDetail() {
               </Flex.ColStartCenter>
             </Flex.RowStartCenter>
           ))
+        ) : (
+          <Typography.BodySmall>
+            댓글 정보를 불러오는 중입니다.
+          </Typography.BodySmall>
         )}
       </div>
     </Flex.ColStartCenter>

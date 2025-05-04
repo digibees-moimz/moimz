@@ -9,20 +9,23 @@ import {
   format,
   getDay,
   isToday,
+  isSameDay,
   parse,
   startOfToday,
-  isBefore,
   parseISO,
 } from "date-fns";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { useMonthlySchedules } from "@/hooks/useMonthlySchedules";
 import type { ScheduleItem } from "@/types/schedule";
+import EventList from "./EventList"; // 새로 만들 컴포넌트
+import CalendarGrid from "./CalendarGrid";
 
 export default function CalendarView({ groupId }: { groupId: number }) {
   const today = startOfToday();
   const [currentMonth, setCurrentMonth] = useState(
     format(today, "yyyy년 MM월")
   );
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
 
   // 실제 날짜 연산을 수행할 때 필요한 Date 객체 생성
   const firstDayCurrentMonth = parse(currentMonth, "yyyy년 MM월", today);
@@ -36,10 +39,14 @@ export default function CalendarView({ groupId }: { groupId: number }) {
     month
   );
 
-  const eventMap = new Map<string, ScheduleItem>();
+  // 날짜별 일정 매핑
+  const eventsByDate = new Map<string, ScheduleItem[]>();
   schedules.forEach((s) => {
     const key = format(parseISO(s.date), "yyyy-MM-dd");
-    eventMap.set(key, s);
+    if (!eventsByDate.has(key)) {
+      eventsByDate.set(key, []);
+    }
+    eventsByDate.get(key)!.push(s);
   });
 
   // 시작 날짜와 종료 날짜 사이의 모든 날짜를 포함하는 배열을 생성
@@ -71,141 +78,105 @@ export default function CalendarView({ groupId }: { groupId: number }) {
 
   // 날짜 선택 함수
   const handleSelectDate = (day: Date) => {
-    // 오늘 날짜 이전을 선택하려는 경우 return
-    if (isBefore(day, today)) return;
-
-    // 선택한 날짜로 이동
-    window.location.href = `/groups/${groupId}/calendar/${day.getDate()}`;
+    setSelectedDate(day);
   };
 
   const isDateHasEvent = (day: Date): boolean => {
     const key = format(day, "yyyy-MM-dd");
-    return eventMap.has(key);
+    return eventsByDate.has(key) && eventsByDate.get(key)!.length > 0;
   };
 
   const getDayClass = (day: Date): string => {
-    const isBeforeToday = isBefore(day, today);
     const hasEvent = isDateHasEvent(day);
+    const isSunday = getDay(day) === 0;
+    const isSaturday = getDay(day) === 6;
+    const isSelected = isSameDay(day, selectedDate);
 
     return [
-      isToday(day) && "text-[#22BD9C] font-bold",
-      isBeforeToday && "text-gray-400", // 오늘 날짜 이전은 회색으로 표시
-      hasEvent && "bg-[#E3F7F4] text-[#22BD9C]", // 이벤트 있는 날짜는 연한 민트색 배경에 민트색 텍스트
-      getDay(day) === 0 && !isBeforeToday && !hasEvent && "text-rose-400", // 일요일
-      getDay(day) === 6 && !isBeforeToday && !hasEvent && "text-blue-400",
+      isToday(day) && "font-bold", // 오늘 날짜는 볼드 처리
+      isSelected && "border-2 border-[#22BD9C]", // 선택된 날짜는 테두리 추가
+      hasEvent && "bg-[#E3F7F4] cursor-pointer", // 이벤트 있는 날짜는 연한 민트색 배경과 커서 포인터
+      isSunday && "text-rose-400", // 일요일은 빨간색
+      isSaturday && "text-blue-400", // 토요일은 파란색
+      !isSunday && !isSaturday && !isToday(day) && !hasEvent && "text-gray-400", // 일반 날짜 중 이벤트가 없는 경우만 회색 처리
       "mx-auto flex h-8 w-8 items-center justify-center rounded-full",
     ]
       .filter(Boolean)
       .join(" ");
   };
 
-  // 일정 제목 표시 함수
-  const getEventTitle = (day: Date): string | null => {
-    const key = format(day, "yyyy-MM-dd");
-    const event = eventMap.get(key);
-    if (event) {
-      return event.title.length > 6
-        ? event.title.slice(0, 6) + "…"
-        : event.title;
-    }
-    return null;
+  // 선택된 날짜의 일정 목록 가져오기
+  const getSelectedDateEvents = (): ScheduleItem[] => {
+    const key = format(selectedDate, "yyyy-MM-dd");
+    return eventsByDate.get(key) || [];
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 relative">
-      {/* 연도 + 월 + 버튼 */}
-      <div className="flex justify-between items-center mb-4">
-        <button
-          type="button"
-          onClick={previousMonth}
-          className="p-2 hover:text-[#22BD9C] transition-colors"
-          disabled={isLoading}
-        >
-          <span className="sr-only">이전달</span>
-          <FaChevronLeft size={16} aria-hidden="true" />
-        </button>
-        <h2 className="text-lg font-medium">
-          {format(firstDayCurrentMonth, "yyyy년 MM월")}
-        </h2>
-        <button
-          type="button"
-          onClick={nextMonth}
-          className="p-2 hover:text-[#22BD9C] transition-colors"
-          disabled={isLoading}
-        >
-          <span className="sr-only">다음달</span>
-          <FaChevronRight size={16} aria-hidden="true" />
-        </button>
-      </div>
-
-      {/* 요일 */}
-      <div className="grid grid-cols-7 text-sm font-medium text-center text-gray-500 border-b pb-2 mb-2">
-        {["일", "월", "화", "수", "목", "금", "토"].map((day, index) => (
-          <div
-            key={index}
-            className={
-              index === 0 ? "text-rose-400" : index === 6 ? "text-blue-400" : ""
-            }
+    <div className="max-w-md mx-auto relative">
+      {/* 캘린더 부분 */}
+      <div className="p-4">
+        {/* 연도 + 월 + 버튼 */}
+        <div className="flex justify-between items-center mb-4">
+          <button
+            type="button"
+            onClick={previousMonth}
+            className="p-2 hover:text-[#22BD9C] transition-colors"
+            disabled={isLoading}
           >
-            {day}
-          </div>
-        ))}
-      </div>
+            <span className="sr-only">이전달</span>
+            <FaChevronLeft size={16} aria-hidden="true" />
+          </button>
+          <h2 className="text-lg font-medium">
+            {format(firstDayCurrentMonth, "yyyy년 MM월")}
+          </h2>
+          <button
+            type="button"
+            onClick={nextMonth}
+            className="p-2 hover:text-[#22BD9C] transition-colors"
+            disabled={isLoading}
+          >
+            <span className="sr-only">다음달</span>
+            <FaChevronRight size={16} aria-hidden="true" />
+          </button>
+        </div>
 
-      {/* 날짜 */}
-      <div className="relative min-h-[280px]">
-        {/* 로딩 오버레이 */}
-        {isLoading && (
-          <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
-            <div className="flex flex-col items-center">
-              <div className="flex space-x-1">
-                <div
-                  className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
-                  style={{ animationDelay: "0s" }}
-                ></div>
-                <div
-                  className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                ></div>
-                <div
-                  className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
-                  style={{ animationDelay: "0.4s" }}
-                ></div>
-              </div>
-              <span className="text-sm text-[#22BD9C] mt-2">로딩 중...</span>
-            </div>
-          </div>
-        )}
-
-        <ul className="grid grid-cols-7 gap-1 text-sm">
-          {days.map((day, dayIdx) => (
-            <li
-              key={day.toString()}
-              className={`${
-                dayIdx === 0 && colStartClasses[getDay(day)]
-              } relative py-1`}
+        {/* 요일 */}
+        <div className="grid grid-cols-7 text-sm font-medium text-center text-gray-500 border-b pb-2 mb-2">
+          {["일", "월", "화", "수", "목", "금", "토"].map((day, index) => (
+            <div
+              key={index}
+              className={
+                index === 0
+                  ? "text-rose-400"
+                  : index === 6
+                  ? "text-blue-400"
+                  : ""
+              }
             >
-              <button
-                type="button"
-                onClick={() => handleSelectDate(day)}
-                className={getDayClass(day)}
-                disabled={isLoading}
-              >
-                <time dateTime={format(day, "yyyy-MM-dd")}>
-                  {format(day, "d")}
-                </time>
-              </button>
-
-              {/* 일정 제목 표시 */}
-              {getEventTitle(day) && (
-                <div className="text-xs text-[#22BD9C] mt-1 text-center">
-                  {getEventTitle(day)}
-                </div>
-              )}
-            </li>
+              {day}
+            </div>
           ))}
-        </ul>
+        </div>
+
+        {/* 날짜 */}
+        <CalendarGrid
+          days={days}
+          selectedDate={selectedDate}
+          isLoading={isLoading}
+          onSelect={handleSelectDate}
+          isDateHasEvent={isDateHasEvent}
+          getDayClass={getDayClass}
+        />
+
+        {/* 선택된 날짜의 일정 목록 */}
+        <div className="mt-4 border-t pt-4">
+          <EventList
+            events={getSelectedDateEvents()}
+            date={selectedDate}
+            groupId={groupId}
+          />
+        </div>
       </div>
-    </div>
+    </div> // ✅ 추가
   );
 }

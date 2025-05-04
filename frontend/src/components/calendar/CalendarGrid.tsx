@@ -1,79 +1,83 @@
 // src/components/calendar/CalendarGrid.tsx
-import { Grid } from "@/components/ui-components/layout/Grid";
-import { Flex } from "@/components/ui-components/layout/Flex";
-import { Typography } from "@/components/ui-components/typography/Typography";
-import type { ScheduleItem } from "@/types/schedule";
+import { getDay, format, isSameDay } from "date-fns";
 
-interface Props {
-  groupId: number;
-  year: number;
-  month: number;
-  schedules: ScheduleItem[];
+interface CalendarGridProps {
+  days: Date[];
+  selectedDate: Date;
+  isLoading: boolean;
+  onSelect: (day: Date) => void;
+  isDateHasEvent: (day: Date) => boolean;
+  getDayClass: (day: Date) => string;
 }
 
-export default function CalendarGrid({ year, month, schedules }: Props) {
-  // 1) 해당 달의 일 수
-  const daysInMonth = new Date(year, month, 0).getDate();
-  // 2) 1일의 요일 인덱스 (0=일,1=월,...6=토)
-  const firstWeekday = new Date(year, month - 1, 1).getDay();
-  // 3) 빈 칸 채우기
-  const blanks = Array.from({ length: firstWeekday }, () => null);
-  // 4) 날짜 배열
-  const dates = [
-    ...blanks,
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
+const colStartClasses = [
+  "",
+  "col-start-2",
+  "col-start-3",
+  "col-start-4",
+  "col-start-5",
+  "col-start-6",
+  "col-start-7",
+];
 
-  // 빠른 조회용 맵 (여러 이벤트가 있다면 array로 바꾸면 됩니다)
-  const evMap = new Map<number, ScheduleItem>();
-  schedules.forEach((s) => {
-    const d = new Date(s.date).getDate();
-    evMap.set(d, s);
-  });
-
+export default function CalendarGrid({
+  days,
+  selectedDate,
+  isLoading,
+  onSelect,
+  isDateHasEvent,
+  getDayClass,
+}: CalendarGridProps) {
   return (
-    <>
-      {/* 요일 헤더 */}
-      <Grid.Col7 className="text-center text-sm text-gray-500 mb-2">
-        {["일", "월", "화", "수", "목", "금", "토"].map((wd) => (
-          <Typography.BodySmall key={wd}>{wd}</Typography.BodySmall>
+    <div className="relative min-h-[280px]">
+      {isLoading && (
+        <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
+          <div className="flex flex-col items-center">
+            <div className="flex space-x-1">
+              <div
+                className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
+                style={{ animationDelay: "0s" }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
+                style={{ animationDelay: "0.4s" }}
+              ></div>
+            </div>
+            <span className="text-sm text-[#22BD9C] mt-2">로딩 중...</span>
+          </div>
+        </div>
+      )}
+
+      <ul className="grid grid-cols-7 gap-1 text-sm">
+        {days.map((day, idx) => (
+          <li
+            key={day.toString()}
+            className={`${
+              idx === 0 && colStartClasses[getDay(day)]
+            } relative py-1`}
+          >
+            <button
+              type="button"
+              onClick={() => onSelect(day)}
+              className={getDayClass(day)}
+              disabled={isLoading}
+            >
+              <time dateTime={format(day, "yyyy-MM-dd")}>
+                {format(day, "d")}
+              </time>
+            </button>
+            {isDateHasEvent(day) && (
+              <div className="flex justify-center mt-1">
+                <div className="w-1 h-1 bg-[#22BD9C] rounded-full"></div>
+              </div>
+            )}
+          </li>
         ))}
-      </Grid.Col7>
-
-      {/* 날짜 그리드 */}
-      <Grid.Col7 className="gap-y-4 gap-x-2">
-        {dates.map((day, idx) => {
-          if (day === null) {
-            // 지난달/다음달 빈칸
-            return <div key={idx} />;
-          }
-
-          const ev = evMap.get(day);
-          const isDone = ev?.is_done;
-          // 사용자 예시처럼 색상을 event마다 달리하고 싶으면 조건 추가
-          const circleBg = ev
-            ? isDone
-              ? "bg-gray-200 text-gray-600"
-              : "bg-blue-100 text-blue-600"
-            : "";
-
-          return (
-            <Flex.ColStartCenter key={idx} className="p-1">
-              {/* 1) 날짜 원 */}
-              <Flex.RowCenter className={`w-8 h-8 rounded-full ${circleBg}`}>
-                <Typography.BodySmall>{day}</Typography.BodySmall>
-              </Flex.RowCenter>
-
-              {/* 2) 이벤트 텍스트 */}
-              {ev && (
-                <Typography.Caption className="mt-1 text-xs text-blue-500">
-                  {ev.title}
-                </Typography.Caption>
-              )}
-            </Flex.ColStartCenter>
-          );
-        })}
-      </Grid.Col7>
-    </>
+      </ul>
+    </div>
   );
 }

@@ -86,11 +86,11 @@ def lock_in(dto: LockInCreate):
 
     with Session(engine) as s:
         ua = get_user_account(s, dto.user_id)
-        ga = get_group_account(s, dto.group_id)
+        ga = get_group_account(s, dto.group_account_id)
         if not ga:
             raise HTTPException(404, "그룹 계좌가 없어요")
 
-        prev_locked = locked_amounts_by_accounts(s, [ua.id], dto.group_id).get(ua.id, 0.0)
+        prev_locked = locked_amounts_by_accounts(s, [ua.id], dto.group_account_id).get(ua.id, 0.0)
         if ua.balance - prev_locked < dto.amount:
             raise HTTPException(400, "락인가능 금액이 부족합니다.")
 
@@ -98,7 +98,7 @@ def lock_in(dto: LockInCreate):
             [
                 LockIn(
                     user_account_id=ua.id,
-                    group_id=dto.group_id,
+                    group_account_id=dto.group_account_id,
                     amount=dto.amount,
                     description=dto.description,
                 ),
