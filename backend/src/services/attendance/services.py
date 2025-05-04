@@ -1,7 +1,7 @@
 # backend/src/services/attendance/services.py
 import os, uuid, time, cv2, pickle
 import numpy as np
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from fastapi import UploadFile, HTTPException
 from PIL import Image, ImageDraw, ImageFont
@@ -293,3 +293,19 @@ def get_attendance_record(session: Session, attendance_id: int) -> AttendanceRec
         check_type=record.check_type,
         image_url=getattr(record, "image_url", None),
     )
+
+
+def update_attendance(
+    session: Session, attendance_id: int, user_ids: List[int]
+) -> None:
+    record = session.get(AttendanceRecord, attendance_id)
+    if not record:
+        raise HTTPException(404, "출석 정보가 없습니다.")
+
+    record.attendee_user_ids = user_ids
+    session.add(record)
+    session.commit()
+    session.refresh(record)
+    return record
+
+

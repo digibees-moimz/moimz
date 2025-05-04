@@ -12,13 +12,16 @@ from src.schemas.attendance import (
     ManualAttendanceResponse,
     AttendanceCompleteRequest,
     AttendanceRecordRead,
+    AttendanceUpdateRequest,
 )
 from src.services.attendance.services import (
     run_photo_attendance,
     run_manual_attendance,
     save_attendance,
     get_attendance_record,
+    update_attendance,
 )
+
 from src.constants import BASE_DIR
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
@@ -61,7 +64,7 @@ def manual_attendance(
 
 
 @router.post(
-    "/attendance/complete",
+    "/complete",
     summary="참석자 명단 DB 저장",
 )
 def complete_attendance(
@@ -73,7 +76,7 @@ def complete_attendance(
 
 
 @router.get(
-    "/attendance/{attendance_id}",
+    "/{attendance_id}",
     response_model=AttendanceRecordRead,
     summary="출석 완료 정보 조회",
 )
@@ -82,3 +85,17 @@ def read_attendance_record(
     session: Session = Depends(get_session),
 ):
     return get_attendance_record(session, attendance_id)
+
+
+@router.put(
+    "/{attendance_id}",
+    response_model=ManualAttendanceResponse,
+    summary="출석 명단 수정 및 요약 반환",
+)
+def update_attendance_route(
+    attendance_id: int,
+    dto: AttendanceUpdateRequest,
+    session: Session = Depends(get_session),
+):
+    record = update_attendance(session, attendance_id, dto.user_ids)
+    return get_attendance_record(session, record.id)

@@ -65,3 +65,13 @@ class AttendanceRecordRead(BaseModel):
     available_to_spend: float
     check_type: str
     image_url: Optional[str] = None
+
+
+class AttendanceUpdateRequest(BaseModel):
+    user_ids: List[int] = Field(..., description="수정된 참석자 ID 리스트")
+
+
+class ManualAttendanceResponse(BaseModel):
+    attendees: List[ManualAttendanceItem]
+    count: int
+    available_to_spend: float
