@@ -324,6 +324,11 @@ def generate_qr_for_attendance(session: Session, attendance_id: int) -> str:
         elapsed = datetime.utcnow() - record.qrcode_created_at
         if elapsed.total_seconds() < 1800:  # 30분
             return record.qrcode_token  # 재사용
+        else:
+            # 기존 QR 이미지 삭제
+            old_qr_path = os.path.join(QR_DIR, f"{record.qrcode_token}.png")
+            if os.path.exists(old_qr_path):
+                os.remove(old_qr_path)
 
     # 새 QR 토큰 생성
     token = uuid.uuid4().hex
