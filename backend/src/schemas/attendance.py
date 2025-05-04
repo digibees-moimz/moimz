@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field
 from typing import List
 
-
+# 사진 기반 출석체크
 class AttendanceItem(BaseModel):
     user_id: int = Field(..., description="출석한 사용자 ID")
     name: str = Field(..., description="출석한 사용자 이름")
@@ -18,3 +18,21 @@ class AttendanceResponse(BaseModel):
     total_available_amount: float = Field(..., description="출석자의 총 락인 금액 합계")
     duration: float = Field(..., description="체크에 걸린 시간(초)")
     image_url: str = Field(..., description="박스와 이름이 표시된 출석 사진 조회 URL")
+
+
+# 수동 출석체크
+class ManualAttendanceRequest(BaseModel):
+    group_id: int
+    user_ids: List[int]
+
+
+class ManualAttendanceItem(BaseModel):
+    user_id: int
+    name: str
+    locked_amount: float
+
+
+class ManualAttendanceResponse(BaseModel):
+    attendees: List[ManualAttendanceItem]
+    count: int
+    total_available_amount: float

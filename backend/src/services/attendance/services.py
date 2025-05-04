@@ -5,16 +5,19 @@ from typing import Dict, Any
 
 from fastapi import UploadFile, HTTPException
 from PIL import Image, ImageDraw, ImageFont
-from sqlmodel import select
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from src.services.face.engine import face_engine
 from src.constants import BASE_DIR, MATCH_THRESHOLD_ATTENDANCE
-from src.models.group import Member
-from src.models.user import User, UserAccount
 from src.core.database import engine
 from src.routers._helpers import locked_amounts_by_accounts
-
+from src.models.group import Member
+from src.models.user import User, UserAccount
+from src.schemas.attendance import (
+    ManualAttendanceRequest,
+    ManualAttendanceResponse,
+    ManualAttendanceItem,
+)
 
 ATTEND_DIR = os.path.join(BASE_DIR, "media", "attendance")
 os.makedirs(ATTEND_DIR, exist_ok=True)
@@ -32,7 +35,8 @@ def get_latest_cluster_dir(user_id: int) -> str:
     return ""
 
 
-async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any]:
+# 사진 기반 출석체크
+async def run_photo_attendance(file: UploadFile, group_id: int) -> Dict[str, Any]:
     start = time.time()
 
     # 1) 그룹 멤버 user_id 조회
@@ -188,3 +192,42 @@ async def run_attendance_check(file: UploadFile, group_id: int) -> Dict[str, Any
             "duration": duration,
             "image_url": f"/api/attendance/photo/{check_id}",
         }
+
+
+# 수동 출석체크
+def run_manual_attendance(
+    session: Session, data: ManualAttendanceRequest
+) -> ManualAttendanceResponse:
+    # 이름 조회
+    stmt = select(User.id, User.name).where(User.id.in_(data.user_ids))
+    name_map = dict(session.exec(stmt).all())
+
+    # 계좌 ID 조회
+    stmt = select(UserAccount.user_id, UserAccount.id).where(
+        UserAccount.user_id.in_(data.user_ids)
+    )
+    account_map = dict(session.exec(stmt).all())
+
+    # 락인 금액 조회
+    locked_map = locked_amounts_by_accounts(
+        session,
+        user_account_ids=list(account_map.values()),
+        group_account_id=data.group_id,
+    )
+
+    attendees: list[ManualAttendanceItem] = []
+    for uid in data.user_ids:
+        account_id = account_map.get(uid)
+        attendees.append(
+            ManualAttendanceItem(
+                user_id=uid,
+                name=name_map.get(uid, "이름 없음"),
+                locked_amount=locked_map.get(account_id, 0.0),
+            )
+        )
+
+    return ManualAttendanceResponse(
+        attendees=attendees,
+        count=len(attendees),
+        total_available_amount=sum(a.locked_amount for a in attendees),
+    )
