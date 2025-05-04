@@ -6,7 +6,7 @@ interface UserState {
   setUserId: (id: number) => void;
 }
 
-export const useUserStore = create<UserState>((set) => ({
-  userId: 1, // 초기값 (하드코딩 대신 여기에만 쓰기)
-  setUserId: (id) => set({ userId: id }),
+export const useUserStore = create<UserState>()((set) => ({
+  userId: 1,
+  setUserId: (id: number) => set({ userId: id }),
 }));
