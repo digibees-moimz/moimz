@@ -5,6 +5,7 @@
 import { useParams } from "next/navigation";
 import GroupDetailSection from "@/components/group/GroupDetailSection";
 import { useUserStore } from "@/stores/userStore";
+import NextScheduleCard from "@/components/scheduleDetail/NextScheduleCard";
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
@@ -13,6 +14,7 @@ export default function GroupDetailPage() {
   return (
     <>
       <GroupDetailSection groupId={id} />
+      <NextScheduleCard />
     </>
   );
 }
