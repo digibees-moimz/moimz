@@ -36,3 +36,6 @@ dlib
 face_recognition
 insightface
 git+https://github.com/ageitgey/face_recognition_models
+
+# QR code
+qrcode[pil]

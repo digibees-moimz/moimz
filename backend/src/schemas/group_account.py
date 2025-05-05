@@ -32,9 +32,3 @@ class LockOutCreate(BaseModel):
     user_id: int
     amount: float
     description: str = "락인 해제"
-
-class SpendCreate(BaseModel):
-    group_id: int
-    user_ids: List[int]  # 출석자
-    total_amount: float  # 전체 지출 금액
-    description: str

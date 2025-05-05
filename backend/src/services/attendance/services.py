@@ -1,7 +1,9 @@
 # backend/src/services/attendance/services.py
+import qrcode
 import os, uuid, time, cv2, pickle
+from datetime import datetime, timedelta
 import numpy as np
-from typing import Dict, Any
+from typing import List, Optional
 
 from fastapi import UploadFile, HTTPException
 from PIL import Image, ImageDraw, ImageFont
@@ -11,16 +13,26 @@ from src.services.face.engine import face_engine
 from src.constants import BASE_DIR, MATCH_THRESHOLD_ATTENDANCE
 from src.core.database import engine
 from src.routers._helpers import locked_amounts_by_accounts
+from src.models.attendance import AttendanceRecord
 from src.models.group import Member
 from src.models.user import User, UserAccount
+from src.models.schedule import Schedule
 from src.schemas.attendance import (
+    PhotoAttendanceItem,
+    PhotoAttendanceResponse,
     ManualAttendanceRequest,
     ManualAttendanceResponse,
     ManualAttendanceItem,
+    AttendanceCompleteRequest,
+    SavedAttendanceItem,
+    AttendanceRecordRead,
 )
 
 ATTEND_DIR = os.path.join(BASE_DIR, "media", "attendance")
 os.makedirs(ATTEND_DIR, exist_ok=True)
+
+QR_DIR = os.path.join(BASE_DIR, "media", "qrcodes")
+os.makedirs(QR_DIR, exist_ok=True)
 
 
 def get_latest_cluster_dir(user_id: int) -> str:
@@ -36,7 +48,9 @@ def get_latest_cluster_dir(user_id: int) -> str:
 
 
 # 사진 기반 출석체크
-async def run_photo_attendance(file: UploadFile, group_id: int) -> Dict[str, Any]:
+async def run_photo_attendance(
+    file: UploadFile, group_id: int
+) -> PhotoAttendanceResponse:
     start = time.time()
 
     # 1) 그룹 멤버 user_id 조회
@@ -154,8 +168,9 @@ async def run_photo_attendance(file: UploadFile, group_id: int) -> Dict[str, Any
             )
         duration = round(time.time() - start, 3)
 
-        # 총 결제 가능 금액 계산
-        total_available_amount = sum(att["locked_amount"] for att in attendees)
+        # 결제 가능 금액 계산
+        min_locked = min((att["locked_amount"] for att in attendees), default=0.0)
+        available_to_spend = min_locked * len(attendees)
 
         # 6) 이미지에 박스·레이블 그리기
         # OpenCV → PIL 변환
@@ -185,13 +200,15 @@ async def run_photo_attendance(file: UploadFile, group_id: int) -> Dict[str, Any
         out_path = os.path.join(ATTEND_DIR, f"{check_id}.png")
         cv2.imwrite(out_path, img)
 
-        return {
-            "attendees": attendees,
-            "count": len(attendees),
-            "total_available_amount": total_available_amount,
-            "duration": duration,
-            "image_url": f"/api/attendance/photo/{check_id}",
-        }
+        return PhotoAttendanceResponse(
+            group_id=group_id,
+            user_ids=[a["user_id"] for a in attendees],
+            count=len(attendees),
+            available_to_spend=available_to_spend,
+            attendees=[PhotoAttendanceItem(**a) for a in attendees],
+            duration=duration,
+            image_url=f"/api/attendance/photo/{check_id}",
+        )
 
 
 # 수동 출석체크
@@ -200,13 +217,13 @@ def run_manual_attendance(
 ) -> ManualAttendanceResponse:
     # 이름 조회
     stmt = select(User.id, User.name).where(User.id.in_(data.user_ids))
-    name_map = dict(session.exec(stmt).all())
+    name_map = dict(session.execute(stmt).all())
 
     # 계좌 ID 조회
     stmt = select(UserAccount.user_id, UserAccount.id).where(
         UserAccount.user_id.in_(data.user_ids)
     )
-    account_map = dict(session.exec(stmt).all())
+    account_map = dict(session.execute(stmt).all())
 
     # 락인 금액 조회
     locked_map = locked_amounts_by_accounts(
@@ -226,8 +243,157 @@ def run_manual_attendance(
             )
         )
 
+    # 결제 가능 금액
+    min_locked = min((att.locked_amount for att in attendees), default=0.0)
+    available_to_spend = min_locked * len(attendees)
+
     return ManualAttendanceResponse(
+        group_id=data.group_id,
+        user_ids=data.user_ids,
         attendees=attendees,
         count=len(attendees),
-        total_available_amount=sum(a.locked_amount for a in attendees),
+        available_to_spend=available_to_spend,
     )
+
+
+def save_attendance(session: Session, dto: AttendanceCompleteRequest) -> int:
+    # 일정이 존재하는지 조회 (0 또는 None → 번개 모임)
+    if dto.schedule_id not in (None, 0):
+        schedule = session.get(Schedule, dto.schedule_id)
+        if not schedule:
+            raise HTTPException(404, "일정이 존재하지 않습니다.")
+        if schedule.is_done:
+            raise HTTPException(400, "종료된 일정에는 출석체크를 저장할 수 없습니다.")
+        schedule_id = schedule.id
+    else:
+        schedule_id = None  # 번개 모임은 None으로 저장
+
+    record = AttendanceRecord(
+        group_id=dto.group_id,
+        schedule_id=schedule_id,
+        attendee_user_ids=dto.user_ids,
+        check_type=dto.check_type,
+        image_url=dto.image_url,
+    )
+    session.add(record)
+    session.commit()
+    session.refresh(record)
+    return record.id
+
+
+def get_attendance_record(session: Session, attendance_id: int) -> AttendanceRecordRead:
+    record = session.get(AttendanceRecord, attendance_id)
+    if not record:
+        raise HTTPException(404, "출석 정보가 없습니다.")
+
+    stmt = select(User.id, User.name).where(User.id.in_(record.attendee_user_ids))
+    name_map = dict(session.execute(stmt).all())
+
+    stmt = select(UserAccount.user_id, UserAccount.id).where(
+        UserAccount.user_id.in_(record.attendee_user_ids)
+    )
+    account_map = dict(session.execute(stmt).all())
+
+    locked_map = locked_amounts_by_accounts(
+        session,
+        user_account_ids=list(account_map.values()),
+        group_account_id=record.group_id,
+    )
+
+    attendees = [
+        SavedAttendanceItem(
+            user_id=uid,
+            name=name_map.get(uid, "이름 없음"),
+            locked_amount=locked_map.get(account_map.get(uid), 0.0),
+        )
+        for uid in record.attendee_user_ids
+    ]
+
+    min_locked = min((a.locked_amount for a in attendees), default=0.0)
+    available_to_spend = min_locked * len(attendees)
+
+    return AttendanceRecordRead(
+        attendance_id=record.id,
+        attendees=attendees,
+        count=len(attendees),
+        available_to_spend=available_to_spend,
+        check_type=record.check_type,
+        image_url=getattr(record, "image_url", None),
+    )
+
+
+def update_attendance(
+    session: Session, attendance_id: int, user_ids: List[int]
+) -> None:
+    record = session.get(AttendanceRecord, attendance_id)
+    if not record:
+        raise HTTPException(404, "출석 정보가 없습니다.")
+    if record.is_closed:
+        raise HTTPException(400, "종료된 모임에서는 출석을 수정할 수 없습니다.")
+
+    record.attendee_user_ids = user_ids
+    session.add(record)
+    session.commit()
+    session.refresh(record)
+    return record
+
+
+def delete_qr_image_if_exists(token: Optional[str]):
+    # 기존 QR 삭제
+    if token:
+        path = os.path.join(QR_DIR, f"{token}.png")
+        if os.path.exists(path):
+            os.remove(path)
+
+
+def generate_qr_for_attendance(session: Session, attendance_id: int) -> str:
+    record = session.get(AttendanceRecord, attendance_id)
+    if not record:
+        raise HTTPException(404, "출석 정보가 없습니다.")
+    if record.is_closed:
+        raise HTTPException(400, "종료된 모임에서는 QR 코드를 생성할 수 없습니다.")
+
+    # 사용된 QR이면 새로 만들어야 함
+    if record.qrcode_used:
+        delete_qr_image_if_exists(record.qrcode_token)
+        # 초기화
+        record.qrcode_token = None
+        record.qrcode_created_at = None
+        record.qrcode_used = False
+
+    # 이미 QR이 생성되어 있고 아직 유효하면 그대로 사용
+    if record.qrcode_token and record.qrcode_created_at:
+        elapsed = datetime.utcnow() - record.qrcode_created_at
+        if elapsed.total_seconds() < 1800:  # 30분
+            return record.qrcode_token  # 재사용
+        delete_qr_image_if_exists(record.qrcode_token)
+
+    # 새 QR 토큰 생성
+    token = uuid.uuid4().hex
+    record.qrcode_token = token
+    record.qrcode_created_at = datetime.utcnow()
+    session.add(record)
+    session.commit()
+
+    # QR 이미지 생성
+    qr_data = f"moiMz|{record.group_id}|{token}"
+    qr_img = qrcode.make(qr_data)
+    qr_path = os.path.join(QR_DIR, f"{token}.png")
+    qr_img.save(qr_path)
+
+    return token
+
+
+# 모임 종료 처리
+def close_attendance_by_schedule_id(session: Session, schedule_id: int):
+    record = (
+        session.execute(
+            select(AttendanceRecord).where(AttendanceRecord.schedule_id == schedule_id)
+        )
+        .scalars()
+        .first()
+    )
+    if record and not record.is_closed:
+        record.is_closed = True
+        session.add(record)
+        session.commit()
