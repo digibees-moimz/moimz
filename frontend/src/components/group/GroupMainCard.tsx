@@ -18,7 +18,7 @@ export default function GroupMainCard({ group }: GroupMainCardProps) {
   } = group;
 
   return (
-    <Flex.RowBetweenCenter className="w-full bg-[#EEFAF7] rounded-2xl p-6 shadow">
+    <Flex.RowBetweenCenter className="w-full bg-[#EEFAF7] p-6">
       {/* Left */}
       <Flex.ColStartCenter className="items-start gap-2 w-auto h-auto">
         <Flex.RowStartCenter className="gap-2 w-auto h-auto">

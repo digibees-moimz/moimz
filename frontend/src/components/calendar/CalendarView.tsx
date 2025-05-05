@@ -15,7 +15,7 @@ import {
   parseISO,
 } from "date-fns";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
-import { useMonthlySchedules } from "@/hooks/useMonthlySchedules";
+import { useMonthlySchedules } from "@/hooks/schedule/useMonthlySchedules";
 import type { ScheduleItem } from "@/types/schedule";
 import EventList from "./EventList"; // 새로 만들 컴포넌트
 import CalendarGrid from "./CalendarGrid";

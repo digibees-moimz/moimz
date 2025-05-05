@@ -1,6 +1,6 @@
-// src/hooks/useScheduleCreate.ts
+// src/hooks/schedule/useScheduleCreate.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axiosInstance from "@/lib/axios";
+import axiosInstance from "@/lib/axios_past";
 import type { ScheduleCreateInput, ScheduleItem } from "@/types/schedule";
 
 /**

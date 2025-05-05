@@ -6,14 +6,14 @@ import { useState } from "react";
 import GroupDetailSection from "@/components/group/GroupDetailSection";
 import LockInManagerModal from "@/components/lockin/LockInManagerModal";
 import { useGroups } from "@/hooks/useGroups";
+import { useUserStore } from "@/stores/userStore";
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
   const id = parseInt(groupId as string, 10);
-  const userId = 1;
-
+  const { userId } = useUserStore(); // ✅ 여기로 대체
   const [modalOpen, setModalOpen] = useState(false);
-  const { groups } = useGroups(userId);
+  const { data: groups } = useGroups(userId);
 
   return (
     <>

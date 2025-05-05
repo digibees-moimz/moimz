@@ -4,13 +4,15 @@ import { useGroups } from "@/hooks/useGroups";
 import GroupMainCard from "./GroupMainCard";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Flex } from "@/components/ui-components/layout/Flex";
+import { useUserStore } from "@/stores/userStore";
 
 export default function GroupDetailSection({ groupId }: { groupId: number }) {
-  const userId = 1;
-  const { groups, loading, error } = useGroups(userId);
+  const { userId } = useUserStore();
+  const { data: groups, isLoading, error } = useGroups(userId);
 
-  if (loading) return <Typography.Body>로딩 중...</Typography.Body>;
-  if (error) return <Typography.Body>에러: {error}</Typography.Body>;
+  if (isLoading) return <Typography.Body>로딩 중...</Typography.Body>;
+  if (error) return <Typography.Body>에러: {error.message}</Typography.Body>;
+  if (!groups) return <Typography.Body>모임이 없습니다.</Typography.Body>;
 
   const group = groups.find((g) => g.id === groupId);
   if (!group)
@@ -19,7 +21,6 @@ export default function GroupDetailSection({ groupId }: { groupId: number }) {
   return (
     <Flex.ColCenter className="w-full px-4 py-6 gap-6">
       <GroupMainCard group={group} />
-      {/* 하단에 출석 현황, 결제 내역 등 컴포넌트 추가 가능 */}
     </Flex.ColCenter>
   );
 }

@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
+from src.schemas.user import UserPublic
 
 class ScheduleCreate(BaseModel):
     group_id: int
@@ -10,38 +11,39 @@ class ScheduleCreate(BaseModel):
     location: Optional[str] = None
     description: Optional[str] = None
 
+
 class ScheduleCalendarRead(BaseModel):
     id: int
     title: str
     date: datetime
     is_done: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ScheduleCommentRead(BaseModel):
     id: int
-    user_id: int
+    user: UserPublic
     content: str
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScheduleRead(BaseModel):
     id: int
     group_id: int
-    user_id: int
+    user: UserPublic
     title: str
     date: datetime
     location: Optional[str]
     is_done: bool
     description: Optional[str]
+    created_at: datetime 
     comments: list[ScheduleCommentRead] = []
 
-    class Config:
-        from_attributes = True  # 이거 꼭 있어야 ORM 관계도 반영
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ScheduleUpdate(BaseModel):
     title: Optional[str] = None

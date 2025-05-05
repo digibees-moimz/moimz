@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useScheduleCreate } from "@/hooks/useScheduleCreate";
+import { useScheduleCreate } from "@/hooks/schedule/useScheduleCreate";
 import { useUserStore } from "@/stores/userStore";
 import type { ScheduleItem } from "@/types/schedule";
 import { Typography } from "../ui-components/typography/Typography";

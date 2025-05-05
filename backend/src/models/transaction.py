@@ -17,7 +17,7 @@ class Transaction(SQLModel, table=True):
 class TransactionParticipant(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     transaction_id: int = Field(foreign_key="transaction.id")
-    user_id: int
+    user_id: int = Field(foreign_key="user.id")
     amount: float
 
     # 역방향 관계 설정

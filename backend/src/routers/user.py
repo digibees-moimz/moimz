@@ -84,6 +84,7 @@ def get_user_detail(user_id: int):
             id=user.id,
             name=user.name,
             email=user.email,
+            profile_image_url=user.profile_image_url,
             account=dict(
                 id=ua.id,
                 user_id=ua.user_id,

@@ -12,16 +12,24 @@ export interface ScheduleItem {
 
 export interface ScheduleComment {
   id: number;
-  user_id: number;
+  user: {
+    id: number;
+    name: string;
+  };
   content: string;
   created_at: string;
 }
 
 export interface ScheduleDetail extends ScheduleItem {
   group_id: number;
-  user_id: number;
+  user: {
+    id: number;
+    name: string;
+    profile_image_url?: string | null; // ✅ 추가
+  };
   location?: string;
   description?: string;
+  created_at: string;
   comments: ScheduleComment[];
 }
 
