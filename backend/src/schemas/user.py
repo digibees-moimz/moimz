@@ -1,7 +1,14 @@
 # src/schemas/user.py
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List
 from src.schemas.account import AccountRead
+
+class UserPublic(BaseModel):
+    id: int
+    name: str
+    profile_image_url: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 class UserCreate(BaseModel):
     name: str
@@ -13,12 +20,13 @@ class UserRead(BaseModel):
     id: int
     name: str
     email: str
-    
+    profile_image_url: str | None = None 
+
 class UserDetail(BaseModel):
     id: int
     name: str
     email: str
+    profile_image_url: str | None = None 
     account: AccountRead | None = None  # 단일 계좌
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

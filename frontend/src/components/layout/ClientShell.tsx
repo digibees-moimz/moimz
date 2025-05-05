@@ -3,6 +3,8 @@
 
 import AppLayout from "./AppLayout";
 import { usePathname } from "next/navigation";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 
 export default function ClientShell({
   children,
@@ -12,5 +14,14 @@ export default function ClientShell({
   const pathname = usePathname();
   const isFullscreenPage = pathname.startsWith("/my/face-register");
 
-  return isFullscreenPage ? <>{children}</> : <AppLayout>{children}</AppLayout>;
+  const [queryClient] = useState(() => new QueryClient());
+  const content = isFullscreenPage ? (
+    children
+  ) : (
+    <AppLayout>{children}</AppLayout>
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>{content}</QueryClientProvider>
+  );
 }

@@ -38,13 +38,12 @@ def get_group_account_summary(group_id: int):
         if not ga:
             raise HTTPException(404, "GroupAccount not found")
 
-        # ① 멤버의 UserAccount-id / 이름 한꺼번에
         ua_rows = s.execute(
-            select(UserAccount.id, User.name)
+            select(UserAccount.id, User.name, User.profile_image_url)
             .join(Member, Member.user_id == UserAccount.user_id)
             .join(User, User.id == UserAccount.user_id)
             .where(Member.group_id == group_id)
-        ).all()  # → [(ua_id, name), …]
+        ).all()
 
         ua_ids = [row[0] for row in ua_rows]
         locked_map = locked_amounts_by_accounts(s, ua_ids, group_id)
@@ -53,9 +52,10 @@ def get_group_account_summary(group_id: int):
             MemberLockedAmount(
                 user_account_id=ua_id,
                 name=name,
+                profile_image_url = profile_url,
                 locked_amount=locked_map.get(ua_id, 0.0),
             )
-            for ua_id, name in ua_rows
+            for ua_id, name, profile_url in ua_rows
         ]
 
         min_locked = min((m.locked_amount for m in members), default=0.0)
@@ -132,11 +132,11 @@ def lock_out(dto: LockOutCreate):
 
     with Session(engine) as s:
         ua = get_user_account(s, dto.user_id)
-        ga = get_group_account(s, dto.group_id)
+        ga = get_group_account(s, dto.group_account_id)
         if not ga:
             raise HTTPException(404, "그룹 계좌가 없어요")
 
-        prev_locked = locked_amounts_by_accounts(s, [ua.id], dto.group_id).get(ua.id, 0.0)
+        prev_locked = locked_amounts_by_accounts(s, [ua.id], dto.group_account_id).get(ua.id, 0.0)
         if prev_locked < dto.amount:
             raise HTTPException(400, "락인된 금액보다 많이 출금할 수 없습니다.")
 
@@ -144,13 +144,13 @@ def lock_out(dto: LockOutCreate):
             [
                 LockIn(
                     user_account_id=ua.id,
-                    group_id=dto.group_id,
+                    group_account_id=ga.id,
                     amount=-dto.amount,
                     description=dto.description or "락인 해제 출금",
                 ),
                 GroupTransaction(
-                    group_account_id=ga.id,
                     user_account_id=ua.id,
+                    group_account_id=ga.id,
                     amount=-dto.amount,
                     description=dto.description or "락인 해제 출금",
                 ),

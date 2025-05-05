@@ -1,16 +1,19 @@
+// src/components/group/GroupList.tsx
 "use client";
 
 import { useGroups } from "@/hooks/useGroups";
 import GroupCard from "./GroupCard";
 import Link from "next/link";
 import { Flex } from "@/components/ui-components/layout/Flex";
+import { useUserStore } from "@/stores/userStore";
 
 export default function GroupList() {
-  const userId = 1; // 🔥 로그인 연동 전까지는 이렇게 하드코딩
-  const { groups, loading, error } = useGroups(userId);
+  const { userId } = useUserStore();
+  const { data: groups, isLoading, error } = useGroups(userId);
 
-  if (loading) return <p>로딩 중...</p>;
-  if (error) return <p>에러: {error}</p>;
+  if (isLoading) return <p>로딩 중...</p>;
+  if (error) return <p>에러: {error.message}</p>;
+  if (!groups) return <p>모임 없음</p>;
 
   return (
     <Flex.ColCenter className="gap-4">

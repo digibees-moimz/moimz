@@ -1,6 +1,6 @@
-// src/hooks/useMonthlySchedules.ts
+// src/hooks/schedule/useMonthlySchedules.ts
 import { useQuery } from "@tanstack/react-query";
-import axios from "@/lib/axios";
+import axios from "@/lib/axios_past";
 import type { ScheduleItem } from "@/types/schedule";
 
 export const useMonthlySchedules = (

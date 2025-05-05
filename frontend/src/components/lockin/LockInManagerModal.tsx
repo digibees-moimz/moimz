@@ -4,7 +4,7 @@
 import { useState } from "react";
 import LockInSelectModal from "./LockInSelectModal";
 import LockInActionModal from "./LockInActionModal";
-import { useLockIn } from "../../hooks/useLockIn";
+import { useLockInMutation } from "../../hooks/useLockIn";
 import { GroupType } from "../../types/group";
 import React from "react";
 
@@ -23,7 +23,7 @@ export default function LockInManagerModal({
 }: LockInManagerModalProps) {
   const [step, setStep] = useState<"select" | "action">("select");
   const [selectedGroup, setSelectedGroup] = useState<GroupType | null>(null);
-  const { lockIn, lockOut } = useLockIn(userId);
+  const { lockIn, lockOut } = useLockInMutation(userId);
 
   if (!open) return null;
 
@@ -45,11 +45,11 @@ export default function LockInManagerModal({
           group={selectedGroup}
           currentLockedAmount={selectedGroup.locked_amount}
           onLockIn={async (amount) => {
-            await lockIn(selectedGroup.id, amount);
-            onClose(); // or go back to select
+            await lockIn.mutateAsync({ groupId: selectedGroup.id, amount });
+            onClose();
           }}
           onLockOut={async (amount) => {
-            await lockOut(selectedGroup.id, amount);
+            await lockOut.mutateAsync({ groupId: selectedGroup.id, amount });
             onClose();
           }}
           onClose={() => setStep("select")}

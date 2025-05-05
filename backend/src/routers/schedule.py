@@ -93,13 +93,15 @@ def get_schedule(schedule_id: int, session: Session = Depends(get_session)):
     stmt = (
         select(Schedule)
         .where(Schedule.id == schedule_id)
-        .options(selectinload(Schedule.comments))
+        .options(
+            selectinload(Schedule.user),  # 주최자 정보 포함
+            selectinload(Schedule.comments).selectinload(ScheduleComment.user),  # 댓글 작성자 정보 포함
+        )
     )
     schedule = session.execute(stmt).scalars().first()
     if not schedule:
         raise HTTPException(404, "일정이 존재하지 않습니다.")
     return schedule
-
 
 @router.patch(
     "/{schedule_id}",
