@@ -7,7 +7,7 @@ from sqlmodel import Session
 
 from src.core.database import get_session
 from src.schemas.attendance import (
-    AttendanceResponse,
+    PhotoAttendanceResponse,
     ManualAttendanceRequest,
     ManualAttendanceResponse,
     AttendanceCompleteRequest,
@@ -33,7 +33,7 @@ router = APIRouter(prefix="/attendance", tags=["Attendance"])
 
 @router.post(
     "/photo",
-    response_model=AttendanceResponse,
+    response_model=PhotoAttendanceResponse,
     summary="사진 기반 출석체크",
 )
 async def check_attendance(
@@ -93,7 +93,7 @@ def read_attendance_record(
 
 @router.put(
     "/{attendance_id}",
-    response_model=ManualAttendanceResponse,
+    response_model=AttendanceRecordRead,
     summary="출석 명단 수정 및 요약 반환",
 )
 def update_attendance_route(

@@ -3,7 +3,7 @@ import qrcode
 import os, uuid, time, cv2, pickle
 from datetime import datetime, timedelta
 import numpy as np
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 
 from fastapi import UploadFile, HTTPException
 from PIL import Image, ImageDraw, ImageFont
@@ -18,6 +18,8 @@ from src.models.group import Member
 from src.models.user import User, UserAccount
 from src.models.schedule import Schedule
 from src.schemas.attendance import (
+    PhotoAttendanceItem,
+    PhotoAttendanceResponse,
     ManualAttendanceRequest,
     ManualAttendanceResponse,
     ManualAttendanceItem,
@@ -46,7 +48,9 @@ def get_latest_cluster_dir(user_id: int) -> str:
 
 
 # 사진 기반 출석체크
-async def run_photo_attendance(file: UploadFile, group_id: int) -> Dict[str, Any]:
+async def run_photo_attendance(
+    file: UploadFile, group_id: int
+) -> PhotoAttendanceResponse:
     start = time.time()
 
     # 1) 그룹 멤버 user_id 조회
@@ -196,13 +200,15 @@ async def run_photo_attendance(file: UploadFile, group_id: int) -> Dict[str, Any
         out_path = os.path.join(ATTEND_DIR, f"{check_id}.png")
         cv2.imwrite(out_path, img)
 
-        return {
-            "attendees": attendees,
-            "count": len(attendees),
-            "available_to_spend": available_to_spend,
-            "duration": duration,
-            "image_url": f"/api/attendance/photo/{check_id}",
-        }
+        return PhotoAttendanceResponse(
+            group_id=group_id,
+            user_ids=[a["user_id"] for a in attendees],
+            count=len(attendees),
+            available_to_spend=available_to_spend,
+            attendees=[PhotoAttendanceItem(**a) for a in attendees],
+            duration=duration,
+            image_url=f"/api/attendance/photo/{check_id}",
+        )
 
 
 # 수동 출석체크
@@ -242,6 +248,8 @@ def run_manual_attendance(
     available_to_spend = min_locked * len(attendees)
 
     return ManualAttendanceResponse(
+        group_id=data.group_id,
+        user_ids=data.user_ids,
         attendees=attendees,
         count=len(attendees),
         available_to_spend=available_to_spend,
@@ -249,14 +257,23 @@ def run_manual_attendance(
 
 
 def save_attendance(session: Session, dto: AttendanceCompleteRequest) -> int:
-    # schedule_id가 있으면 연결
-    schedule_id = dto.schedule_id  # None: 번개 모임
+    # 일정이 존재하는지 조회 (0 또는 None → 번개 모임)
+    if dto.schedule_id not in (None, 0):
+        schedule = session.get(Schedule, dto.schedule_id)
+        if not schedule:
+            raise HTTPException(404, "일정이 존재하지 않습니다.")
+        if schedule.is_done:
+            raise HTTPException(400, "종료된 일정에는 출석체크를 저장할 수 없습니다.")
+        schedule_id = schedule.id
+    else:
+        schedule_id = None  # 번개 모임은 None으로 저장
 
     record = AttendanceRecord(
         group_id=dto.group_id,
         schedule_id=schedule_id,
         attendee_user_ids=dto.user_ids,
         check_type=dto.check_type,
+        image_url=dto.image_url,
     )
     session.add(record)
     session.commit()
