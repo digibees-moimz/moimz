@@ -104,8 +104,13 @@ def spend_via_token(session: Session, qr_token: str, dto: SpendByTokenRequest):
         .scalars()
         .first()
     )
+
     if not record:
         raise HTTPException(404, "유효하지 않은 QR 코드입니다.")
+
+    # 모임 종료 체크
+    if record.is_closed:
+        raise HTTPException(400, "종료된 모임에서는 결제를 진행할 수 없습니다.")
 
     # 중복 방지
     if record.qrcode_used:

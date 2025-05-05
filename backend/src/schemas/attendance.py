@@ -47,6 +47,7 @@ class ManualAttendanceResponse(BaseModel):
 # 출석 완료 시 정보 저장
 class AttendanceCompleteRequest(BaseModel):
     group_id: int
+    schedule_id: Optional[int] = None
     user_ids: List[int]
     check_type: str  # "photo" 또는 "manual"
     image_url: Optional[str] = None

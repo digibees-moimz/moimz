@@ -1,7 +1,7 @@
 # backend/src/services/attendance/services.py
 import qrcode
-from datetime import datetime
 import os, uuid, time, cv2, pickle
+from datetime import datetime, timedelta
 import numpy as np
 from typing import Dict, Any, List
 
@@ -16,6 +16,7 @@ from src.routers._helpers import locked_amounts_by_accounts
 from src.models.attendance import AttendanceRecord
 from src.models.group import Member
 from src.models.user import User, UserAccount
+from src.models.schedule import Schedule
 from src.schemas.attendance import (
     ManualAttendanceRequest,
     ManualAttendanceResponse,
@@ -248,8 +249,12 @@ def run_manual_attendance(
 
 
 def save_attendance(session: Session, dto: AttendanceCompleteRequest) -> int:
+    # schedule_id가 있으면 연결
+    schedule_id = dto.schedule_id  # None: 번개 모임
+
     record = AttendanceRecord(
         group_id=dto.group_id,
+        schedule_id=schedule_id,
         attendee_user_ids=dto.user_ids,
         check_type=dto.check_type,
     )
@@ -306,6 +311,8 @@ def update_attendance(
     record = session.get(AttendanceRecord, attendance_id)
     if not record:
         raise HTTPException(404, "출석 정보가 없습니다.")
+    if record.is_closed:
+        raise HTTPException(400, "종료된 모임에서는 출석을 수정할 수 없습니다.")
 
     record.attendee_user_ids = user_ids
     session.add(record)
@@ -318,6 +325,8 @@ def generate_qr_for_attendance(session: Session, attendance_id: int) -> str:
     record = session.get(AttendanceRecord, attendance_id)
     if not record:
         raise HTTPException(404, "출석 정보가 없습니다.")
+    if record.is_closed:
+        raise HTTPException(400, "종료된 모임에서는 QR 코드를 생성할 수 없습니다.")
 
     # 이미 QR이 생성되어 있고 아직 유효하면 그대로 사용
     if record.qrcode_token and record.qrcode_created_at:
@@ -344,3 +353,18 @@ def generate_qr_for_attendance(session: Session, attendance_id: int) -> str:
     qr_img.save(qr_path)
 
     return token
+
+
+# 모임 종료 처리
+def close_attendance_by_schedule_id(session: Session, schedule_id: int):
+    record = (
+        session.execute(
+            select(AttendanceRecord).where(AttendanceRecord.schedule_id == schedule_id)
+        )
+        .scalars()
+        .first()
+    )
+    if record and not record.is_closed:
+        record.is_closed = True
+        session.add(record)
+        session.commit()
