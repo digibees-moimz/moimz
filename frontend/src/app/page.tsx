@@ -1,3 +1,5 @@
+// src/app/page.tsx
+
 import { Typography } from "@/components/ui-components/typography/Typography";
 import GroupList from "@/components/group/GroupList";
 

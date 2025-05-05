@@ -43,7 +43,7 @@ export default function GroupCard({ group }: GroupCardProps) {
           </div>
         </Flex.RowStartCenter>
         <button className="text-xs px-2 py-0.5 border border-gray-300 rounded-full text-gray-500">
-          추가 락인
+          락인 관리
         </button>
       </Flex.RowBetweenCenter>
 

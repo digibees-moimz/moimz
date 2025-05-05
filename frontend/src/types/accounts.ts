@@ -9,6 +9,13 @@ export interface GroupAccountSummary {
   group_account_id: number;
   account_number: string;
   total_balance: number;
-  members: GroupAccountMember[];
+  members: MemberLockedAmount[];
   available_to_spend: number;
+}
+
+export interface MemberLockedAmount {
+  user_account_id: number;
+  name: string;
+  profile_image_url: string;
+  locked_amount: number;
 }

@@ -1,6 +1,6 @@
 // src/hooks/useGroupAccountDetail.ts
 import { useQuery } from "@tanstack/react-query";
-import { fetchGroupAccountSummary } from "@/api/accounts";
+import { fetchGroupAccountSummary } from "@/api/account";
 import { GroupAccountSummary } from "@/types/accounts";
 
 export function useGroupAccountDetail(groupId: number) {

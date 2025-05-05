@@ -6,10 +6,11 @@ from typing import List
 class MemberLockedAmount(BaseModel):
     user_account_id: int
     name: str
+    profile_image_url: str | None = None
     locked_amount: float
 
     class Config:
-        orm_mode = True # orm_mode = True는 DB에서 가져온 데이터 그대로 변환 가능하게 해줌
+        from_attributes = True # True는 DB에서 가져온 데이터 그대로 변환 가능하게 해줌
 
 class GroupAccountSummary(BaseModel):
     group_account_id: int
@@ -19,7 +20,7 @@ class GroupAccountSummary(BaseModel):
     available_to_spend: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class LockInCreate(BaseModel):
     group_account_id: int
