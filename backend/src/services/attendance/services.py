@@ -3,7 +3,7 @@ import qrcode
 import os, uuid, time, cv2, pickle
 from datetime import datetime, timedelta
 import numpy as np
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from fastapi import UploadFile, HTTPException
 from PIL import Image, ImageDraw, ImageFont
@@ -321,6 +321,14 @@ def update_attendance(
     return record
 
 
+def delete_qr_image_if_exists(token: Optional[str]):
+    # 기존 QR 삭제
+    if token:
+        path = os.path.join(QR_DIR, f"{token}.png")
+        if os.path.exists(path):
+            os.remove(path)
+
+
 def generate_qr_for_attendance(session: Session, attendance_id: int) -> str:
     record = session.get(AttendanceRecord, attendance_id)
     if not record:
@@ -328,16 +336,20 @@ def generate_qr_for_attendance(session: Session, attendance_id: int) -> str:
     if record.is_closed:
         raise HTTPException(400, "종료된 모임에서는 QR 코드를 생성할 수 없습니다.")
 
+    # 사용된 QR이면 새로 만들어야 함
+    if record.qrcode_used:
+        delete_qr_image_if_exists(record.qrcode_token)
+        # 초기화
+        record.qrcode_token = None
+        record.qrcode_created_at = None
+        record.qrcode_used = False
+
     # 이미 QR이 생성되어 있고 아직 유효하면 그대로 사용
     if record.qrcode_token and record.qrcode_created_at:
         elapsed = datetime.utcnow() - record.qrcode_created_at
         if elapsed.total_seconds() < 1800:  # 30분
             return record.qrcode_token  # 재사용
-        else:
-            # 기존 QR 이미지 삭제
-            old_qr_path = os.path.join(QR_DIR, f"{record.qrcode_token}.png")
-            if os.path.exists(old_qr_path):
-                os.remove(old_qr_path)
+        delete_qr_image_if_exists(record.qrcode_token)
 
     # 새 QR 토큰 생성
     token = uuid.uuid4().hex
