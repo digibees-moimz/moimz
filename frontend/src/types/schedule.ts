@@ -41,3 +41,10 @@ export interface ScheduleCreateInput {
   location?: string;
   description?: string;
 }
+
+export interface ScheduleCalendarItem {
+  id: number;
+  title: string;
+  date: string;
+  is_done: boolean;
+}
