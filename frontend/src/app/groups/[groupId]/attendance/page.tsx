@@ -19,7 +19,6 @@ export default function AttendancePage() {
     <>
       <Typography.Heading3 className="font-bold">출석체크</Typography.Heading3>
       <Flex.ColCenter className="gap-5">
-        {/* 출석 관련 컴포넌트 추가 예정 */}
         <Image
           src="/icons/together.png"
           alt="단디 똑디 우디"
