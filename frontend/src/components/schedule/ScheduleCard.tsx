@@ -27,7 +27,7 @@ export const ScheduleCard = ({
   const translateY = isToday ? "-translate-y-1/5" : "-translate-y-1/7 ";
   const backgroundColor = isToday ? "bg-[#EEFAF7]" : "bg-[#FFF3F6]";
   const buttonColor = isToday ? "secondary" : "destructive";
-  const disableAttendance = dday !== undefined && dday !== "D-Day";
+  const disableAttendance = dday !== undefined && dday !== "D-day";
 
   return (
     <div className="relative max-w-xl mx-auto">
@@ -52,7 +52,7 @@ export const ScheduleCard = ({
             {!isToday && (
               <Typography.Heading4>{scheduleTitle}</Typography.Heading4>
             )}
-            {dday !== undefined && (
+            {!isToday && dday !== undefined && (
               <Typography.BodySmall className="text-[#FC9DB3] font-bold pl-3">
                 {dday}
               </Typography.BodySmall>

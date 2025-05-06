@@ -5,11 +5,11 @@ import {
   fetchGroupUpcomingSchedule,
   fetchTodaySchedules,
 } from "@/api/schedule";
-import type { ScheduleCalendarItem } from "@/types/schedule";
+import type { AllScheduleCardItem, ScheduleCardItem } from "@/types/schedule";
 
 // 전체 모임 중 오늘 일정 1개
 export function useTodaySchedule(userId: number) {
-  return useQuery<ScheduleCalendarItem | null>({
+  return useQuery<AllScheduleCardItem | null>({
     queryKey: ["schedules", "today", userId],
     queryFn: () => fetchTodaySchedule(userId),
     enabled: !!userId,
@@ -18,7 +18,7 @@ export function useTodaySchedule(userId: number) {
 
 // 전체 모임 중 다음 일정 1개
 export function useUpcomingSchedule(userId: number) {
-  return useQuery<ScheduleCalendarItem | null>({
+  return useQuery<AllScheduleCardItem | null>({
     queryKey: ["schedules", "upcoming", userId],
     queryFn: () => fetchUpcomingSchedule(userId),
     enabled: !!userId,
@@ -27,7 +27,7 @@ export function useUpcomingSchedule(userId: number) {
 
 // 특정 그룹의 다음 일정 1개
 export function useGroupUpcomingSchedule(groupId: number) {
-  return useQuery<ScheduleCalendarItem | null>({
+  return useQuery<ScheduleCardItem | null>({
     queryKey: ["schedules", "group", "upcoming", groupId],
     queryFn: () => fetchGroupUpcomingSchedule(groupId),
     enabled: !!groupId,
@@ -39,7 +39,7 @@ export const useTodaySchedules = (
   groupId: number,
   is_done: boolean = false
 ) => {
-  return useQuery<ScheduleCalendarItem[] | null, Error>({
+  return useQuery<ScheduleCardItem[] | null, Error>({
     queryKey: ["todaySchedules", groupId, is_done],
     queryFn: () => fetchTodaySchedules(groupId, is_done),
     enabled: !!groupId,

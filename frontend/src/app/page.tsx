@@ -1,33 +1,32 @@
 // src/app/page.tsx
 "use client";
 
+import { formatTimeOnly, getDdayLabel } from "@/utils/formatDate";
+import { ScheduleCard } from "@/components/schedule/ScheduleCard";
+import { Typography } from "@/components/ui-components/typography/Typography";
+import GroupList from "@/components/group/GroupList";
 import { useUserStore } from "@/stores/userStore";
 import {
   useTodaySchedule,
   useUpcomingSchedule,
 } from "@/hooks/schedule/useUpcomingSchedule";
-import { ScheduleCard } from "@/components/schedule/ScheduleCard";
-import { Typography } from "@/components/ui-components/typography/Typography";
-import GroupList from "@/components/group/GroupList";
-import { formatTimeOnly, getDdayLabel } from "@/utils/formatDate";
 
 export default function HomePage() {
   const { userId } = useUserStore();
   const { data: today } = useTodaySchedule(userId);
   const { data: next } = useUpcomingSchedule(userId);
 
-  console.log(userId, today, next);
-
   return (
     <>
-      {/* <div className="space-y-6">
+      {today && <p>{getDdayLabel(today.date)}</p>}
+      <div className="space-y-6">
         {today && (
           <ScheduleCard
             type="today"
-            groupName={""}
+            groupName={today.group_name}
             scheduleTitle={today.title}
             time={formatTimeOnly(today.date)}
-            dday="D-Day"
+            dday={getDdayLabel(today.date)}
           />
         )}
 
@@ -39,7 +38,7 @@ export default function HomePage() {
             dday={getDdayLabel(next.date)}
           />
         )}
-      </div> */}
+      </div>
       <Typography.Heading3 className="m-2">내 모임통장</Typography.Heading3>
       <GroupList />
     </>

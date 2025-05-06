@@ -1,6 +1,6 @@
 // src/api/schedule.ts
 import axios from "@/lib/axios";
-import { ScheduleDetail, ScheduleCalendarItem } from "@/types/schedule";
+import { ScheduleDetail, ScheduleCardItem, AllScheduleCardItem } from "@/types/schedule";
 
 // 특정 그룹의 모든 일정 조회
 export async function fetchSchedulesByGroup(
@@ -12,7 +12,7 @@ export async function fetchSchedulesByGroup(
 // 사용자 기준 오늘 일정 조회
 export async function fetchTodaySchedule(
   userId: number
-): Promise<ScheduleCalendarItem> {
+): Promise<AllScheduleCardItem> {
   return axios.get(`/api/schedules/today`, {
     params: { user_id: userId },
   });
@@ -21,7 +21,7 @@ export async function fetchTodaySchedule(
 // 사용자 기준 전체 중 다음 일정 조회
 export async function fetchUpcomingSchedule(
   userId: number
-): Promise<ScheduleCalendarItem> {
+): Promise<AllScheduleCardItem> {
   return axios.get(`/api/schedules/upcoming`, {
     params: { user_id: userId },
   });
@@ -31,7 +31,7 @@ export async function fetchUpcomingSchedule(
 export async function fetchTodaySchedules(
   groupId: number,
   is_done: boolean = false
-): Promise<ScheduleCalendarItem[]> {
+): Promise<ScheduleCardItem[]> {
   return axios.get(`/api/schedules/group/${groupId}/today`, {
     params: { is_done },
   });
@@ -40,6 +40,6 @@ export async function fetchTodaySchedules(
 // 특정 그룹 기준 다음 일정 조회
 export async function fetchGroupUpcomingSchedule(
   groupId: number
-): Promise<ScheduleCalendarItem> {
+): Promise<ScheduleCardItem> {
   return axios.get(`/api/schedules/groups/${groupId}/upcoming`);
 }
