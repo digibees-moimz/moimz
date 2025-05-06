@@ -5,6 +5,7 @@ from typing import Optional
 from sqlmodel import Session, select
 from src.core.database import get_session
 from sqlalchemy.orm import selectinload
+from src.models.group import Member
 from src.models.schedule import Schedule, ScheduleComment
 from src.schemas.schedule import (
     ScheduleCreate,
@@ -13,6 +14,7 @@ from src.schemas.schedule import (
     ScheduleCommentCreate,
     ScheduleCommentRead,
     ScheduleCalendarRead,
+    AllScheduleCalendarRead,
 )
 from src.services.attendance.services import close_attendance_by_schedule_id
 
@@ -41,6 +43,94 @@ def create_schedule(
     session.commit()
     session.refresh(schedule)
     return schedule
+
+
+# 전체 중 다음 일정 1개
+@router.get(
+    "/upcoming",
+    response_model=AllScheduleCalendarRead,
+    summary="전체 중 가장 가까운 다음 일정 조회",
+)
+def get_upcoming_schedule(
+    user_id: int = Query(..., description="사용자 ID"),
+    session: Session = Depends(get_session),
+):
+    now = datetime.utcnow()
+
+    # 사용자가 속한 그룹 ID 목록
+    group_ids_stmt = select(Member.group_id).where(Member.user_id == user_id)
+    group_ids = session.execute(group_ids_stmt).scalars().all()
+
+    if not group_ids:
+        raise HTTPException(404, detail="가입한 그룹이 없습니다.")
+
+    stmt = (
+        select(Schedule)
+        .options(selectinload(Schedule.group))
+        .where(Schedule.group_id.in_(group_ids))
+        .where(Schedule.date >= now)
+        .order_by(Schedule.date.asc())
+        .limit(1)
+    )
+    schedule = session.execute(stmt).scalars().first()
+    if not schedule:
+        raise HTTPException(404, detail="다가오는 일정이 없습니다.")
+    return AllScheduleCalendarRead(
+        id=schedule.id,
+        title=schedule.title,
+        date=schedule.date,
+        is_done=schedule.is_done,
+        group_id=schedule.group_id,
+        group_name=schedule.group.name if schedule.group else "",
+        location=schedule.location,
+    )
+
+
+# 전체 중 오늘 기준 다음 일정 1개
+@router.get(
+    "/today",
+    response_model=AllScheduleCalendarRead,
+    summary="전체 중 오늘의 가장 빠른 일정 조회",
+)
+def get_today_schedule(
+    user_id: int = Query(..., description="사용자 ID"),
+    session: Session = Depends(get_session),
+):
+    today = datetime.utcnow().date()
+    start_time = datetime.combine(today, datetime.min.time())  # 00:00:00
+    end_time = datetime.combine(today, datetime.max.time())  # 23:59:59
+
+    # 사용자가 속한 그룹 ID 목록
+    group_ids_stmt = select(Member.group_id).where(Member.user_id == user_id)
+    group_ids = session.execute(group_ids_stmt).scalars().all()
+
+    if not group_ids:
+        raise HTTPException(404, detail="가입한 그룹이 없습니다.")
+
+    # 해당 그룹들 중 오늘 이후 가장 빠른 일정
+    stmt = (
+        select(Schedule)
+        .options(selectinload(Schedule.group))
+        .where(Schedule.group_id.in_(group_ids))
+        .where(Schedule.is_done == False)
+        .where(Schedule.date >= start_time)
+        .where(Schedule.date <= end_time)
+        .order_by(Schedule.date.asc())
+        .limit(1)
+    )
+    schedule = session.execute(stmt).scalars().first()
+
+    if not schedule:
+        raise HTTPException(404, detail="다가오는 일정이 없습니다.")
+    return AllScheduleCalendarRead(
+        id=schedule.id,
+        title=schedule.title,
+        date=schedule.date,
+        is_done=schedule.is_done,
+        group_id=schedule.group_id,
+        group_name=schedule.group.name if schedule.group else "",
+        location=schedule.location,
+    )
 
 
 @router.get(
@@ -95,13 +185,16 @@ def get_schedule(schedule_id: int, session: Session = Depends(get_session)):
         .where(Schedule.id == schedule_id)
         .options(
             selectinload(Schedule.user),  # 주최자 정보 포함
-            selectinload(Schedule.comments).selectinload(ScheduleComment.user),  # 댓글 작성자 정보 포함
+            selectinload(Schedule.comments).selectinload(
+                ScheduleComment.user
+            ),  # 댓글 작성자 정보 포함
         )
     )
     schedule = session.execute(stmt).scalars().first()
     if not schedule:
         raise HTTPException(404, "일정이 존재하지 않습니다.")
     return schedule
+
 
 @router.patch(
     "/{schedule_id}",
@@ -224,3 +317,27 @@ def get_today_unfinished_schedules(
     )
 
     return session.execute(stmt).scalars().all()
+
+
+# 특정 그룹의 다음 일정 1개
+@router.get(
+    "/groups/{group_id}/upcoming",
+    response_model=ScheduleCalendarRead,
+    summary="특정 그룹의 다음 일정 조회",
+)
+def get_upcoming_schedule_by_group(
+    group_id: int, session: Session = Depends(get_session)
+):
+    now = datetime.utcnow()
+    stmt = (
+        select(Schedule)
+        .where(Schedule.group_id == group_id)
+        .where(Schedule.date >= now)
+        .order_by(Schedule.date.asc())
+        .limit(1)
+    )
+    schedule = session.execute(stmt).scalars().first()
+
+    if not schedule:
+        raise HTTPException(404, detail="이 그룹에는 예정된 일정이 없습니다.")
+    return ScheduleCalendarRead.model_validate(schedule)

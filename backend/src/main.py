@@ -30,7 +30,10 @@ app.add_middleware(
 )
 
 # 정적 파일 제공 - backend/media 디렉토리
-os.makedirs("src/backend/media", exist_ok=True)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
+MEDIA_DIR = os.path.join(BASE_DIR, "media")
+
+os.makedirs(MEDIA_DIR, exist_ok=True)
 app.mount("/files", StaticFiles(directory="media"), name="media")
 
 

@@ -10,11 +10,21 @@ const Heading1 = createHTMLElementWithCurry(
   "h1"
 );
 const Heading2 = createHTMLElementWithCurry(
-  "text-2xl sm:text-3xl font-semibold leading-snug",
+  "text-2xl sm:text-3xl font-bold leading-snug",
   "h2"
 );
 const Heading3 = createHTMLElementWithCurry(
-  "text-xl sm:text-2xl font-semibold leading-snug",
+  "text-xl sm:text-2xl font-bold leading-snug",
+  "h3"
+);
+
+const Heading4 = createHTMLElementWithCurry(
+  "text-lg sm:text-xl font-bold leading-snug",
+  "h3"
+);
+
+const Heading5 = createHTMLElementWithCurry(
+  "text-base sm:text-lg font-bold leading-snug",
   "h3"
 );
 
@@ -38,6 +48,8 @@ export const Typography = {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
+  Heading5,
   BodyLarge,
   Body,
   BodySmall,

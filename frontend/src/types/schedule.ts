@@ -41,3 +41,16 @@ export interface ScheduleCreateInput {
   location?: string;
   description?: string;
 }
+
+export interface ScheduleCardItem {
+  id: number;
+  title: string;
+  date: string;
+  is_done: boolean;
+  location?: string;
+}
+
+export interface AllScheduleCardItem extends ScheduleCardItem {
+  group_id: number;
+  group_name: string;
+}

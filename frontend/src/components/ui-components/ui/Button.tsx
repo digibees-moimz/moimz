@@ -42,7 +42,7 @@ export const Button = ({
   ...rest
 }: ButtonProps) => {
   const mergedClass = twMerge(
-    "inline-flex items-center justify-center font-medium rounded-lg transition",
+    "inline-flex items-center justify-center font-medium rounded-lg transition cursor-pointer",
     fullWidth ? "w-full" : "w-fit",
     iconOnly && "p-2 justify-center",
     isDisabled
