@@ -80,7 +80,7 @@ def get_upcoming_schedule(
 @router.get(
     "/today",
     response_model=ScheduleCalendarRead,
-    summary="전체 중 오늘 이후 가장 가까운 일정 조회",
+    summary="전체 중 오늘의 가장 빠른 일정 조회",
 )
 def get_today_schedule(
     user_id: int = Query(..., description="사용자 ID"),
@@ -302,7 +302,7 @@ def get_today_unfinished_schedules(
 
 # 특정 그룹의 다음 일정 1개
 @router.get(
-    "/groups/{group_id}/schedules/upcoming",
+    "/groups/{group_id}/upcoming",
     response_model=ScheduleCalendarRead,
     summary="특정 그룹의 다음 일정 조회",
 )
