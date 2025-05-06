@@ -17,6 +17,7 @@ class ScheduleCalendarRead(BaseModel):
     title: str
     date: datetime
     is_done: bool
+    location: Optional[str] = None 
 
     model_config = ConfigDict(from_attributes=True)
 
