@@ -27,11 +27,16 @@ export default function GroupDetailPage() {
         type="next"
         scheduleTitle="금오산 등산"
         time="13:30"
-        dday={2}
+        dday="D-2"
       />
 
       {/* 다음 모임용 */}
-      <ScheduleCard type="next" scheduleTitle="스터디" time="10:30" dday={0} />
+      <ScheduleCard
+        type="next"
+        scheduleTitle="스터디"
+        time="10:30"
+        dday="D-Day"
+      />
 
       <GroupDetailSection groupId={id} />
       <NextScheduleCard />

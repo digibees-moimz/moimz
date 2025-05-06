@@ -10,7 +10,8 @@ type ScheduleCardProps = {
   groupName?: string;
   scheduleTitle: string;
   time: string;
-  dday?: number;
+  location?: string;
+  dday?: string;
 };
 
 export const ScheduleCard = ({
@@ -18,13 +19,15 @@ export const ScheduleCard = ({
   groupName,
   scheduleTitle,
   time,
+  location,
   dday,
 }: ScheduleCardProps) => {
   const isToday = type === "today";
   const icon = isToday ? "hanging_woodi" : "hanging_ddockdi";
+  const translateY = isToday ? "-translate-y-1/5" : "-translate-y-1/7 ";
   const backgroundColor = isToday ? "bg-[#EEFAF7]" : "bg-[#FFF3F6]";
   const buttonColor = isToday ? "secondary" : "destructive";
-  const disableAttendance = typeof dday === "number" && dday > 0;
+  const disableAttendance = dday !== undefined && dday !== "D-Day";
 
   return (
     <div className="relative max-w-xl mx-auto">
@@ -34,7 +37,9 @@ export const ScheduleCard = ({
       </Typography.Heading3>
 
       {/* 캐릭터 */}
-      <div className="absolute left-1/2 -translate-x-1/1 -translate-y-1/5 z-10 top-0">
+      <div
+        className={`absolute left-1/2 -translate-x-1/1 z-10 top-0 ${translateY}`}
+      >
         <Image src={`/icons/${icon}.png`} alt={icon} width={65} height={65} />
       </div>
 
@@ -49,20 +54,29 @@ export const ScheduleCard = ({
             )}
             {dday !== undefined && (
               <Typography.BodySmall className="text-[#FC9DB3] font-bold pl-3">
-                D-{dday}
+                {dday}
               </Typography.BodySmall>
             )}
           </Flex.RowStartCenter>
 
           {/* 시간 + D-day */}
           <Flex.RowEndCenter className="gap-3">
-            {isToday && (
+            {isToday ? (
               <Flex.RowCenter className="flex items-center gap-1">
                 <AiOutlineSchedule className="text-gray-400" size={18} />
                 <Typography.BodySmall className="text-gray-400">
                   {scheduleTitle}
                 </Typography.BodySmall>
               </Flex.RowCenter>
+            ) : (
+              location && (
+                <Flex.RowCenter className="flex items-center gap-1">
+                  <FaMapMarkerAlt className="text-gray-400" />
+                  <Typography.BodySmall className="text-gray-400">
+                    {location}
+                  </Typography.BodySmall>
+                </Flex.RowCenter>
+              )
             )}
             {/* 시간 */}
             <Flex.RowEndCenter className="flex items-center gap-1">
@@ -81,7 +95,7 @@ export const ScheduleCard = ({
             variant={buttonColor}
             isDisabled={disableAttendance}
           >
-            출석›체크 시작하기
+            출석체크 시작하기
           </Button>
           <Button size="xs">모임비 추가 납부하기</Button>
         </div>
