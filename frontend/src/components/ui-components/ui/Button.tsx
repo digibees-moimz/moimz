@@ -24,7 +24,7 @@ const variantClasses: Record<Variant, string> = {
 const sizeClasses: Record<Size, string> = {
   xs: "h-8 px-2 text-sm",
   sm: "h-10 px-3 text-base",
-  md: "h-12 px-4 text-base",
+  md: "h-12 px-4 text-lg",
   lg: "h-14 px-5 text-xl",
   icon: "h-10 w-10 p-2",
 };

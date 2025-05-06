@@ -17,7 +17,7 @@ export default function AttendancePage() {
 
   return (
     <>
-      <Typography.Heading3 className="font-bold">출석체크</Typography.Heading3>
+      <Typography.Heading3>출석체크</Typography.Heading3>
       <Flex.ColCenter className="gap-5">
         <Image
           src="/icons/together.png"
