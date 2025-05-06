@@ -14,6 +14,7 @@ from src.schemas.schedule import (
     ScheduleCommentCreate,
     ScheduleCommentRead,
     ScheduleCalendarRead,
+    AllScheduleCalendarRead,
 )
 from src.services.attendance.services import close_attendance_by_schedule_id
 
@@ -47,7 +48,7 @@ def create_schedule(
 # 전체 중 다음 일정 1개
 @router.get(
     "/upcoming",
-    response_model=ScheduleCalendarRead,
+    response_model=AllScheduleCalendarRead,
     summary="전체 중 가장 가까운 다음 일정 조회",
 )
 def get_upcoming_schedule(
@@ -65,6 +66,7 @@ def get_upcoming_schedule(
 
     stmt = (
         select(Schedule)
+        .options(selectinload(Schedule.group))
         .where(Schedule.group_id.in_(group_ids))
         .where(Schedule.date >= now)
         .order_by(Schedule.date.asc())
@@ -73,13 +75,21 @@ def get_upcoming_schedule(
     schedule = session.execute(stmt).scalars().first()
     if not schedule:
         raise HTTPException(404, detail="다가오는 일정이 없습니다.")
-    return schedule
+    return AllScheduleCalendarRead(
+        id=schedule.id,
+        title=schedule.title,
+        date=schedule.date,
+        is_done=schedule.is_done,
+        group_id=schedule.group_id,
+        group_name=schedule.group.name if schedule.group else "",
+        location=schedule.location,
+    )
 
 
 # 전체 중 오늘 기준 다음 일정 1개
 @router.get(
     "/today",
-    response_model=ScheduleCalendarRead,
+    response_model=AllScheduleCalendarRead,
     summary="전체 중 오늘의 가장 빠른 일정 조회",
 )
 def get_today_schedule(
@@ -100,6 +110,7 @@ def get_today_schedule(
     # 해당 그룹들 중 오늘 이후 가장 빠른 일정
     stmt = (
         select(Schedule)
+        .options(selectinload(Schedule.group))
         .where(Schedule.group_id.in_(group_ids))
         .where(Schedule.is_done == False)
         .where(Schedule.date >= start_time)
@@ -111,7 +122,15 @@ def get_today_schedule(
 
     if not schedule:
         raise HTTPException(404, detail="다가오는 일정이 없습니다.")
-    return ScheduleCalendarRead.model_validate(schedule)
+    return AllScheduleCalendarRead(
+        id=schedule.id,
+        title=schedule.title,
+        date=schedule.date,
+        is_done=schedule.is_done,
+        group_id=schedule.group_id,
+        group_name=schedule.group.name if schedule.group else "",
+        location=schedule.location,
+    )
 
 
 @router.get(
