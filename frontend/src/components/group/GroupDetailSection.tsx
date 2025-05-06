@@ -19,7 +19,7 @@ export default function GroupDetailSection({ groupId }: { groupId: number }) {
     return <Typography.Body>모임을 찾을 수 없습니다.</Typography.Body>;
 
   return (
-    <Flex.ColCenter className="w-full px-4 py-6 gap-6">
+    <Flex.ColCenter>
       <GroupMainCard group={group} />
     </Flex.ColCenter>
   );

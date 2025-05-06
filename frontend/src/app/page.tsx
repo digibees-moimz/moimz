@@ -18,7 +18,6 @@ export default function HomePage() {
 
   return (
     <>
-      {today && <p>{getDdayLabel(today.date)}</p>}
       <div className="space-y-6">
         {today && (
           <ScheduleCard

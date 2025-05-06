@@ -7,39 +7,31 @@ import GroupDetailSection from "@/components/group/GroupDetailSection";
 import { useUserStore } from "@/stores/userStore";
 import NextScheduleCard from "@/components/scheduleDetail/NextScheduleCard";
 import { ScheduleCard } from "@/components/schedule/ScheduleCard";
+import { useGroupUpcomingSchedule } from "@/hooks/schedule/useUpcomingSchedule";
+import { formatTimeOnly, getDdayLabel } from "@/utils/formatDate";
 
 export default function GroupDetailPage() {
-  const { groupId } = useParams();
-  const id = parseInt(groupId as string, 10);
+  const { groupId } = useParams<{ groupId: string }>();
+  const groupIdNum = Number(groupId);
+
+  if (isNaN(groupIdNum)) return <div>잘못된 그룹입니다.</div>;
+
+  const { data: next } = useGroupUpcomingSchedule(groupIdNum);
 
   return (
     <>
-      {/* 오늘의 모임용 */}
-      <ScheduleCard
-        type="today"
-        groupName="우디 언제봐"
-        scheduleTitle="금오산 등산"
-        time="18:30"
-      />
+    {/* 모임통장 상세 */}
+      <GroupDetailSection groupId={groupIdNum} />
 
-      {/* 다음 모임용 */}
-      <ScheduleCard
-        type="next"
-        scheduleTitle="금오산 등산"
-        time="13:30"
-        dday="D-2"
-      />
-
-      {/* 다음 모임용 */}
-      <ScheduleCard
-        type="next"
-        scheduleTitle="스터디"
-        time="10:30"
-        dday="D-Day"
-      />
-
-      <GroupDetailSection groupId={id} />
-      <NextScheduleCard />
+      {/* 다음 일정 */}
+      {next && (
+        <ScheduleCard
+          type="next"
+          scheduleTitle={next.title}
+          time={formatTimeOnly(next.date)}
+          dday={getDdayLabel(next.date)}
+        />
+      )}
     </>
   );
 }
