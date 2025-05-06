@@ -10,24 +10,24 @@ export async function fetchSchedulesByGroup(
 }
 
 // 사용자 기준 오늘 일정 조회
-export async function fetchTodaySchedule(userId: number) {
-  const { data } = await axios.get<ScheduleCalendarItem>(
-    `/api/schedules/today`,
-    { params: { user_id: userId } }
-  );
-  return data;
+export async function fetchTodaySchedule(
+  userId: number
+): Promise<ScheduleCalendarItem> {
+  return axios.get(`/api/schedules/today`, {
+    params: { user_id: userId },
+  });
 }
 
 // 사용자 기준 전체 중 다음 일정 조회
-export async function fetchUpcomingSchedule(userId: number) {
-  const { data } = await axios.get<ScheduleCalendarItem>(
-    `/api/schedules/upcoming`,
-    { params: { user_id: userId } }
-  );
-  return data;
+export async function fetchUpcomingSchedule(
+  userId: number
+): Promise<ScheduleCalendarItem> {
+  return axios.get(`/api/schedules/upcoming`, {
+    params: { user_id: userId },
+  });
 }
 
-// 특정 그룹 기준 오늘 일정 조회
+// 특정 그룹 기준 오늘 일정 리스트 조회
 export async function fetchTodaySchedules(
   groupId: number,
   is_done: boolean = false
@@ -38,9 +38,8 @@ export async function fetchTodaySchedules(
 }
 
 // 특정 그룹 기준 다음 일정 조회
-export async function fetchGroupUpcomingSchedule(groupId: number) {
-  const { data } = await axios.get<ScheduleCalendarItem>(
-    `/api/schedules/groups/${groupId}/upcoming`
-  );
-  return data;
+export async function fetchGroupUpcomingSchedule(
+  groupId: number
+): Promise<ScheduleCalendarItem> {
+  return axios.get(`/api/schedules/groups/${groupId}/upcoming`);
 }
