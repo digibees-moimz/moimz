@@ -18,6 +18,11 @@ const Heading3 = createHTMLElementWithCurry(
   "h3"
 );
 
+const Heading4 = createHTMLElementWithCurry(
+  "text-lg sm:text-xl font-semibold leading-snug",
+  "h3"
+);
+
 // Body 계열
 const BodyLarge = createHTMLElementWithCurry("text-lg leading-relaxed", "p");
 const Body = createHTMLElementWithCurry("text-base leading-relaxed", "p");
@@ -38,6 +43,7 @@ export const Typography = {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
   BodyLarge,
   Body,
   BodySmall,
