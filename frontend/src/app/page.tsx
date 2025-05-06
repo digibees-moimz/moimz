@@ -22,6 +22,7 @@ export default function HomePage() {
         {today && (
           <ScheduleCard
             type="today"
+            groupId={today.group_id}
             groupName={today.group_name}
             scheduleTitle={today.title}
             time={formatTimeOnly(today.date)}
@@ -32,6 +33,7 @@ export default function HomePage() {
         {!today && next && (
           <ScheduleCard
             type="next"
+            groupId={next.group_id}
             scheduleTitle={next.title}
             time={formatTimeOnly(next.date)}
             dday={getDdayLabel(next.date)}

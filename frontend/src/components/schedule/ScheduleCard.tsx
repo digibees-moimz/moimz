@@ -1,12 +1,15 @@
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { FaRegClock, FaMapMarkerAlt } from "react-icons/fa";
 import { AiOutlineSchedule } from "react-icons/ai";
 import { Typography } from "../ui-components/typography/Typography";
 import { Button } from "../ui-components/ui/Button";
 import { Flex } from "../ui-components/layout/Flex";
+import { navigateWithScrollTop } from "@/utils/navigation";
 
 type ScheduleCardProps = {
   type: "today" | "next";
+  groupId: number
   groupName?: string;
   scheduleTitle: string;
   time: string;
@@ -16,12 +19,15 @@ type ScheduleCardProps = {
 
 export const ScheduleCard = ({
   type,
+  groupId,
   groupName,
   scheduleTitle,
   time,
   location,
   dday,
 }: ScheduleCardProps) => {
+  const router = useRouter();
+
   const isToday = type === "today";
   const icon = isToday ? "hanging_woodi" : "hanging_ddockdi";
   const translateY = isToday ? "-translate-y-1/5" : "-translate-y-1/7 ";
@@ -94,6 +100,9 @@ export const ScheduleCard = ({
             size="xs"
             variant={buttonColor}
             isDisabled={disableAttendance}
+            onClick={() =>
+              navigateWithScrollTop(router, `/groups/${groupId}/attendance`)
+            }
           >
             출석체크 시작하기
           </Button>

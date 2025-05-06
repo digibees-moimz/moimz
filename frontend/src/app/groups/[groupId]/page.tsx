@@ -20,13 +20,14 @@ export default function GroupDetailPage() {
 
   return (
     <>
-    {/* 모임통장 상세 */}
+      {/* 모임통장 상세 */}
       <GroupDetailSection groupId={groupIdNum} />
 
       {/* 다음 일정 */}
       {next && (
         <ScheduleCard
           type="next"
+          groupId={groupIdNum}
           scheduleTitle={next.title}
           time={formatTimeOnly(next.date)}
           dday={getDdayLabel(next.date)}
