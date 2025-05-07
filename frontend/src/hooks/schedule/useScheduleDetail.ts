@@ -1,6 +1,6 @@
 // src/hooks/schedule/useScheduleDetail.ts
 import { useQuery } from "@tanstack/react-query";
-import axios from "@/lib/axios_past";
+import axios from "@/lib/axios";
 import type { ScheduleDetail } from "@/types/schedule";
 
 export const useScheduleDetail = (scheduleId: number) => {

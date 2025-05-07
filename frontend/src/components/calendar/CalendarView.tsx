@@ -12,13 +12,13 @@ import {
   isSameDay,
   parse,
   startOfToday,
-  parseISO,
 } from "date-fns";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { useMonthlySchedules } from "@/hooks/schedule/useMonthlySchedules";
 import type { ScheduleItem } from "@/types/schedule";
 import EventList from "./EventList"; // 새로 만들 컴포넌트
 import CalendarGrid from "./CalendarGrid";
+import { parseISOAsUtc } from "@/utils/formatDate";
 
 export default function CalendarView({ groupId }: { groupId: number }) {
   const today = startOfToday();
@@ -42,7 +42,7 @@ export default function CalendarView({ groupId }: { groupId: number }) {
   // 날짜별 일정 매핑
   const eventsByDate = new Map<string, ScheduleItem[]>();
   schedules.forEach((s) => {
-    const key = format(parseISO(s.date), "yyyy-MM-dd");
+    const key = format(parseISOAsUtc(s.date), "yyyy-MM-dd");
     if (!eventsByDate.has(key)) {
       eventsByDate.set(key, []);
     }

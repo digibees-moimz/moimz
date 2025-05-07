@@ -1,21 +1,15 @@
 // src/hooks/schedule/useMonthlySchedules.ts
 import { useQuery } from "@tanstack/react-query";
-import axios from "@/lib/axios_past";
-import type { ScheduleItem } from "@/types/schedule";
+import { fetchMonthlySchedules } from "@/api/schedule";
+import type { ScheduleCardItem } from "@/types/schedule";
 
 export const useMonthlySchedules = (
   groupId: number,
   year: number,
   month: number
 ) => {
-  return useQuery({
+  return useQuery<ScheduleCardItem[]>({
     queryKey: ["schedules", groupId, year, month],
-    queryFn: async (): Promise<ScheduleItem[]> => {
-      const { data } = await axios.get<ScheduleItem[]>(
-        `/api/schedules/group/${groupId}/monthly`,
-        { params: { year, month } }
-      );
-      return data;
-    },
+    queryFn: () => fetchMonthlySchedules(groupId, year, month),
   });
 };
