@@ -1,4 +1,4 @@
-import axios from "@/lib/axios";
+import axios, { uploadFile } from "@/lib/axios";
 import {
   PhotoAttendanceResponse,
   ManualAttendanceRequest,
@@ -9,10 +9,7 @@ import {
 
 // 1. 사진 기반 출석체크
 export const checkPhotoAttendance = (formData: FormData, groupId: number) =>
-  axios.post<PhotoAttendanceResponse>(
-    `api/attendance/photo?group_id=${groupId}`,
-    formData
-  );
+  uploadFile(`api/attendance/photo?group_id=${groupId}`, formData);
 
 // 2. 출석 결과 이미지 조회
 export const getAttendanceImageUrl = (checkId: string) =>

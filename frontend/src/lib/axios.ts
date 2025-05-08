@@ -6,9 +6,6 @@ const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
   timeout: 15000, // 15초
   withCredentials: true, // 필요시 쿠키/세션 인증 처리
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // 공통 에러 핸들링 (선택)
@@ -20,5 +17,15 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// 파일 업로드용 함수
+export const uploadFile = (url: string, formData: FormData, config = {}) => {
+  return axiosInstance.post(url, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    ...config,
+  });
+};
 
 export default axiosInstance;
