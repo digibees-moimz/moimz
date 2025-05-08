@@ -49,7 +49,7 @@ export const updateAttendanceRecord = (
 export const generateQrForAttendance = (
   attendanceId: number
 ): Promise<{ qr_token: string; qr_url: string }> =>
-  axios.post(`/attendance/${attendanceId}/qr`);
+  axios.post(`api/attendance/${attendanceId}/qr`);
 
 // 8. QR 이미지 조회 URL
 export const getQrImageUrl = (token: string) =>

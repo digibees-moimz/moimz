@@ -2,18 +2,31 @@
 
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useAttendance } from "@/hooks/Attendance/useAttendance";
-import { AttendanceRecordRead } from "@/types/attendance";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Button } from "@/components/ui-components/ui/Button";
 
 export default function AttendanceResultPage() {
+  const router = useRouter();
   const { attendanceId, groupId } = useParams();
   const id = Number(attendanceId);
 
-  const { useAttendanceRecord } = useAttendance();
+  const { useAttendanceRecord, useGenerateQr } = useAttendance();
   const { data, isLoading } = useAttendanceRecord(id);
+  const { mutate: generateQr, isPending: isQrGenerating } = useGenerateQr();
+
+  const handleGenerateQr = () => {
+    generateQr(id, {
+      onSuccess: (res) => {
+        const token = res.qr_token;
+        router.push(`/groups/${groupId}/pay?token=${token}`);
+      },
+      onError: () => {
+        alert("QR 코드 생성에 실패했어요. 다시 시도해주세요.");
+      },
+    });
+  };
 
   if (isLoading || !data) return <div className="p-4">로딩 중...</div>;
 
@@ -42,8 +55,18 @@ export default function AttendanceResultPage() {
       </div>
 
       <div className="flex gap-2 pt-4">
-        <Button className="flex-1">결제하러 가기</Button>
-        <Button className="flex-1" variant="destructive">
+        <Button
+          className="flex-1"
+          onClick={handleGenerateQr}
+          disabled={isQrGenerating}
+        >
+          결제하러 가기
+        </Button>
+        <Button
+          className="flex-1"
+          variant="destructive"
+          onClick={() => router.back()}
+        >
           돌아가기
         </Button>
       </div>
