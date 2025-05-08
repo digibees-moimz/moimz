@@ -44,3 +44,15 @@ class UserGroupSummary(BaseModel):
     
     class Config:
         orm_mode = True
+        
+# 대표 캐릭터 업로드
+class CharacterImageUpload(BaseModel):
+    image_base64: str
+    is_representative: bool = False
+ 
+# 대표 캐릭터 읽기
+class CharacterRead(BaseModel):
+    id: int
+    group_id: int
+    image_url: str
+    is_representative: bool

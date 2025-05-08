@@ -4,8 +4,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from sqlmodel import Session, select, exists
-from src.core.database import engine, get_session
-from src.models.group import Group, Member
+from sqlalchemy import text
+from src.core.database import engine, get_session, SD_API_URL
+from src.models.group import Group, Member, MoimCharacter, MoimScore
 from src.models.group_account import GroupAccount
 from src.models.user import User
 from src.schemas.group import (
@@ -14,9 +15,16 @@ from src.schemas.group import (
     GroupUpdate,
     GroupJoin,
     GroupLeave,
+    CharacterImageUpload, 
+    CharacterRead,
 )
 from src.routers._helpers import get_group
+from src.services.group.service import (
+    save_moim_character_image,
+    generate_prompt_from_scores,
+)
 import random
+import requests
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
 
@@ -51,6 +59,10 @@ def create_group(dto: GroupCreate):
                 account_number=_generate_account_number(),
             )
         )
+        s.add(
+            MoimScore(group_id=grp.id)
+        )
+
         s.commit()
         return GroupRead.model_validate(grp, from_attributes=True)
 
@@ -155,3 +167,66 @@ def get_member_ids(group_id: int, session: Session = Depends(get_session)):
     if not ids:
         raise HTTPException(404, "해당 그룹에 멤버가 없습니다.")
     return ids
+
+
+# ───────────────────────── 캐릭터 생성 및 저장
+@router.post(
+    "/{group_id}/generate-character",
+    response_model=CharacterRead,
+    summary="SD 기반 캐릭터 생성 및 저장",
+    description="모임 데이터를 바탕으로 캐릭터 생성 → 저장 후 대표 캐릭터로 등록합니다.",
+)
+def generate_character(group_id: int, session: Session = Depends(get_session)):
+    group = get_group(session, group_id)
+
+    try:
+        # 1️⃣ session 넘겨서 호출
+        result = generate_prompt_from_scores(group_id, session)
+        print("🎯 프롬프트:", result["prompt"])
+        print("🎯 네거티브:", result["negative_prompt"])
+        payload = {
+            "prompt": result["prompt"],
+            "negative_prompt": result["negative_prompt"],
+            "steps": 25,
+            "sampler_index": "Euler a",
+            "enable_hr": True,
+            "hr_scale": 2,
+            "denoising_strength": 0.7,
+            "hr_upscaler": "Latent",
+            "width": 512,
+            "height": 512,
+        }
+
+        txt2img_url = f"{SD_API_URL}/sdapi/v1/txt2img"
+        response = requests.post(txt2img_url, json=payload)
+        response.raise_for_status()
+        image_base64 = response.json()["images"][0]
+
+        # 2️⃣ 저장
+        image_url = save_moim_character_image(image_base64, group_id)
+
+        # 3️⃣ 기존 대표 플래그 초기화
+        session.execute(
+            text(
+                "UPDATE moimcharacter "
+                "SET is_representative = false "
+                "WHERE group_id = :gid"
+            ),
+            {"gid": group_id},
+        )
+
+        # 4️⃣ 새로운 레코드 & 그룹 대표 이미지 갱신
+        new_char = MoimCharacter(
+            group_id=group_id,
+            image_url=image_url,
+            is_representative=True,
+        )
+        session.add(new_char)
+        group.image_url = image_url
+
+        session.commit()
+        session.refresh(new_char)
+        return CharacterRead.model_validate(new_char, from_attributes=True)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"캐릭터 생성 실패: {e}")

@@ -28,6 +28,14 @@ export default function GroupMainCard({ group }: GroupMainCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const { data: groups } = useGroups(userId); // 🔥 전체 그룹 정보
 
+  const isDefaultImage = image_url === "/images/groups/default.png";
+  const cleanUrl = image_url
+    .replace(/\\/g, "/") // 역슬래시 → 슬래시
+    .replace("/media", ""); // "/media"만 제거
+  const displayImage = isDefaultImage
+    ? image_url
+    : `http://localhost:8000/files${cleanUrl}`;
+
   return (
     <>
       <Flex.RowBetweenCenter className="w-full bg-[#EEFAF7] p-6 rounded-xl">
@@ -79,9 +87,9 @@ export default function GroupMainCard({ group }: GroupMainCardProps) {
         {/* Right */}
         <Flex.ColCenter className="w-auto h-auto">
           <img
-            src={image_url}
+            src={displayImage}
             alt="캐릭터"
-            className="w-24 h-24 object-contain"
+            className="w-56 h-56 object-contain"
           />
         </Flex.ColCenter>
       </Flex.RowBetweenCenter>

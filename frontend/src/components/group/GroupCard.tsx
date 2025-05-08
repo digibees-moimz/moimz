@@ -16,17 +16,26 @@ export default function GroupCard({ group }: GroupCardProps) {
     group_balance = 0,
     locked_amount = 0,
   } = group;
-  const displayImage = image_url || "/group-images/default.png";
+
+  const isDefaultImage = image_url === "/images/groups/default.png";
+
+  const cleanUrl = image_url
+    .replace(/\\/g, "/") // 역슬래시 → 슬래시
+    .replace("/media", ""); // "/media"만 제거
+
+  const displayImage = isDefaultImage
+    ? image_url
+    : `http://localhost:8000/files${cleanUrl}`;
 
   return (
     <div className="w-full">
       {/* 상단: 이미지 + 그룹명 + 카테고리 + 추가 확인 */}
       <Flex.RowBetweenCenter className="w-full">
-        <Flex.RowStartCenter className="gap-3">
+        <Flex.RowStartCenter className="gap-4">
           <img
             src={displayImage}
             alt={`${name} 대표 이미지`}
-            className="w-10 h-10 object-contain"
+            className="w-20 h-20 object-contain"
           />
           <div>
             <Flex.RowStartCenter className="gap-2">

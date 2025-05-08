@@ -9,6 +9,7 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./local.db")
 engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SD_API_URL = os.getenv("SD_API_URL", "")
 
 from src.models import *
 
