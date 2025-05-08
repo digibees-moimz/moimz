@@ -17,7 +17,7 @@ interface AttendanceStore {
   type: AttendanceCheckType; // "photo" | "manual"
   attendees: Attendee[]; // 선택된 출석자 명단
   imageUrl?: string; // 사진 출석용 이미지
-  photoFile?: File; // 사진 파일 (선택적으로)
+  uploadedPhoto?: File; // 사진 파일
 
   // 상태 업데이트
   set: (data: Partial<AttendanceStore>) => void;
@@ -33,7 +33,7 @@ export const useAttendanceStore = create<AttendanceStore>((set) => ({
   type: "photo",
   attendees: [],
   imageUrl: undefined,
-  photoFile: undefined,
+  uploadedPhoto: undefined,
 
   set: (data) => set((state) => ({ ...state, ...data })),
 
@@ -45,6 +45,6 @@ export const useAttendanceStore = create<AttendanceStore>((set) => ({
       type: "photo",
       attendees: [],
       imageUrl: undefined,
-      photoFile: undefined,
+      uploadedPhoto: undefined,
     }),
 }));
