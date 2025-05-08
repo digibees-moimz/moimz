@@ -1,5 +1,6 @@
 // useAttendanceStore.ts
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { AttendanceCheckType } from "@/types/attendance";
 
 // 출석자 정보 타입
@@ -28,21 +29,9 @@ interface AttendanceStore {
   reset: () => void;
 }
 
-export const useAttendanceStore = create<AttendanceStore>((set) => ({
-  attendanceId: null,
-  groupId: 0,
-  scheduleId: null,
-  type: "photo",
-  attendees: [],
-  userIds: [],
-  availableToSpend: 0,
-  imageUrl: undefined,
-  uploadedPhoto: undefined,
-
-  set: (data) => set((state) => ({ ...state, ...data })),
-
-  reset: () =>
-    set({
+export const useAttendanceStore = create<AttendanceStore>()(
+  persist(
+    (set) => ({
       attendanceId: null,
       groupId: 0,
       scheduleId: null,
@@ -52,5 +41,33 @@ export const useAttendanceStore = create<AttendanceStore>((set) => ({
       availableToSpend: 0,
       imageUrl: undefined,
       uploadedPhoto: undefined,
+
+      set: (data) => set((state) => ({ ...state, ...data })),
+      reset: () =>
+        set({
+          attendanceId: null,
+          groupId: 0,
+          scheduleId: null,
+          type: "photo",
+          attendees: [],
+          userIds: [],
+          availableToSpend: 0,
+          imageUrl: undefined,
+          uploadedPhoto: undefined,
+        }),
     }),
-}));
+    {
+      name: "attendance-storage", // 로컬스토리지 키 이름
+      partialize: (state) => ({
+        attendanceId: state.attendanceId,
+        groupId: state.groupId,
+        scheduleId: state.scheduleId,
+        attendees: state.attendees,
+        userIds: state.userIds,
+        availableToSpend: state.availableToSpend,
+        type: state.type,
+        imageUrl: state.imageUrl,
+      }),
+    }
+  )
+);
