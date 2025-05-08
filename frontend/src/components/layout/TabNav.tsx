@@ -14,6 +14,7 @@ export default function TabNav() {
     { label: "커뮤니티", href: "/groups/1/community" },
     { label: "앨범", href: "/groups/1/album" },
     { label: "캘린더", href: "/groups/1/calendar" },
+    { label: "출석체크", href: "/groups/1/attendance" },
   ];
 
   const activeTabHref = tabs
