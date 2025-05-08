@@ -4,21 +4,19 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { useAttendance } from "@/hooks/Attendance/useAttendance";
-import {
-  ManualAttendanceRequest,
-  ManualAttendanceResponse,
-} from "@/types/attendance";
+import { ManualAttendanceRequest } from "@/types/attendance";
 import { useGroupAccountSummary } from "@/hooks/useGroupAccountSummary";
+import { useTodaySchedules } from "@/hooks/schedule/useUpcomingSchedule";
 import { Button } from "@/components/ui-components/ui/Button";
 import { GroupMembers } from "@/components/attendance/GroupMembers";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { ScheduleSelector } from "@/components/attendance/ScheduleSelector";
 
 export default function ManualAttendancePage() {
   const router = useRouter();
   const { groupId: groupIdParam } = useParams();
   const groupIdNum = Number(groupIdParam);
-  const { groupId, scheduleId, set, attendees, userIds, availableToSpend } =
-    useAttendanceStore();
+  const { groupId, scheduleId, set } = useAttendanceStore();
   const { useManualAttendance, useCompleteAttendance } = useAttendance();
 
   useEffect(() => {
@@ -32,6 +30,10 @@ export default function ManualAttendancePage() {
   const members = summary?.members || [];
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
+    null
+  );
+  const { data: todaySchedules } = useTodaySchedules(groupId);
 
   const { mutate: submitManualAttendance, isPending } = useManualAttendance();
   const { mutate: submitCompleteAttendance, isPending: isCompleting } =
@@ -78,8 +80,14 @@ export default function ManualAttendancePage() {
     <div className="p-4 space-y-4 pb-32">
       <h1 className="text-xl font-bold">수동 출석체크</h1>
 
-      <Typography.Body className="text-gray-700">
-        선택된 인원: {selectedIds.length}명
+      <ScheduleSelector
+        schedules={todaySchedules || []}
+        selectedScheduleId={selectedScheduleId}
+        onSelect={setSelectedScheduleId}
+      />
+
+      <Typography.Body className="text-gray-700 pt-3">
+        선택된 인원 - {selectedIds.length}명
       </Typography.Body>
 
       {/* 출석자 선택 리스트 */}
