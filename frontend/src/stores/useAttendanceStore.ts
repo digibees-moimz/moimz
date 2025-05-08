@@ -16,6 +16,8 @@ interface AttendanceStore {
   scheduleId: number | null;
   type: AttendanceCheckType; // "photo" | "manual"
   attendees: Attendee[]; // 선택된 출석자 명단
+  userIds: number[];
+  availableToSpend: number;
   imageUrl?: string; // 사진 출석용 이미지
   uploadedPhoto?: File; // 사진 파일
 
@@ -32,6 +34,8 @@ export const useAttendanceStore = create<AttendanceStore>((set) => ({
   scheduleId: null,
   type: "photo",
   attendees: [],
+  userIds: [],
+  availableToSpend: 0,
   imageUrl: undefined,
   uploadedPhoto: undefined,
 
@@ -44,6 +48,8 @@ export const useAttendanceStore = create<AttendanceStore>((set) => ({
       scheduleId: null,
       type: "photo",
       attendees: [],
+      userIds: [],
+      availableToSpend: 0,
       imageUrl: undefined,
       uploadedPhoto: undefined,
     }),

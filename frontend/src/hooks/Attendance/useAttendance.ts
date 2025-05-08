@@ -11,6 +11,7 @@ import {
 import {
   ManualAttendanceRequest,
   AttendanceCompleteRequest,
+  ManualAttendanceResponse,
 } from "@/types/attendance";
 
 export const useAttendance = () => {
@@ -28,19 +29,16 @@ export const useAttendance = () => {
   };
 
   // 수동 출석
-  const useManualAttendance = () => {
-    return useMutation({
-      mutationFn: (data: ManualAttendanceRequest) =>
-        checkManualAttendance(data),
+  const useManualAttendance = () =>
+    useMutation<ManualAttendanceResponse, Error, ManualAttendanceRequest>({
+      mutationFn: (data) => checkManualAttendance(data),
     });
-  };
 
   // 출석 완료 저장
-  const useCompleteAttendance = () => {
-    return useMutation({
-      mutationFn: (data: AttendanceCompleteRequest) => completeAttendance(data),
+  const useCompleteAttendance = () =>
+    useMutation<{ attendance_id: number }, Error, AttendanceCompleteRequest>({
+      mutationFn: (data) => completeAttendance(data),
     });
-  };
 
   // 출석 조회
   const useAttendanceRecord = (attendanceId: number) => {

@@ -16,12 +16,16 @@ export const getAttendanceImageUrl = (checkId: string) =>
   `/api/attendance/photo/${checkId}`;
 
 // 3. 수동 출석체크
-export const checkManualAttendance = (data: ManualAttendanceRequest) =>
-  axios.post<ManualAttendanceResponse>(`api/attendance/manual`, data);
+export const checkManualAttendance = (
+  data: ManualAttendanceRequest
+): Promise<ManualAttendanceResponse> =>
+  axios.post(`api/attendance/manual`, data);
 
 // 4. 출석 완료 저장
-export const completeAttendance = (data: AttendanceCompleteRequest) =>
-  axios.post<{ attendance_id: number }>(`api/attendance/complete`, data);
+export const completeAttendance = (
+  data: AttendanceCompleteRequest
+): Promise<{ attendance_id: number }> =>
+  axios.post(`api/attendance/complete`, data);
 
 // 5. 출석 조회
 export const fetchAttendanceRecord = (attendanceId: number) =>
