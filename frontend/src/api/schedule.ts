@@ -1,6 +1,12 @@
 // src/api/schedule.ts
 import axios from "@/lib/axios";
-import { ScheduleDetail, ScheduleCardItem, AllScheduleCardItem } from "@/types/schedule";
+import {
+  ScheduleDetail,
+  ScheduleCardItem,
+  AllScheduleCardItem,
+  ScheduleCreateInput,
+  ScheduleItem,
+} from "@/types/schedule";
 
 // 특정 그룹의 모든 일정 조회
 export async function fetchSchedulesByGroup(
@@ -42,4 +48,27 @@ export async function fetchGroupUpcomingSchedule(
   groupId: number
 ): Promise<ScheduleCardItem> {
   return axios.get(`/api/schedules/groups/${groupId}/upcoming`);
+}
+
+// 특정 그룹 월별 일정 조회 후 캘린더 나타내기기
+export async function fetchMonthlySchedules(
+  groupId: number,
+  year: number,
+  month: number
+): Promise<ScheduleCardItem[]> {
+  return axios.get(`/api/schedules/group/${groupId}/monthly`, {
+    params: { year, month },
+  });
+}
+
+// 일정 생성
+export async function createSchedule(
+  groupId: number,
+  payload: ScheduleCreateInput
+): Promise<ScheduleItem> {
+  const { data } = await axios.post<ScheduleItem>("/api/schedules", {
+    group_id: groupId,
+    ...payload,
+  });
+  return data;
 }

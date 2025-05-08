@@ -9,20 +9,26 @@ type DateFormatOptions = {
   second?: boolean;
 };
 
+export function parseISOAsUtc(input: string): Date {
+  return new Date(input.endsWith("Z") ? input : input + "Z");
+}
+
 export function formatKoreanDateCustom(
   dateInput: string | Date,
-  options: DateFormatOptions = {}
+  options: DateFormatOptions = {},
+  hour12: boolean = false
 ): string {
-  const raw = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-  const date: Date = raw;
+  const date =
+    typeof dateInput === "string" ? parseISOAsUtc(dateInput) : dateInput;
 
   const localeOptions: Intl.DateTimeFormatOptions = {
     ...(options.year && { year: "numeric" }),
     ...(options.month && { month: "long" }),
     ...(options.day && { day: "numeric" }),
-    ...(options.hour && { hour: "2-digit", hour12: false }),
+    ...(options.hour && { hour: "2-digit", hour12 }),
     ...(options.minute && { minute: "2-digit" }),
     ...(options.second && { second: "2-digit" }),
+    timeZone: "Asia/Seoul",
   };
 
   return date

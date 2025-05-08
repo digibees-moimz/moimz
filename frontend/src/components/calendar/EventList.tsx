@@ -8,6 +8,7 @@ import { FaCalendarAlt, FaClock } from "react-icons/fa";
 import type { ScheduleItem } from "@/types/schedule";
 import { Button } from "../ui-components/ui/Button";
 import { useRouter } from "next/navigation";
+import { formatKoreanDateCustom } from "@/utils/formatDate";
 
 type EventListProps = {
   events: ScheduleItem[];
@@ -56,14 +57,10 @@ export default function EventList({ events, date, groupId }: EventListProps) {
                 <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
                   <FaClock className="text-gray-400" size={12} />
                   <span>
-                    {new Date(event.date)
-                      .toLocaleTimeString("ko-KR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                      .replace("오전", "AM")
-                      .replace("오후", "PM")}
+                    {formatKoreanDateCustom(event.date, {
+                      hour: true,
+                      minute: true,
+                    })}
                   </span>
                 </div>
               </Link>

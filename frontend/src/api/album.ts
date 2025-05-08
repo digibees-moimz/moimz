@@ -1,4 +1,4 @@
-import axios from "@/lib/axios_past";
+import axios from "@/lib/axios";
 import {
   Photo,
   Person,

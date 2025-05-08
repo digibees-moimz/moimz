@@ -16,6 +16,11 @@ export default function TabNav() {
     { label: "캘린더", href: "/groups/1/calendar" },
   ];
 
+  const activeTabHref = tabs
+    .map((tab) => tab.href)
+    .sort((a, b) => b.length - a.length) // 긴 게 먼저 오도록 정렬
+    .find((href) => pathname.startsWith(href));
+
   return (
     <Flex.RowBetweenCenter className="sticky top-12 z-40 px-6 py-2 border-b border-gray-300 bg-white/80">
       <Flex.RowStartCenter className="gap-4">
@@ -23,7 +28,7 @@ export default function TabNav() {
           <Link key={tab.href} href={tab.href}>
             <span
               className={`text-sm ${
-                pathname === tab.href
+                activeTabHref === tab.href
                   ? "font-bold text-green-700 underline underline-offset-13"
                   : ""
               }`}
