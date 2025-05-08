@@ -1,25 +1,36 @@
-// frontend/src/app/groups/[groupId]/attendance/result/[attendanceId]/page.tsx
-
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
 import { useAttendance } from "@/hooks/Attendance/useAttendance";
+import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Button } from "@/components/ui-components/ui/Button";
+import { isQrTokenValid } from "@/utils/isQrValid";
 
 export default function AttendanceResultPage() {
   const router = useRouter();
   const { attendanceId, groupId } = useParams();
   const id = Number(attendanceId);
-
+  const { set, qrToken, qrTokenCreatedAt } = useAttendanceStore();
   const { useAttendanceRecord, useGenerateQr } = useAttendance();
   const { data, isLoading } = useAttendanceRecord(id);
   const { mutate: generateQr, isPending: isQrGenerating } = useGenerateQr();
 
   const handleGenerateQr = () => {
+    if (qrToken && isQrTokenValid(qrTokenCreatedAt)) {
+      router.push(`/groups/${groupId}/pay?token=${qrToken}`);
+      return;
+    }
+
     generateQr(id, {
       onSuccess: (res) => {
         const token = res.qr_token;
+        const createdAt = new Date().toISOString();
+        set({
+          qrToken: token,
+          qrTokenCreatedAt: createdAt,
+          attendanceId: id,
+        });
         router.push(`/groups/${groupId}/pay?token=${token}`);
       },
       onError: () => {

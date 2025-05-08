@@ -21,11 +21,10 @@ interface AttendanceStore {
   availableToSpend: number;
   imageUrl?: string; // 사진 출석용 이미지
   uploadedPhoto?: File; // 사진 파일
+  qrToken?: string;
+  qrTokenCreatedAt?: string;
 
-  // 상태 업데이트
   set: (data: Partial<AttendanceStore>) => void;
-
-  // 출석 초기화
   reset: () => void;
 }
 
@@ -41,6 +40,8 @@ export const useAttendanceStore = create<AttendanceStore>()(
       availableToSpend: 0,
       imageUrl: undefined,
       uploadedPhoto: undefined,
+      qrToken: undefined,
+      qrTokenCreatedAt: undefined,
 
       set: (data) => set((state) => ({ ...state, ...data })),
       reset: () =>
@@ -54,6 +55,8 @@ export const useAttendanceStore = create<AttendanceStore>()(
           availableToSpend: 0,
           imageUrl: undefined,
           uploadedPhoto: undefined,
+          qrToken: undefined,
+          qrTokenCreatedAt: undefined,
         }),
     }),
     {
@@ -67,6 +70,8 @@ export const useAttendanceStore = create<AttendanceStore>()(
         availableToSpend: state.availableToSpend,
         type: state.type,
         imageUrl: state.imageUrl,
+        qrToken: state.qrToken,
+        qrTokenCreatedAt: state.qrTokenCreatedAt,
       }),
     }
   )

@@ -80,10 +80,14 @@ export default function ManualAttendancePage() {
     <div className="p-4 space-y-4 pb-32">
       <h1 className="text-xl font-bold">수동 출석체크</h1>
 
+      {/* 일정 리스트 */}
       <ScheduleSelector
         schedules={todaySchedules || []}
         selectedScheduleId={selectedScheduleId}
-        onSelect={setSelectedScheduleId}
+        onSelect={(id) => {
+          setSelectedScheduleId(id);
+          set({ scheduleId: id });
+        }}
       />
 
       <Typography.Body className="text-gray-700 pt-3">
