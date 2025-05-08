@@ -38,7 +38,7 @@ export default function PhotoPreviewPage() {
   return (
     <>
       <Typography.Heading3>사진 출석체크</Typography.Heading3>
-      <Flex.ColBetweenCenter className="min-h-screen">
+      <Flex.ColBetweenCenter className="h-[calc(100vh-204px)]">
         <div className="rounded-lg overflow-hidden shadow-md max-w-sm mx-auto mb-6">
           {imageUrl && (
             <img
@@ -50,7 +50,7 @@ export default function PhotoPreviewPage() {
         </div>
 
         {/* 하단 고정 버튼 */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm px-2 py-4">
           <Flex.ColCenter className="gap-3">
             <Button variant="destructive" onClick={openFilePicker}>
               다시 선택하기

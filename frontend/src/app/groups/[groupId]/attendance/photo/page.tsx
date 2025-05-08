@@ -11,7 +11,7 @@ export default function PhotoAttendancePage() {
   const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="relative min-h-screen pb-28 px-4 pt-8">
+    <div className="relative">
       <Typography.Heading3 className="text-center">
         사진 출석체크
       </Typography.Heading3>
@@ -33,7 +33,7 @@ export default function PhotoAttendancePage() {
       </Flex.ColCenter>
 
       {/* 하단 고정 버튼 */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm px-2 py-4">
         <Button
           variant="secondary"
           className="w-full text-lg"

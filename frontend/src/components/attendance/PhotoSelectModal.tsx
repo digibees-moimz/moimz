@@ -29,7 +29,7 @@ export const PhotoSelectModal = ({ onClose }: { onClose: () => void }) => {
   return (
     <>
       <div className="fixed inset-0 bg-black/60 flex items-end justify-center z-50">
-        <div className="w-full rounded-t-xl p-8 space-y-3">
+        <div className="w-full rounded-t-xl max-w-sm px-2 py-4 space-y-3">
           <Button
             onClick={() => {
               navigator.mediaDevices.getUserMedia({ video: true }).then(() => {

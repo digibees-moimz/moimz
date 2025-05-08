@@ -15,7 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col w-screen min-h-screen">
       <Header />
       {isMoimMain ? <MainTab /> : <TabNav />}
-      <main className="flex-1">
+      <main className="h-[calc(100vh-96px)]">
         <Container as="section" className="py-6 space-y-6">
           {children}
         </Container>
