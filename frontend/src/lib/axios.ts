@@ -22,13 +22,17 @@ axiosInstance.interceptors.response.use(
 );
 
 // 파일 업로드용 함수
-export const uploadFile = (url: string, formData: FormData, config = {}) => {
-  return axiosInstance.post(url, formData, {
+export const uploadFile = <T = any>(
+  url: string,
+  formData: FormData,
+  config = {}
+): Promise<T> => {
+  return axiosInstance.post<T>(url, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
     ...config,
-  });
+  }) as Promise<T>;
 };
 
 export default axiosInstance;

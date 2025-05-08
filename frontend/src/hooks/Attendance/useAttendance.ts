@@ -12,21 +12,21 @@ import {
   ManualAttendanceRequest,
   AttendanceCompleteRequest,
   ManualAttendanceResponse,
+  PhotoAttendanceResponse,
+  AttendanceRecordRead,
 } from "@/types/attendance";
 
 export const useAttendance = () => {
   // 사진 출석
-  const usePhotoAttendance = () => {
-    return useMutation({
-      mutationFn: ({
-        formData,
-        groupId,
-      }: {
-        formData: FormData;
-        groupId: number;
-      }) => checkPhotoAttendance(formData, groupId),
+  const usePhotoAttendance = () =>
+    useMutation<
+      PhotoAttendanceResponse,
+      Error,
+      { formData: FormData; groupId: number }
+    >({
+      mutationFn: ({ formData, groupId }) =>
+        checkPhotoAttendance(formData, groupId),
     });
-  };
 
   // 수동 출석
   const useManualAttendance = () =>
@@ -41,34 +41,29 @@ export const useAttendance = () => {
     });
 
   // 출석 조회
-  const useAttendanceRecord = (attendanceId: number) => {
-    return useQuery({
+  const useAttendanceRecord = (attendanceId: number) =>
+    useQuery<AttendanceRecordRead>({
       queryKey: ["attendance", attendanceId],
       queryFn: () => fetchAttendanceRecord(attendanceId),
-      enabled: !!attendanceId, // id 있을 때만 fetch
+      enabled: !!attendanceId,
     });
-  };
 
   // 출석 명단 수정
-  const useUpdateAttendance = () => {
-    return useMutation({
-      mutationFn: ({
-        attendanceId,
-        user_ids,
-      }: {
-        attendanceId: number;
-        user_ids: number[];
-      }) => updateAttendanceRecord(attendanceId, user_ids),
+  const useUpdateAttendance = () =>
+    useMutation<
+      AttendanceRecordRead,
+      Error,
+      { attendanceId: number; user_ids: number[] }
+    >({
+      mutationFn: ({ attendanceId, user_ids }) =>
+        updateAttendanceRecord(attendanceId, user_ids),
     });
-  };
 
   // QR 코드 생성
-  const useGenerateQr = () => {
-    return useMutation({
-      mutationFn: (attendanceId: number) =>
-        generateQrForAttendance(attendanceId),
+  const useGenerateQr = () =>
+    useMutation<{ qr_token: string; qr_url: string }, Error, number>({
+      mutationFn: (attendanceId) => generateQrForAttendance(attendanceId),
     });
-  };
 
   return {
     usePhotoAttendance,
