@@ -1,15 +1,37 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { useParams, useRouter } from "next/navigation";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { navigateWithScrollTop } from "@/utils/navigation";
+import { Button } from "@/components/ui-components/ui/Button";
 
 export default function AttendancePage() {
   const router = useRouter();
   const { groupId } = useParams();
   const groupIdNumber = Number(groupId);
+
+  const { attendanceId, groupId: storedGroupId } = useAttendanceStore();
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (
+      attendanceId &&
+      storedGroupId === groupIdNumber &&
+      !isNaN(groupIdNumber)
+    ) {
+      setShowModal(true); // useAttendanceStore에 값 있으면 모달 띄우기
+    } else {
+      setShowModal(false); // 없으면 초기화
+    }
+  }, [attendanceId, storedGroupId, groupIdNumber]);
+
+  const handleGoToResult = () => {
+    router.push(`/groups/${groupId}/attendance/result/${attendanceId}`);
+  };
 
   if (isNaN(groupIdNumber)) {
     return <Typography.Body>잘못된 그룹 ID입니다.</Typography.Body>;
@@ -17,6 +39,27 @@ export default function AttendancePage() {
 
   return (
     <>
+      {showModal && (
+        <div className="fixed w-full h-screen inset-0 z-50 bg-black/90 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full">
+            <Typography.Heading4 className="mb-2">
+              이미 출석했어요
+            </Typography.Heading4>
+            <Typography.Body className="text-gray-700 mb-4">
+              이전에 출석한 내역이 있어요.
+              <br />
+              결과 페이지로 이동할까요?
+            </Typography.Body>
+            <div className="flex justify-end gap-2">
+              <Button onClick={handleGoToResult}>결과 보기</Button>
+              <Button variant="destructive" onClick={() => setShowModal(false)}>
+                아니요
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Typography.Heading3>출석체크</Typography.Heading3>
       <Flex.ColCenter className="gap-5">
         <Image
