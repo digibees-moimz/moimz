@@ -8,7 +8,6 @@ import { ManualAttendanceRequest } from "@/types/attendance";
 import { useGroupAccountSummary } from "@/hooks/useGroupAccountSummary";
 import { useTodaySchedules } from "@/hooks/schedule/useUpcomingSchedule";
 import { Button } from "@/components/ui-components/ui/Button";
-import { GroupMembers } from "@/components/attendance/GroupMembers";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { ScheduleSelector } from "@/components/attendance/ScheduleSelector";
 import { AttendanceMemberList } from "@/components/attendance/AttendanceMemberList";
