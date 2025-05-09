@@ -19,6 +19,7 @@ class Schedule(SQLModel, table=True):
     comments: List["ScheduleComment"] = Relationship(back_populates="schedule")
     group: Optional["Group"] = Relationship(back_populates="schedules")
     user: Optional["User"] = Relationship(back_populates="schedules")
+    transactions: List["Transaction"] = Relationship(back_populates="schedule")
 
 class ScheduleComment(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

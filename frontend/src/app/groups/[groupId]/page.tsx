@@ -11,6 +11,7 @@ import { useGroupUpcomingSchedule } from "@/hooks/schedule/useUpcomingSchedule";
 import { formatTimeOnly, getDdayLabel } from "@/utils/formatDate";
 import CharacterGenerateButton from "@/components/character/CharacterGenerateButton";
 import { useGroups } from "@/hooks/useGroups";
+import TabNav from "@/components/layout/TabNav";
 
 export default function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -25,6 +26,8 @@ export default function GroupDetailPage() {
   const { data: next } = useGroupUpcomingSchedule(groupIdNum);
   return (
     <>
+      {/* TabNav 추가 */}
+      <TabNav groupId={groupIdNum} />
       {/* 모임통장 상세 */}
       <GroupDetailSection group={group} />
       <CharacterGenerateButton

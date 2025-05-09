@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 from src.schemas.user import UserPublic
+from src.schemas.transaction import TransactionRead
 
 class ScheduleCreate(BaseModel):
     group_id: int
@@ -53,6 +54,7 @@ class ScheduleRead(BaseModel):
     description: Optional[str]
     created_at: datetime 
     comments: list[ScheduleCommentRead] = []
+    transactions: list[TransactionRead] = []
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -1,6 +1,6 @@
 # src/schemas/transaction.py
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 class ParticipantOut(BaseModel):
@@ -8,15 +8,18 @@ class ParticipantOut(BaseModel):
     amount: float
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class TransactionRead(BaseModel):
     id: int
     group_id: int
     total_amount: float
+    schedule_id: int | None 
+    store_name: Optional[str] = None # 이거 DB에서 직접 넣을게요
+    mcc_code: Optional[int] = None   
     description: str
     created_at: datetime
-    participants: List[ParticipantOut] # 관계 필드
+    participants: List[ParticipantOut]
 
     class Config:
-        orm_mode = True
+        from_attributes = True 

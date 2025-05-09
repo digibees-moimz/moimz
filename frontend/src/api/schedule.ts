@@ -72,3 +72,10 @@ export async function createSchedule(
   });
   return data;
 }
+
+// 일정 상세 조회
+export async function fetchScheduleDetail(
+  scheduleId: number
+): Promise<ScheduleDetail> {
+  return axios.get(`/api/schedules/${scheduleId}`);
+}

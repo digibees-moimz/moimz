@@ -52,6 +52,7 @@ def perform_spend(session: Session, dto: SpendCreate):
         group_id=dto.group_id,
         total_amount=dto.total_amount,
         description=dto.description,
+        schedule_id=dto.schedule_id,  # ✅ 추가!
     )
     session.add(settlement)
     session.commit()
@@ -142,6 +143,7 @@ def spend_via_token(session: Session, qr_token: str, dto: SpendByTokenRequest):
 
     spend_dto = SpendCreate(
         group_id=record.group_id,
+        schedule_id=record.schedule_id,  # ✅ 추가
         user_ids=record.attendee_user_ids,
         total_amount=dto.total_amount,
         description=dto.description or "QR 결제",
