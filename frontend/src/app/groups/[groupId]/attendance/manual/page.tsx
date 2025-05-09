@@ -11,6 +11,7 @@ import { Button } from "@/components/ui-components/ui/Button";
 import { GroupMembers } from "@/components/attendance/GroupMembers";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { ScheduleSelector } from "@/components/attendance/ScheduleSelector";
+import { AttendanceMemberList } from "@/components/attendance/AttendanceMemberList";
 
 export default function ManualAttendancePage() {
   const router = useRouter();
@@ -95,25 +96,15 @@ export default function ManualAttendancePage() {
       </Typography.Body>
 
       {/* 출석자 선택 리스트 */}
-      <div className="space-y-3">
-        {members.map((member) => {
-          const id = member.user_account_id;
-          return (
-            <GroupMembers
-              key={id}
-              member={member}
-              isSelected={selectedIds.includes(id)}
-              onToggle={() => {
-                setSelectedIds((prev) =>
-                  prev.includes(id)
-                    ? prev.filter((x) => x !== id)
-                    : [...prev, id]
-                );
-              }}
-            />
-          );
-        })}
-      </div>
+      <AttendanceMemberList
+        members={members}
+        selectedIds={selectedIds}
+        onToggle={(id) =>
+          setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+          )
+        }
+      />
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm px-2 py-4 bg-white">
         <div className="flex flex-col gap-3">
