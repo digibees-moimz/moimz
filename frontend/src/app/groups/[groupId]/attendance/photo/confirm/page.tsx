@@ -2,8 +2,9 @@
 
 import { useAttendance } from "@/hooks/Attendance/useAttendance";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
+import { useGroupAccountSummary } from "@/hooks/useGroupAccountSummary";
 import { useRouter, useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui-components/ui/Button";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { AttendanceMemberList } from "@/components/attendance/AttendanceMemberList";
@@ -21,6 +22,11 @@ export default function PhotoConfirmPage() {
     userIds,
     set,
   } = useAttendanceStore();
+
+  const { data: groupSummary } = useGroupAccountSummary(gid);
+  const groupMembers = groupSummary?.members || [];
+
+  console.log(userIds);
 
   const [selectedIds, setSelectedIds] = useState<number[]>(userIds || []);
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
@@ -40,20 +46,39 @@ export default function PhotoConfirmPage() {
       },
       {
         onSuccess: (res) => {
-          router.push(
-            `/groups/${groupId}/attendance/result/${res.attendance_id}`
-          );
           set({
             attendanceId: res.attendance_id,
           });
+          router.push(
+            `/groups/${groupId}/attendance/result/${res.attendance_id}`
+          );
         },
       }
     );
   };
 
+  const displayMembers = isEditable
+    ? groupMembers.sort((a, b) => {
+        const aSelected = selectedIds.includes(a.user_account_id);
+        const bSelected = selectedIds.includes(b.user_account_id);
+        return Number(bSelected) - Number(aSelected);
+      })
+    : groupMembers.filter(
+        (m) => selectedIds.includes(m.user_account_id)
+      );
+
   return (
     <>
       <Typography.Heading3>사진 출석체크</Typography.Heading3>
+
+      {/* 일정 선택 */}
+      <ScheduleSelector
+        selectedScheduleId={selectedScheduleId}
+        onSelect={(id) => {
+          setSelectedScheduleId(id);
+          set({ scheduleId: id });
+        }}
+      />
 
       {/* 사진 미리보기 */}
       {imageUrl && (
@@ -87,12 +112,7 @@ export default function PhotoConfirmPage() {
       </Flex.RowBetweenCenter>
 
       <AttendanceMemberList
-        members={attendees.map((a) => ({
-          user_account_id: a.user_id,
-          name: a.name,
-          profile_image_url: "", // 없으면 기본값으로 처리
-          locked_amount: a.locked_amount,
-        }))}
+        members={displayMembers}
         selectedIds={selectedIds}
         onToggle={
           isEditable
@@ -102,17 +122,8 @@ export default function PhotoConfirmPage() {
                     ? prev.filter((x) => x !== id)
                     : [...prev, id]
                 )
-            : () => {} // 수정 불가 상태일 땐 아무 동작도 하지 않음
+            : () => {}
         }
-      />
-
-      {/* 일정 선택 */}
-      <ScheduleSelector
-        selectedScheduleId={selectedScheduleId}
-        onSelect={(id) => {
-          setSelectedScheduleId(id);
-          set({ scheduleId: id });
-        }}
       />
 
       {/* 하단 버튼 */}

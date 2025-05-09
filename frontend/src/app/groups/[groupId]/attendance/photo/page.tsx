@@ -42,7 +42,6 @@ export default function PhotoAttendancePage() {
       { formData, groupId: Number(groupId) },
       {
         onSuccess: (data) => {
-          router.push(`/groups/${groupId}/attendance/photo/confirm`);
           set({
             groupId: Number(groupId),
             type: "photo",
@@ -51,6 +50,7 @@ export default function PhotoAttendancePage() {
             availableToSpend: data.available_to_spend,
             imageUrl: data.image_url,
           });
+          router.push(`/groups/${groupId}/attendance/photo/confirm`);
           console.error("출석 성공", data);
         },
         onError: (error) => {
