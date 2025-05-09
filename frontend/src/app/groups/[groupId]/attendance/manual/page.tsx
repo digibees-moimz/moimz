@@ -6,7 +6,6 @@ import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { useAttendance } from "@/hooks/Attendance/useAttendance";
 import { ManualAttendanceRequest } from "@/types/attendance";
 import { useGroupAccountSummary } from "@/hooks/useGroupAccountSummary";
-import { useTodaySchedules } from "@/hooks/schedule/useUpcomingSchedule";
 import { Button } from "@/components/ui-components/ui/Button";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { ScheduleSelector } from "@/components/attendance/ScheduleSelector";
@@ -33,7 +32,6 @@ export default function ManualAttendancePage() {
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
     null
   );
-  const { data: todaySchedules } = useTodaySchedules(groupId);
 
   const { mutate: submitManualAttendance, isPending } = useManualAttendance();
   const { mutate: submitCompleteAttendance, isPending: isCompleting } =
@@ -82,7 +80,6 @@ export default function ManualAttendancePage() {
 
       {/* 일정 리스트 */}
       <ScheduleSelector
-        schedules={todaySchedules || []}
         selectedScheduleId={selectedScheduleId}
         onSelect={(id) => {
           setSelectedScheduleId(id);

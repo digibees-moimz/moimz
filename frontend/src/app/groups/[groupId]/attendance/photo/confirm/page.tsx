@@ -1,73 +1,129 @@
 "use client";
 
-import { useRef } from "react";
-import { useSearchParams, useRouter, useParams } from "next/navigation";
+import { useAttendance } from "@/hooks/Attendance/useAttendance";
+import { useAttendanceStore } from "@/stores/useAttendanceStore";
+import { useRouter, useParams } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui-components/ui/Button";
-import { Flex } from "@/components/ui-components/layout/Flex";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { AttendanceMemberList } from "@/components/attendance/AttendanceMemberList";
+import { ScheduleSelector } from "@/components/attendance/ScheduleSelector";
+import { Flex } from "@/components/ui-components/layout/Flex";
 
-export default function PhotoPreviewPage() {
-  const searchParams = useSearchParams();
-  const imageUrl = searchParams.get("src"); // URL.createObjectURL(file)로 전달된 값
+export default function PhotoConfirmPage() {
+  const { groupId } = useParams();
   const router = useRouter();
-  const { groupId } = useParams<{ groupId: string }>();
+  const { useCompleteAttendance } = useAttendance();
+  const {
+    groupId: gid,
+    imageUrl,
+    attendees,
+    userIds,
+    set,
+  } = useAttendanceStore();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const openFilePicker = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      console.log("업로드할 파일:", file);
-      router.push(
-        `/groups/${groupId}/attendance/photo/preview?src=${encodeURIComponent(
-          previewUrl
-        )}`
-      );
-    }
-  };
+  const [selectedIds, setSelectedIds] = useState<number[]>(userIds || []);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
+    null
+  );
+  const [isEditable, setIsEditable] = useState<boolean>(false);
+  const { mutate: completeAttendance, isPending } = useCompleteAttendance();
 
   const handleSubmit = () => {
-    // 출석 체크 API 요청
+    completeAttendance(
+      {
+        group_id: gid,
+        user_ids: selectedIds,
+        check_type: "photo",
+        image_url: imageUrl,
+        schedule_id: selectedScheduleId || undefined,
+      },
+      {
+        onSuccess: (res) => {
+          router.push(
+            `/groups/${groupId}/attendance/result/${res.attendance_id}`
+          );
+          set({
+            attendanceId: res.attendance_id,
+          });
+        },
+      }
+    );
   };
 
   return (
     <>
       <Typography.Heading3>사진 출석체크</Typography.Heading3>
-      <Flex.ColBetweenCenter className="h-[calc(100vh-204px)]">
-        <div className="rounded-lg overflow-hidden shadow-md max-w-sm mx-auto mb-6">
-          {imageUrl && (
-            <img
-              src={imageUrl ?? undefined}
-              alt="업로드한 사진"
-              className="w-full rounded-lg"
-            />
-          )}
-        </div>
 
-        {/* 하단 고정 버튼 */}
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm px-2 py-4">
-          <Flex.ColCenter className="gap-3">
-            <Button variant="destructive" onClick={openFilePicker}>
-              다시 선택하기
-            </Button>
-            <Button onClick={handleSubmit}>출석체크 진행하기</Button>
-          </Flex.ColCenter>
-        </div>
-
-        {/* 숨겨진 input */}
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={handleFileChange}
+      {/* 사진 미리보기 */}
+      {imageUrl && (
+        <img
+          src={`http://localhost:8000${imageUrl}`}
+          alt="출석 예측 이미지"
+          className="w-full rounded-xl shadow mb-4"
         />
-      </Flex.ColBetweenCenter>
+      )}
+
+      {/* 참석자 선택 */}
+      <Flex.RowBetweenCenter className="pt-4">
+        <Typography.Body className="text-gray-700">
+          출석된 인원 {selectedIds.length}명
+        </Typography.Body>
+        {isEditable ? (
+          <button
+            className="text-sm text-[#7BABFF] p-1 font-bold"
+            onClick={() => setIsEditable(false)}
+          >
+            수정 완료
+          </button>
+        ) : (
+          <button
+            className="text-sm text-[#7BABFF] p-1 font-bold"
+            onClick={() => setIsEditable(true)}
+          >
+            출석자 수정
+          </button>
+        )}
+      </Flex.RowBetweenCenter>
+
+      <AttendanceMemberList
+        members={attendees.map((a) => ({
+          user_account_id: a.user_id,
+          name: a.name,
+          profile_image_url: "", // 없으면 기본값으로 처리
+          locked_amount: a.locked_amount,
+        }))}
+        selectedIds={selectedIds}
+        onToggle={
+          isEditable
+            ? (id) =>
+                setSelectedIds((prev) =>
+                  prev.includes(id)
+                    ? prev.filter((x) => x !== id)
+                    : [...prev, id]
+                )
+            : () => {} // 수정 불가 상태일 땐 아무 동작도 하지 않음
+        }
+      />
+
+      {/* 일정 선택 */}
+      <ScheduleSelector
+        selectedScheduleId={selectedScheduleId}
+        onSelect={(id) => {
+          setSelectedScheduleId(id);
+          set({ scheduleId: id });
+        }}
+      />
+
+      {/* 하단 버튼 */}
+      <div>
+        <Button
+          onClick={handleSubmit}
+          disabled={isPending || selectedIds.length === 0}
+        >
+          출석 완료하기
+        </Button>
+      </div>
     </>
   );
 }
