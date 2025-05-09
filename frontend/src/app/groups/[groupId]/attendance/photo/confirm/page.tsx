@@ -15,18 +15,10 @@ export default function PhotoConfirmPage() {
   const { groupId } = useParams();
   const router = useRouter();
   const { useCompleteAttendance } = useAttendance();
-  const {
-    groupId: gid,
-    imageUrl,
-    attendees,
-    userIds,
-    set,
-  } = useAttendanceStore();
+  const { groupId: gid, imageUrl, userIds, set } = useAttendanceStore();
 
   const { data: groupSummary } = useGroupAccountSummary(gid);
   const groupMembers = groupSummary?.members || [];
-
-  console.log(userIds);
 
   const [selectedIds, setSelectedIds] = useState<number[]>(userIds || []);
   const [selectedScheduleId, setSelectedScheduleId] = useState<number | null>(
@@ -63,9 +55,7 @@ export default function PhotoConfirmPage() {
         const bSelected = selectedIds.includes(b.user_account_id);
         return Number(bSelected) - Number(aSelected);
       })
-    : groupMembers.filter(
-        (m) => selectedIds.includes(m.user_account_id)
-      );
+    : groupMembers.filter((m) => selectedIds.includes(m.user_account_id));
 
   return (
     <>
@@ -127,7 +117,7 @@ export default function PhotoConfirmPage() {
       />
 
       {/* 하단 버튼 */}
-      <div>
+      <div className="w-full max-w-sm">
         <Button
           onClick={handleSubmit}
           disabled={isPending || selectedIds.length === 0}

@@ -11,7 +11,7 @@ export const AttendanceSummaryCard = ({
   availableToSpend: number;
 }) => {
   const minAmount = Math.min(...attendees.map((p) => p.locked_amount));
-  const totalAmount = availableToSpend * count;
+  const perPersonAmount = Math.floor(availableToSpend / count);
 
   return (
     <div className="p-5 mt-6 bg-[#EEFAF7] rounded-xl space-y-1 text-sm text-gray-800">
@@ -26,13 +26,13 @@ export const AttendanceSummaryCard = ({
 
       <div className="flex justify-between p-1">
         <span>1인당 결제 가능 금액</span>
-        <span>{availableToSpend.toLocaleString()} 원</span>
+        <span>{perPersonAmount.toLocaleString()} 원</span>
       </div>
 
       <div className="flex justify-between border-t mt-3 pt-2 border-gray-200 font-bold p-1">
         <span>총 결제 가능 금액</span>
         <span className="text-[#22BD9C] text-base">
-          {totalAmount.toLocaleString()} 원
+          {availableToSpend.toLocaleString()} 원
         </span>
       </div>
     </div>

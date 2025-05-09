@@ -28,12 +28,12 @@ export default function AttendanceResultPage() {
       onSuccess: (res) => {
         const token = res.qr_token;
         const createdAt = new Date().toISOString();
-        router.push(`/groups/${groupId}/pay?token=${token}`);
         set({
           qrToken: token,
           qrTokenCreatedAt: createdAt,
           attendanceId: id,
         });
+        router.push(`/groups/${groupId}/pay?token=${token}`);
       },
       onError: () => {
         alert("QR 코드 생성에 실패했어요. 다시 시도해주세요.");

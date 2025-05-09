@@ -78,8 +78,8 @@ export default function PhotoAttendancePage() {
             <Typography.Body className="text-center pt-5">
               얼굴을 인식해 자동으로 출석을 처리해요.
               <br />
-              처음 이용 시{" "}
-              <span className="font-semibold text-[#22BD9C]">얼굴 등록</span>이
+              처음 이용 시
+              <span className="font-semibold text-[#22BD9C]"> 얼굴 등록</span>이
               필요해요!
             </Typography.Body>
           </>
@@ -94,7 +94,7 @@ export default function PhotoAttendancePage() {
         )}
       </Flex.ColCenter>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm px-2 py-4 bg-white">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm px-2 py-4">
         <Flex.ColCenter className="gap-3">
           <Button variant="secondary" onClick={openFilePicker}>
             {selectedFile ? "다시 선택하기" : "사진 선택하기"}
