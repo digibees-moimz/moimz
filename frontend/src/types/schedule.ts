@@ -1,5 +1,7 @@
 // src/types/schedule.ts
 
+import { TransactionRead } from "./transaction";
+
 export interface ScheduleItem {
   id: number;
   title: string;
@@ -31,6 +33,7 @@ export interface ScheduleDetail extends ScheduleItem {
   description?: string;
   created_at: string;
   comments: ScheduleComment[];
+  transactions: TransactionRead[]; // ✅ 이 줄 추가!
 }
 
 export interface ScheduleCreateInput {

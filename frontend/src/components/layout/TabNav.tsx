@@ -6,15 +6,20 @@ import { usePathname } from "next/navigation";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { IoSettingsOutline } from "react-icons/io5";
 
-export default function TabNav() {
+interface TabNavProps {
+  groupId: number;
+}
+
+export default function TabNav({ groupId }: TabNavProps) {
   const pathname = usePathname();
 
+  const base = `/groups/${groupId}`;
   const tabs = [
-    { label: "모임", href: "/groups/1" },
-    { label: "커뮤니티", href: "/groups/1/community" },
-    { label: "앨범", href: "/groups/1/album" },
-    { label: "캘린더", href: "/groups/1/calendar" },
-    { label: "출석체크", href: "/groups/1/attendance" },
+    { label: "모임", href: `${base}` },
+    { label: "커뮤니티", href: `${base}/community` },
+    { label: "앨범", href: `${base}/album` },
+    { label: "캘린더", href: `${base}/calendar` },
+    { label: "출석체크", href: `${base}/attendance` },
   ];
 
   const activeTabHref = tabs
