@@ -11,7 +11,7 @@ class AttendeeInfo(BaseModel):
 
 class DiaryCreate(BaseModel):
     group_id: int
-    user_id: int  # 유저 정보도 저장
+    user_id: Optional[int] = None  # 유저 정보도 저장
     schedule_id: Optional[int] = None
     attendance_id: Optional[int] = None
     diary_text: str
@@ -26,6 +26,7 @@ class DiaryRead(BaseModel):
     attendance_id: Optional[int]
     title: str
     diary_text: str
+    summary: Optional[str] = None
     image_path: Optional[str]
     created_at: datetime
 

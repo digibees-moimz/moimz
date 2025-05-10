@@ -48,8 +48,8 @@ def generate_diary_auto(
         diary = auto_generate_diary(
             session=session,
             group_id=group_id,
-            attendance_id=attendance_id,
             schedule_id=schedule_id,
+            attendance_id=attendance_id,
             user_id=user_id,
         )
         attendees = get_attendees_from_attendance(session, attendance_id)

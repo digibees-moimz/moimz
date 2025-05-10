@@ -2,12 +2,13 @@ from sqlmodel import Session, select
 from src.models.attendance import AttendanceRecord
 from src.models.user import User
 from datetime import datetime
+from src.models.group import Member
 from src.models.diary import Diary
 from src.models.transaction import Transaction
 from src.models.attendance import AttendanceRecord
 from src.models.schedule import Schedule
 from src.models.user import User
-from src.services.diary.llm_utils import generate_diary_content
+from src.services.diary.llm_utils import generate_diary_content, generate_diary_summary
 
 
 def get_attendees_from_attendance(session: Session, attendance_id: int):
@@ -48,13 +49,15 @@ def auto_generate_diary(
     )
     attendees = [u.name for u in users]
 
-    # 그룹 전체 인원 이름 조회 (필요하면 Member 테이블 등에서 그룹 사용자 전부 가져오기)
-    all_users = (
-        session.execute(
-            select(User).join_from(User, Schedule, Schedule.group_id == group_id)
-        )
+    members = (
+        session.execute(select(Member).where(Member.group_id == group_id))
         .scalars()
         .all()
+    )
+    user_ids = [m.user_id for m in members]
+
+    all_users = (
+        session.execute(select(User).where(User.id.in_(user_ids))).scalars().all()
     )
     all_user_names = [u.name for u in all_users]
 
@@ -91,7 +94,7 @@ def auto_generate_diary(
 
     diary_text = generate_diary_content(group_data, tx_data)
 
-    # ✅ TextBlock 리스트를 하나의 문자열로 변환
+    # TextBlock 리스트를 하나의 문자열로 변환
     if isinstance(diary_text, list):
         diary_text_str = "\n\n".join(block.text for block in diary_text)
     else:
@@ -100,6 +103,9 @@ def auto_generate_diary(
     # 제목 추출
     title = diary_text_str.strip().split("\n")[0].replace("#", "").strip()
 
+    # 요약 버전
+    summary = generate_diary_summary(diary_text_str)
+
     diary = Diary(
         group_id=group_id,
         user_id=user_id,
@@ -107,6 +113,7 @@ def auto_generate_diary(
         attendance_id=attendance_id,
         title=title,
         diary_text=diary_text_str,
+        summary=summary,
         created_at=datetime.utcnow(),
     )
     session.add(diary)
