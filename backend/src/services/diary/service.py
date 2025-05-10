@@ -8,7 +8,11 @@ from src.models.transaction import Transaction
 from src.models.attendance import AttendanceRecord
 from src.models.schedule import Schedule
 from src.models.user import User
-from src.services.diary.llm_utils import generate_diary_content, generate_diary_summary
+from src.services.diary.llm_utils import (
+    generate_diary_content,
+    generate_diary_summary,
+    generate_diary_title,
+)
 
 
 def get_attendees_from_attendance(session: Session, attendance_id: int):
@@ -100,8 +104,8 @@ def auto_generate_diary(
     else:
         diary_text_str = str(diary_text)
 
-    # 제목 추출
-    title = diary_text_str.strip().split("\n")[0].replace("#", "").strip()
+    # 제목 생성
+    title = generate_diary_title(diary_text_str)
 
     # 요약 버전
     summary = generate_diary_summary(diary_text_str)

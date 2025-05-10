@@ -80,3 +80,30 @@ def generate_diary_summary(full_text: str) -> str:
         return response.content.strip()
     else:
         return str(response.content)
+
+
+def generate_diary_title(full_text: str) -> str:
+    prompt = f"""
+다음은 친구들과의 모임 일기야.
+이 일기 내용에 어울리는 귀엽고 센스있는 제목을 한 줄로 만들어줘.
+모임비에 대한 언급은 제외하고 활동 중심으로 작성해줘.
+"# " 없이 본문으로 넣을 거야. 공백 포함 30자 이내로 부탁해!
+
+일기 내용:
+{full_text}
+
+제목:
+"""
+    response = client.messages.create(
+        model="claude-3-7-sonnet-20250219",
+        max_tokens=100,
+        temperature=0.7,
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    if isinstance(response.content, list) and len(response.content) > 0:
+        return response.content[0].text.strip()
+    elif isinstance(response.content, str):
+        return response.content.strip()
+    else:
+        return "오늘의 모임 일기"
