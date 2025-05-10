@@ -1,10 +1,26 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useAttendanceStore } from "@/stores/useAttendanceStore";
+import { useAttendance } from "@/hooks/Attendance/useAttendance";
+import { AttendanceSummaryCard } from "@/components/attendance/AttendanceSummaryCard";
 
 export default function PayPage() {
+  const { attendanceId } = useAttendanceStore();
+  const { useAttendanceRecord } = useAttendance();
+
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+
+  if (!token || !attendanceId) {
+    return <div className="p-4">잘못된 접근입니다.</div>;
+  }
+
+  const { data, isLoading } = useAttendanceRecord(attendanceId);
+
+  if (isLoading || !data) {
+    return <div className="p-4">로딩 중입니다...</div>;
+  }
 
   if (!token) return <div className="p-4">잘못된 접근입니다.</div>;
 
@@ -21,6 +37,12 @@ export default function PayPage() {
       <p className="text-center text-sm text-gray-500">
         이 QR코드를 스캔해 결제를 진행하세요.
       </p>
+
+      <AttendanceSummaryCard
+        attendees={data.attendees}
+        count={data.count}
+        availableToSpend={data.available_to_spend}
+      />
     </div>
   );
 }

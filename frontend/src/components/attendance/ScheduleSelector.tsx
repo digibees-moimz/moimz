@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ScheduleCardItem } from "@/types/schedule";
+import { useTodaySchedules } from "@/hooks/schedule/useUpcomingSchedule";
+import { useParams } from "next/navigation";
 import { ScheduleModal } from "@/components/attendance/ScheduleModal";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Flex } from "@/components/ui-components/layout/Flex";
@@ -10,21 +11,25 @@ import { FaRegClock, FaMapMarkerAlt } from "react-icons/fa";
 import Image from "next/image";
 
 interface ScheduleSelectorProps {
-  schedules: ScheduleCardItem[];
   selectedScheduleId: number | null;
   onSelect: (id: number) => void;
 }
 
 export function ScheduleSelector({
-  schedules,
   selectedScheduleId,
   onSelect,
 }: ScheduleSelectorProps) {
+  const { groupId } = useParams();
+  const { data: schedules = [], isFetching } = useTodaySchedules(
+    Number(groupId)
+  );
   const [showModal, setShowModal] = useState(false);
 
   return (
     <>
-      {schedules.length > 0 ? (
+      {isFetching ? (
+        <div className="bg-gray-50 w-full h-[85px] p-4 rounded-lg" />
+      ) : schedules && schedules.length > 0 ? (
         <button
           onClick={() => setShowModal(true)}
           className="bg-[#F4FBCF] w-full p-4 rounded-lg hover:bg-[#EEF6C2] cursor-pointer"
@@ -46,21 +51,16 @@ export function ScheduleSelector({
                     {schedules.find((s) => s.id === selectedScheduleId)?.title}
                   </Typography.BodySmall>
                   <Flex.RowStartCenter className="gap-12 text-sm text-[#27937b]">
-                    {/* 시간 */}
                     <Flex.RowStartCenter className="gap-1">
                       <FaRegClock className="text-[#27937b]" />
                       <span>
                         {formatKoreanDateCustom(
                           schedules.find((s) => s.id === selectedScheduleId)!
                             .date,
-                          {
-                            hour: true,
-                          }
+                          { hour: true }
                         )}
                       </span>
                     </Flex.RowStartCenter>
-
-                    {/* 위치 */}
                     <Flex.RowStartCenter className="gap-1">
                       <FaMapMarkerAlt className="text-[#27937b]" />
                       <span>
@@ -69,7 +69,6 @@ export function ScheduleSelector({
                       </span>
                     </Flex.RowStartCenter>
                   </Flex.RowStartCenter>
-
                   <Typography.Caption className="mt-2">
                     일정이 잘못되었다면 다시 선택해주세요
                   </Typography.Caption>
@@ -112,11 +111,10 @@ export function ScheduleSelector({
         </div>
       )}
 
-      {/* 모달 */}
       <ScheduleModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        schedules={schedules}
+        schedules={schedules ?? []}
         selectedId={selectedScheduleId}
         onSelect={onSelect}
       />
