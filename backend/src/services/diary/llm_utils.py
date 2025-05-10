@@ -32,7 +32,14 @@ def generate_diary_content(group_data, transactions):
 """
     )
     for tx in transactions:
-        prompt += f"- {tx['merchant_name']} ({tx['merchant_category']}): {tx['amount']}원, 날짜: {tx['transaction_date']}, 장소: {tx['location']}\n"
+        prompt += f"""
+        - 상점 이름: {tx['store_name']}
+        - 상점 주소: {tx['store_location']}
+        - mcc 코드: {tx['mcc_code']}
+        - 결제 금액: {tx['total_amount']}원
+        - 결제 일시: {tx['created_at']}
+        - 추가 정보: {tx['description']}
+        """
 
     prompt += (
         "\n이 정보를 참고해서 위 규칙을 완벽히 지켜서 재미있는 모임 일기를 작성해줘."

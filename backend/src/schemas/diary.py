@@ -24,6 +24,7 @@ class DiaryRead(BaseModel):
     user_id: int
     schedule_id: Optional[int]
     attendance_id: Optional[int]
+    title: str
     diary_text: str
     image_path: Optional[str]
     created_at: datetime
@@ -31,4 +32,4 @@ class DiaryRead(BaseModel):
     attendees: List[AttendeeInfo] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True

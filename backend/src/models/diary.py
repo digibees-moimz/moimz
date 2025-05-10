@@ -14,6 +14,7 @@ class Diary(SQLModel, table=True):
         default=None, foreign_key="attendancerecord.id"
     )
 
+    title: str
     diary_text: str
     image_path: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
