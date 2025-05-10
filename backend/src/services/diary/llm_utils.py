@@ -43,67 +43,29 @@ def generate_diary_content(group_data, transactions):
         - 추가 정보: {tx['description']}
         """
 
-    prompt += (
-        "\n이 정보를 참고해서 위 규칙을 완벽히 지켜서 재미있는 모임 일기를 작성해줘."
-    )
+    prompt += """\n이 정보를 참고해서 위 규칙을 완벽히 지켜서 재미있는 모임 일기를 작성해줘.
+    출력할 때는 반드시 모든 줄바꿈(\n)을 문자열 안에서는 \\n으로 이스케이프해서 JSON 파싱이 되게 해줘.
+    아래 항목들을 한 번에 모두 작성해줘:
+        1. 제목(title): 공백 포함 30자 이내, '# ' 없이 한 줄로만. 모임비 언급은 제외하고 활동 위주로 귀엽고 센스 있는 느낌!
+        2. 본문(body): 위 규칙에 따라 공백 포함 900자~1300자 사이로 작성.
+        3. 요약(summary): 본문의 분위기를 살려 2~3문장 요약, 공백 포함 200자~400자 사이로 작성.
+        4. 해시태그(hashtags): 본문 내용을 기반으로 캐주얼하게, 5~8개. '#' 포함, 문자열 배열(JSON list)로 작성.
+
+        🎯 출력 형식은 반드시 다음 JSON 형식을 따라줘:
+        ```json
+        {{
+          "title": "...",
+          "body": "...",
+          "summary": "...",
+          "hashtags": "..."
+        }}```
+ """
 
     response = client.messages.create(
         model="claude-3-7-sonnet-20250219",
-        max_tokens=1500,
+        max_tokens=2500,
         temperature=0.7,
         messages=[{"role": "user", "content": prompt}],
     )
 
     return response.content
-
-
-def generate_diary_summary(full_text: str) -> str:
-    prompt = f"""
-다음은 친구들과의 모임 일기야.
-이 일기의 분위기와 감성을 유지하면서 2~3문장으로 요약해줘.
-짧고 귀엽고 자연스럽게, 공백 포함 300자 이내로 부탁해!
-
-일기 내용:
-{full_text}
-
-요약:
-"""
-    response = client.messages.create(
-        model="claude-3-7-sonnet-20250219",
-        temperature=0.7,
-        max_tokens=1200,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    if isinstance(response.content, list) and len(response.content) > 0:
-        return response.content[0].text  # TextBlock → 텍스트만 추출
-    elif isinstance(response.content, str):
-        return response.content.strip()
-    else:
-        return str(response.content)
-
-
-def generate_diary_title(full_text: str) -> str:
-    prompt = f"""
-다음은 친구들과의 모임 일기야.
-이 일기 내용에 어울리는 귀엽고 센스있는 제목을 한 줄로 만들어줘.
-모임비에 대한 언급은 제외하고 활동 중심으로 작성해줘.
-"# " 없이 본문으로 넣을 거야. 공백 포함 30자 이내로 부탁해!
-
-일기 내용:
-{full_text}
-
-제목:
-"""
-    response = client.messages.create(
-        model="claude-3-7-sonnet-20250219",
-        max_tokens=100,
-        temperature=0.7,
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-    if isinstance(response.content, list) and len(response.content) > 0:
-        return response.content[0].text.strip()
-    elif isinstance(response.content, str):
-        return response.content.strip()
-    else:
-        return "오늘의 모임 일기"

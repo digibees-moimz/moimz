@@ -1,3 +1,4 @@
+import json, re
 from sqlmodel import Session, select
 from src.models.attendance import AttendanceRecord
 from src.models.user import User
@@ -8,11 +9,7 @@ from src.models.transaction import Transaction
 from src.models.attendance import AttendanceRecord
 from src.models.schedule import Schedule
 from src.models.user import User
-from src.services.diary.llm_utils import (
-    generate_diary_content,
-    generate_diary_summary,
-    generate_diary_title,
-)
+from src.services.diary.llm_utils import generate_diary_content
 
 
 def get_attendees_from_attendance(session: Session, attendance_id: int):
@@ -96,31 +93,46 @@ def auto_generate_diary(
         "group_member_num": len(all_user_names),
     }
 
-    diary_text = generate_diary_content(group_data, tx_data)
+    diary_response = generate_diary_content(group_data, tx_data)
 
-    # TextBlock 리스트를 하나의 문자열로 변환
-    if isinstance(diary_text, list):
-        diary_text_str = "\n\n".join(block.text for block in diary_text)
+    # 응답 정제 및 JSON 파싱
+    if isinstance(diary_response, list):
+        diary_response_str = "\n".join([b.text for b in diary_response])
+    elif isinstance(diary_response, str):
+        diary_response_str = diary_response
     else:
-        diary_text_str = str(diary_text)
+        raise ValueError("Claude 응답 형식이 예상과 다릅니다.")
 
-    # 제목 생성
-    title = generate_diary_title(diary_text_str)
+    diary_response_str = clean_json_text(diary_response_str)
+    parsed = json.loads(diary_response_str)
 
-    # 요약 버전
-    summary = generate_diary_summary(diary_text_str)
+    print("Claude 응답 원문 ↓↓↓")
+    print(diary_response_str)
 
     diary = Diary(
         group_id=group_id,
         user_id=user_id,
         schedule_id=schedule_id,
         attendance_id=attendance_id,
-        title=title,
-        diary_text=diary_text_str,
-        summary=summary,
+        title=parsed["title"],
+        diary_text=parsed["body"],
+        summary=parsed.get("summary", None),
+        hashtags=parsed.get("hashtags", []),
         created_at=datetime.utcnow(),
     )
     session.add(diary)
     session.commit()
     session.refresh(diary)
     return diary
+
+
+def clean_json_text(text: str) -> str:
+    # ```json ... ``` 제거
+    text = text.strip()
+    if text.startswith("```json"):
+        text = text[7:]
+    if text.endswith("```"):
+        text = text[:-3]
+    # JSON control character 정리
+    text = re.sub(r'(?<!\\)\\(?!["\\/bfnrtu])', r"\\\\", text)
+    return text.strip()

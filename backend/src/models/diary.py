@@ -1,7 +1,7 @@
 # src/models/diary.py
 
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional
+from sqlmodel import SQLModel, Field, Relationship, Column, JSON
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -18,7 +18,8 @@ class Diary(SQLModel, table=True):
     diary_text: str
     image_path: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    summary: Optional[str] = None
+    summary: Optional[str] = Field(default=None)
+    hashtags: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
 
     # 양방향 관계 설정
     group: Optional["Group"] = Relationship(back_populates="diaries")
