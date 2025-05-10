@@ -37,7 +37,7 @@ def generate_diary_content(group_data, transactions):
         - 상점 주소: {tx['store_location']}
         - mcc 코드: {tx['mcc_code']}
         - 결제 금액: {tx['total_amount']}원
-        - 결제 일시: {tx['created_at']}
+        - 결제 일시: {tx['transaction_date']}
         - 추가 정보: {tx['description']}
         """
 

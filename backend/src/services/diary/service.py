@@ -1,6 +1,6 @@
+from sqlmodel import Session, select
 from src.models.attendance import AttendanceRecord
 from src.models.user import User
-from sqlmodel import Session, select
 from datetime import datetime
 from src.models.diary import Diary
 from src.models.transaction import Transaction
@@ -68,11 +68,12 @@ def auto_generate_diary(
     )
     tx_data = [
         {
-            "merchant_name": tx.store_name,
-            "merchant_category": tx.mcc_code,
-            "amount": tx.total_amount,
+            "store_name": tx.store_name,
+            "store_location": tx.store_location or "미정",
+            "mcc_code": tx.mcc_code,
+            "total_amount": tx.total_amount,
             "transaction_date": tx.created_at.strftime("%Y-%m-%d"),
-            "location": tx.description or "미정",
+            "description": tx.description,
         }
         for tx in transactions
     ]
@@ -90,12 +91,22 @@ def auto_generate_diary(
 
     diary_text = generate_diary_content(group_data, tx_data)
 
+    # ✅ TextBlock 리스트를 하나의 문자열로 변환
+    if isinstance(diary_text, list):
+        diary_text_str = "\n\n".join(block.text for block in diary_text)
+    else:
+        diary_text_str = str(diary_text)
+
+    # 제목 추출
+    title = diary_text_str.strip().split("\n")[0].replace("#", "").strip()
+
     diary = Diary(
         group_id=group_id,
         user_id=user_id,
         schedule_id=schedule_id,
         attendance_id=attendance_id,
-        diary_text=diary_text,
+        title=title,
+        diary_text=diary_text_str,
         created_at=datetime.utcnow(),
     )
     session.add(diary)
