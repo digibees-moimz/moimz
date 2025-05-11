@@ -235,25 +235,6 @@ def delete_schedule(schedule_id: int, session: Session = Depends(get_session)):
     return {"message": "일정이 삭제되었습니다."}
 
 
-@router.patch(
-    "/{schedule_id}/done",
-    status_code=status.HTTP_200_OK,
-    summary="일정 완료 처리",
-    description="특정 일정을 완료 상태로 표시합니다.",
-)
-def mark_schedule_done(schedule_id: int, session: Session = Depends(get_session)):
-    schedule = get_schedule_or_404(session, schedule_id)
-    schedule.is_done = True
-
-    # 연결된 출석 기록 종료
-    close_attendance_by_schedule_id(session, schedule_id)
-
-    session.add(schedule)
-    session.commit()
-    session.refresh(schedule)
-    return {"message": "일정을 완료 처리했습니다.", "schedule_id": schedule.id}
-
-
 @router.post(
     "/{schedule_id}/comments",
     response_model=ScheduleCommentRead,
@@ -402,3 +383,63 @@ def get_pending_schedule(group_id: int, session: Session = Depends(get_session))
         return None
 
     return schedule
+
+
+@router.patch(
+    "/{schedule_id}/done",
+    status_code=status.HTTP_200_OK,
+    summary="일정 완료 처리 + 일기 자동 생성",
+    description="특정 일정을 완료 상태로 표시하고 출석 정보가 있으면 일기를 자동 생성합니다.",
+)
+def mark_schedule_done(
+    schedule_id: int,
+    group_id: int,
+    user_id: int,
+    session: Session = Depends(get_session),
+):
+    # 1. 일정 가져오기
+    schedule = get_schedule_or_404(session, schedule_id)
+    if schedule.is_done:
+        raise HTTPException(status_code=400, detail="이미 종료된 일정입니다.")
+
+    # 2. 일정 종료 처리
+    schedule.is_done = True
+    session.add(schedule)
+
+    # 3. 연결된 출석 기록 종료 + attendance_id 반환
+    attendance_id = close_attendance_by_schedule_id(session, schedule_id)
+
+    session.commit()
+    session.refresh(schedule)
+
+    # 4. 출석 기록이 있다면 일기 생성
+    if attendance_id:
+        from src.models.attendance import AttendanceRecord
+
+        record = session.get(AttendanceRecord, attendance_id)
+        if record and record.attendee_user_ids:
+            try:
+                from src.services.diary.service import auto_generate_diary
+
+                diary = auto_generate_diary(
+                    session=session,
+                    group_id=group_id,
+                    schedule_id=schedule_id,
+                    attendance_id=record.id,
+                    user_id=user_id,
+                )
+                return {
+                    "message": "일정 종료 및 일기 생성 완료",
+                    "schedule_id": schedule.id,
+                    "diary_id": diary.id,
+                }
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500, detail=f"일기 생성 중 오류: {str(e)}"
+                )
+
+    return {
+        "message": "일정은 종료되었지만 출석자가 없어 일기는 생성되지 않았습니다.",
+        "schedule_id": schedule.id,
+        "diary_id": None,
+    }
