@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from src.models.group import Member
 from src.models.transaction import Transaction
 from src.models.schedule import Schedule, ScheduleComment
+from src.models.attendance import AttendanceRecord
 from src.schemas.schedule import (
     ScheduleCreate,
     ScheduleRead,
@@ -17,6 +18,7 @@ from src.schemas.schedule import (
     ScheduleCalendarRead,
     AllScheduleCalendarRead,
 )
+from src.schemas.attendance import AttendanceRead
 from src.services.attendance.services import close_attendance_by_schedule_id
 
 router = APIRouter(prefix="/schedules", tags=["Schedules"])
@@ -188,10 +190,10 @@ def get_schedule(schedule_id: int, session: Session = Depends(get_session)):
             selectinload(Schedule.user),  # 주최자 정보 포함
             selectinload(Schedule.comments).selectinload(
                 ScheduleComment.user
-                ),  # 댓글 작성자 정보 포함
+            ),  # 댓글 작성자 정보 포함
             selectinload(Schedule.transactions).selectinload(
                 Transaction.participants
-                ),  # ✅ 이 줄 추가!
+            ),  # ✅ 이 줄 추가!
         )
     )
     schedule = session.execute(stmt).scalars().first()
@@ -345,3 +347,24 @@ def get_upcoming_schedule_by_group(
     if not schedule:
         raise HTTPException(404, detail="이 그룹에는 예정된 일정이 없습니다.")
     return ScheduleCalendarRead.model_validate(schedule)
+
+
+@router.get(
+    "/schedules/{schedule_id}/attendance",
+    response_model=AttendanceRead,
+    summary="일정에 연결된 출석 정보 조회",
+    description="특정 일정(schedule_id)에 연결된 출석 기록을 반환합니다.",
+)
+def get_attendance_of_schedule(
+    schedule_id: int, session: Session = Depends(get_session)
+):
+    record = (
+        session.execute(
+            select(AttendanceRecord).where(AttendanceRecord.schedule_id == schedule_id)
+        )
+        .scalars()
+        .first()
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="출석 기록이 없습니다.")
+    return record

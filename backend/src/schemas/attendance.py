@@ -1,6 +1,7 @@
 # backend/src/schemas/attendance.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Literal
+from datetime import datetime
 
 
 class BaseAttendanceItem(BaseModel):
@@ -67,3 +68,15 @@ class AttendanceRecordRead(BaseModel):
 
 class AttendanceUpdateRequest(BaseModel):
     user_ids: List[int] = Field(..., description="수정된 참석자 ID 리스트")
+
+
+class AttendanceRead(BaseModel):
+    id: int
+    group_id: int
+    schedule_id: Optional[int]
+    attendee_user_ids: List[int]
+    check_type: str
+    is_closed: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
