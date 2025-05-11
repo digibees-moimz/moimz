@@ -1,7 +1,8 @@
 # src/models/diary.py
 
+from sqlalchemy import Text
 from sqlmodel import SQLModel, Field, Relationship, Column, JSON
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
 
 
@@ -14,13 +15,14 @@ class Diary(SQLModel, table=True):
         default=None, foreign_key="attendancerecord.id"
     )
 
-    title: str
-    diary_text: str
+    title: str = Field(sa_column=Column(Text))  # 길이 제한 없도록
+    diary_text: str = Field(sa_column=Column(Text))  # 긴 본문 처리
+    summary: Optional[str] = Field(default=None, sa_column=Column(Text))  # 요약도 안전하게
+    hashtags: Optional[str] = Field(default=None, sa_column=Column(Text))  # 해시태그도 여유롭게
+
     image_path: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    summary: Optional[str] = Field(default=None)
-    hashtags: Optional[List[str]] = Field(default=None, sa_column=Column(JSON))
-
+    
     # 양방향 관계 설정
     group: Optional["Group"] = Relationship(back_populates="diaries")
     user: Optional["User"] = Relationship(back_populates="diaries")

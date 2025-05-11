@@ -19,7 +19,7 @@ export const ScheduleEndBtn = ({
   groupId,
   userId,
 }: ScheduleEndBtnProps) => {
-  const { handleEndSchedule } = useScheduleAction();
+  const { handleEndSchedule, isPending } = useScheduleAction();
 
   return (
     <div className="relative max-w-xl mx-auto">
@@ -68,6 +68,7 @@ export const ScheduleEndBtn = ({
           <Button
             size="sm"
             variant="destructive"
+            isDisabled={isPending}
             onClick={() =>
               handleEndSchedule({
                 scheduleId: schedule.id,

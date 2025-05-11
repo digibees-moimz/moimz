@@ -30,7 +30,7 @@ class DiaryRead(BaseModel):
     image_path: Optional[str]
     created_at: datetime
 
-    hashtags: Optional[List[str]] = None
+    hashtags: Optional[str] = None
     attendees: List[AttendeeInfo] = []
 
     class Config:

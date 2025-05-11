@@ -87,3 +87,14 @@ export async function fetchPendingSchedule(
 ): Promise<PendingSchedule | null> {
   return axios.get(`/api/schedules/groups/${groupId}/pending`);
 }
+
+// 일정 종료 및 일기 자동 생성
+export async function completeSchedule(
+  scheduleId: number,
+  groupId: number,
+  userId: number
+): Promise<{ message: string; diary_id: number | null }> {
+  return axios.patch(`/api/schedules/${scheduleId}/done`, null, {
+    params: { group_id: groupId, user_id: userId },
+  });
+}
