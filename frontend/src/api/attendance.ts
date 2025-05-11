@@ -5,6 +5,7 @@ import {
   ManualAttendanceResponse,
   AttendanceCompleteRequest,
   AttendanceRecordRead,
+  AttendanceRecord,
 } from "@/types/attendance";
 
 // 1. 사진 기반 출석체크
@@ -54,3 +55,10 @@ export const generateQrForAttendance = (
 // 8. QR 이미지 조회 URL
 export const getQrImageUrl = (token: string) =>
   `/api/attendance/qr/image/${token}`;
+
+// 일정에 연결된 출석 정보 조회
+export async function fetchAttendanceBySchedule(
+  scheduleId: number
+): Promise<AttendanceRecord> {
+  return axios.get(`/api/schedules/${scheduleId}/attendance`);
+}

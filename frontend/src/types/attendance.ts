@@ -59,3 +59,13 @@ export interface AttendanceRecordRead {
   check_type: AttendanceCheckType;
   image_url?: string;
 }
+
+export interface AttendanceRecord {
+  id: number;
+  group_id: number;
+  schedule_id?: number;
+  attendee_user_ids: number[];
+  check_type: string;
+  is_closed: boolean;
+  created_at: string;
+}
