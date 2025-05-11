@@ -6,6 +6,7 @@ import { Typography } from "@/components/ui-components/typography/Typography";
 import { formatKoreanDateCustom } from "@/utils/formatDate";
 import type { ScheduleDetail as ScheduleDetailType } from "@/types/schedule";
 import ScheduleCommentForm from "./ScheduleCommentForm";
+import DiaryLink from "../diary/DiaryLink";
 
 interface ScheduleDetailProps {
   schedule: ScheduleDetailType;
@@ -22,7 +23,15 @@ export default function ScheduleDetail({
 
       <Flex.RowStartStart className="w-full">
         <Flex.ColStartStart className="w-full">
-          <Typography.Heading2>{schedule.title}</Typography.Heading2>
+          <Flex.RowBetweenCenter className="w-full">
+            <Typography.Heading2>{schedule.title}</Typography.Heading2>
+            {schedule.diary_id && (
+              <DiaryLink
+                diaryId={schedule.diary_id}
+                groupId={schedule.group_id}
+              />
+            )}
+          </Flex.RowBetweenCenter>{" "}
           <Flex.RowStartCenter className="gap-3 mt-2">
             <img
               src={

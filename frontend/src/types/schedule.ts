@@ -34,6 +34,7 @@ export interface ScheduleDetail extends ScheduleItem {
   created_at: string;
   comments: ScheduleComment[];
   transactions: TransactionRead[]; // ✅ 이 줄 추가!
+  diary_id?: number | null; // ✅ 이 줄 추가
 }
 
 export interface ScheduleCreateInput {

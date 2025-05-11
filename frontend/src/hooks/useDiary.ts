@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchDiariesByGroup, generateDiaryAuto } from "@/api/diary";
+import {
+  fetchDiariesByGroup,
+  fetchDiaryById,
+  generateDiaryAuto,
+} from "@/api/diary";
 import type { Diary, DiaryAutoGenerateInput } from "@/types/diary";
 
 export const useDiary = () => {
@@ -21,5 +25,14 @@ export const useDiary = () => {
       },
     });
   };
-  return { useDiaryByGroup, useGenerateDiaryAuto };
+
+  // 3. 일기 단일 조회회
+  const useDiaryById = (diaryId: number) =>
+    useQuery<Diary>({
+      queryKey: ["diary", diaryId],
+      queryFn: () => fetchDiaryById(diaryId),
+      enabled: !!diaryId,
+    });
+
+  return { useDiaryByGroup, useGenerateDiaryAuto, useDiaryById };
 };

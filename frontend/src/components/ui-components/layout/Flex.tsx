@@ -37,15 +37,28 @@ const RowEndCenter = createHTMLElementWithCurry(
   "flex flex-row justify-end items-center h-full"
 );
 
+const RowStartBetween = createHTMLElementWithCurry(
+  "flex flex-row justify-between items-start w-full"
+);
+
+const ColStartBetween = createHTMLElementWithCurry(
+  "flex flex-col justify-between items-start w-full"
+);
+
 export const Flex = {
-  ColCenter,
-  RowCenter,
-  ColBetweenCenter,
-  RowBetweenCenter,
-  ColStartStart,
-  ColStartCenter,
+  // Row
   RowStartStart,
   RowStartCenter,
-  ColEndCenter,
+  RowStartBetween,
+  RowCenter,
+  RowBetweenCenter,
   RowEndCenter,
+
+  // Col
+  ColStartStart,
+  ColStartCenter,
+  ColStartBetween,
+  ColCenter,
+  ColBetweenCenter,
+  ColEndCenter,
 };
