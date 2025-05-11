@@ -78,6 +78,11 @@ def get_group_diaries(group_id: int):
             if diary.attendance_id:
                 attendees = get_attendees_from_attendance(session, diary.attendance_id)
 
-            result.append(DiaryRead(**diary.dict(), attendees=attendees))
+            hashtags = diary.hashtags
+            if isinstance(hashtags, str):
+                hashtags = hashtags.strip().split()
+
+            diary_dict = {**diary.dict(), "hashtags": hashtags, "attendees": attendees}
+            result.append(DiaryRead(**diary_dict))
 
         return result

@@ -106,6 +106,10 @@ def auto_generate_diary(
     diary_response_str = clean_json_text(diary_response_str)
     parsed = json.loads(diary_response_str)
 
+    hashtags = parsed.get("hashtags")
+    if isinstance(hashtags, str):
+        hashtags = hashtags.strip().split()
+
     print("Claude 응답 원문 ↓↓↓")
     print(diary_response_str)
 
@@ -117,7 +121,7 @@ def auto_generate_diary(
         title=parsed["title"],
         diary_text=parsed["body"],
         summary=parsed.get("summary", None),
-        hashtags=parsed.get("hashtags", []),
+        hashtags=hashtags,
         created_at=datetime.utcnow(),
     )
     session.add(diary)
