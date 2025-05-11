@@ -26,8 +26,6 @@ export default function GroupDetailPage() {
   const { data: next } = useGroupUpcomingSchedule(groupIdNum);
   return (
     <>
-      {/* TabNav 추가 */}
-      <TabNav groupId={groupIdNum} />
       {/* 모임통장 상세 */}
       <GroupDetailSection group={group} />
       <CharacterGenerateButton
