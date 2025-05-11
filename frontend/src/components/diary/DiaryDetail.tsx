@@ -18,20 +18,9 @@ export default function DiaryDetail({ diary }: DiaryDetailProps) {
   const day = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
 
   // Format hashtags for display if needed
-  const hashtagArray = diary.hashtags ? diary.hashtags.split(" ") : [];
+  const hashtagArray = (diary.hashtags as string | undefined)?.split(" ") ?? [];
 
   // Generate mood rating (5 dots, some filled based on mood)
-  const moodRating = 1; // Adjust based on your needs
-  const moodDots = Array(5)
-    .fill(0)
-    .map((_, i) => (
-      <div
-        key={i}
-        className={`w-5 h-5 rounded-full ${
-          i < moodRating ? "bg-gray-400" : "bg-gray-200"
-        }`}
-      ></div>
-    ));
 
   return (
     <div className="w-full max-w-md mx-auto pb-6 px-4">
@@ -138,7 +127,7 @@ export default function DiaryDetail({ diary }: DiaryDetailProps) {
           {/* Hashtags */}
           {diary.hashtags && (
             <Typography.BodySmall className="text-blue-500 mb-4">
-              {hashtagArray.map((tag, index) => (
+              {hashtagArray.map((tag: string, index: number) => (
                 <span key={index} className="mr-1">
                   {tag}
                 </span>
