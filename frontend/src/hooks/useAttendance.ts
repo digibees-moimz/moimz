@@ -72,6 +72,7 @@ export const useAttendance = () => {
     return useQuery<AttendanceRecord>({
       queryKey: ["attendance-by-schedule", scheduleId],
       queryFn: () => fetchAttendanceBySchedule(scheduleId),
+      enabled: !!scheduleId,
     });
   };
 

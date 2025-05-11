@@ -29,10 +29,10 @@ export const ScheduleCard = ({
   const router = useRouter();
 
   const isToday = type === "today";
-  const icon = isToday ? "hanging_woodi" : "hanging_ddockdi";
-  const translateY = isToday ? "-translate-y-1/5" : "-translate-y-1/7 ";
-  const backgroundColor = isToday ? "bg-[#EEFAF7]" : "bg-[#FFF3F6]";
-  const buttonColor = isToday ? "secondary" : "destructive";
+  const icon = isToday ? "hanging_woodi" : "hanging_dandi";
+  const backgroundColor = isToday ? "bg-[#EEFAF7]" : "bg-[#EAF9FF]";
+  const translateY = isToday ? "-translate-y-1/5" : "-translate-y-1/4 ";
+  const buttonColor = isToday ? "secondary" : "primary";
   const disableAttendance = dday !== undefined && dday !== "D-day";
 
   return (
@@ -46,7 +46,7 @@ export const ScheduleCard = ({
       <div
         className={`absolute left-1/2 -translate-x-1/1 z-10 top-0 ${translateY}`}
       >
-        <Image src={`/icons/${icon}.png`} alt={icon} width={65} height={65} />
+        <Image src={`/icons/${icon}.png`} alt={icon} width={isToday ? 65 : 60} height={isToday ? 65 : 60} />
       </div>
 
       {/* 카드 본체 */}
@@ -59,7 +59,7 @@ export const ScheduleCard = ({
               <Typography.Heading4>{scheduleTitle}</Typography.Heading4>
             )}
             {!isToday && dday !== undefined && (
-              <Typography.BodySmall className="text-[#FC9DB3] font-bold pl-3">
+              <Typography.BodySmall className="text-[#7BABFF] font-bold pl-3">
                 {dday}
               </Typography.BodySmall>
             )}

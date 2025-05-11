@@ -10,7 +10,6 @@ import {
   useTodaySchedule,
   useUpcomingSchedule,
 } from "@/hooks/schedule/useUpcomingSchedule";
-import MainTabNav from "@/components/layout/MainTabNav";
 
 export default function HomePage() {
   const { userId } = useUserStore();
@@ -19,7 +18,6 @@ export default function HomePage() {
 
   return (
     <>
-      <MainTabNav />
       <div className="space-y-6">
         {today && (
           <ScheduleCard

@@ -85,5 +85,5 @@ export async function fetchScheduleDetail(
 export async function fetchPendingSchedule(
   groupId: number
 ): Promise<PendingSchedule | null> {
-  return axios.get(`/api/groups/${groupId}/pending`);
+  return axios.get(`/api/schedules/groups/${groupId}/pending`);
 }
