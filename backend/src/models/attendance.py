@@ -25,3 +25,4 @@ class AttendanceRecord(SQLModel, table=True):
     is_closed: bool = Field(
         default=False, description="출석 세션 종료 여부 (QR 재생성 차단용)"
     )
+    created_at: datetime = Field(default_factory=datetime.utcnow)

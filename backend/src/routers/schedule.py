@@ -1,6 +1,6 @@
 # src/routers/schedule.py
 from fastapi import APIRouter, HTTPException, status, Depends, Query
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from sqlmodel import Session, select
 from src.core.database import get_session
@@ -12,6 +12,7 @@ from src.models.attendance import AttendanceRecord
 from src.schemas.schedule import (
     ScheduleCreate,
     ScheduleRead,
+    PendingScheduleRead,
     ScheduleUpdate,
     ScheduleCommentCreate,
     ScheduleCommentRead,
@@ -297,6 +298,27 @@ def get_comments(schedule_id: int, session: Session = Depends(get_session)):
 
 
 @router.get(
+    "/{schedule_id}/attendance",
+    response_model=AttendanceRead,
+    summary="일정에 연결된 출석 정보 조회",
+    description="특정 일정(schedule_id)에 연결된 출석 기록을 반환합니다.",
+)
+def get_attendance_of_schedule(
+    schedule_id: int, session: Session = Depends(get_session)
+):
+    record = (
+        session.execute(
+            select(AttendanceRecord).where(AttendanceRecord.schedule_id == schedule_id)
+        )
+        .scalars()
+        .first()
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="출석 기록이 없습니다.")
+    return record
+
+
+@router.get(
     "/group/{group_id}/today",
     response_model=list[ScheduleCalendarRead],
     summary="오늘 날짜 기준 일정 조회 (기본값: 오늘의 미완료 일정 조회)",
@@ -350,21 +372,33 @@ def get_upcoming_schedule_by_group(
 
 
 @router.get(
-    "/schedules/{schedule_id}/attendance",
-    response_model=AttendanceRead,
-    summary="일정에 연결된 출석 정보 조회",
-    description="특정 일정(schedule_id)에 연결된 출석 기록을 반환합니다.",
+    "/groups/{group_id}/pending",
+    response_model=PendingScheduleRead | None,
+    summary="종료되지 않은 일정 반환",
+    description="출석 시작 후 12시간이 지났지만 아직 종료되지 않은 일정이 있다면 반환합니다.",
 )
-def get_attendance_of_schedule(
-    schedule_id: int, session: Session = Depends(get_session)
-):
+def get_pending_schedule(group_id: int, session: Session = Depends(get_session)):
+    twelve_hours_ago = datetime.utcnow() - timedelta(hours=12)
+
+    # 1. 12시간 이상 경과한 출석 중 아직 종료되지 않은 것
     record = (
         session.execute(
-            select(AttendanceRecord).where(AttendanceRecord.schedule_id == schedule_id)
+            select(AttendanceRecord).where(
+                AttendanceRecord.group_id == group_id,
+                AttendanceRecord.created_at < twelve_hours_ago,
+                AttendanceRecord.is_closed == False,
+            )
         )
         .scalars()
         .first()
     )
-    if not record:
-        raise HTTPException(status_code=404, detail="출석 기록이 없습니다.")
-    return record
+
+    if not record or not record.schedule_id:
+        return None
+
+    # 2. 연결된 일정이 완료되지 않았는지 확인
+    schedule = session.get(Schedule, record.schedule_id)
+    if not schedule or schedule.is_done:
+        return None
+
+    return schedule
