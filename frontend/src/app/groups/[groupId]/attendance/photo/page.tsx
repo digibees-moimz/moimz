@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui-components/ui/Button";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { Typography } from "@/components/ui-components/typography/Typography";
-import { useAttendance } from "@/hooks/Attendance/useAttendance";
+import { useAttendance } from "@/hooks/useAttendance";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
 
 export default function PhotoAttendancePage() {

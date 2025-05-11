@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
-import { useAttendance } from "@/hooks/Attendance/useAttendance";
+import { useAttendance } from "@/hooks/useAttendance";
 import { AttendanceSummaryCard } from "@/components/attendance/AttendanceSummaryCard";
 
 export default function PayPage() {

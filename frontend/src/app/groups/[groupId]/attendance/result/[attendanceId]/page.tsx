@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useAttendance } from "@/hooks/Attendance/useAttendance";
+import { useAttendance } from "@/hooks/useAttendance";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Button } from "@/components/ui-components/ui/Button";

@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
-import { useAttendance } from "@/hooks/Attendance/useAttendance";
+import { useAttendance } from "@/hooks/useAttendance";
 import { ManualAttendanceRequest } from "@/types/attendance";
 import { useGroupAccountSummary } from "@/hooks/useGroupAccountSummary";
 import { Button } from "@/components/ui-components/ui/Button";
