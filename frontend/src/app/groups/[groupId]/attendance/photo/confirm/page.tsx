@@ -1,6 +1,6 @@
 "use client";
 
-import { useAttendance } from "@/hooks/Attendance/useAttendance";
+import { useAttendance } from "@/hooks/useAttendance";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { useGroupAccountSummary } from "@/hooks/useGroupAccountSummary";
 import { useRouter, useParams } from "next/navigation";

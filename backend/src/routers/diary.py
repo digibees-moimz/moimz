@@ -53,10 +53,14 @@ def generate_diary_auto(
             user_id=user_id,
         )
         attendees = get_attendees_from_attendance(session, attendance_id)
+
+        print("🧾 다이어리 내용", diary.dict())
+
         return DiaryRead(**diary.dict(), attendees=attendees)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=400, detail=str(e))
+        print("❌ 응답 직전 오류:", e)
+        raise HTTPException(status_code=500, detail="응답 생성 중 오류 발생")
 
 
 @router.get(
@@ -78,6 +82,11 @@ def get_group_diaries(group_id: int):
             if diary.attendance_id:
                 attendees = get_attendees_from_attendance(session, diary.attendance_id)
 
-            result.append(DiaryRead(**diary.dict(), attendees=attendees))
+            diary_dict = {
+                **diary.dict(),
+                "attendees": attendees,
+                "hashtags": diary.hashtags,
+            }
+            result.append(DiaryRead(**diary_dict))
 
         return result

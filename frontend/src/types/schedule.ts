@@ -57,3 +57,12 @@ export interface AllScheduleCardItem extends ScheduleCardItem {
   group_id: number;
   group_name: string;
 }
+
+export interface PendingSchedule {
+  id: number;
+  group_id: number;
+  title: string;
+  date: string;
+  is_done: boolean;
+  location?: string;
+}

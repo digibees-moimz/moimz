@@ -6,6 +6,7 @@ import {
   AllScheduleCardItem,
   ScheduleCreateInput,
   ScheduleItem,
+  PendingSchedule,
 } from "@/types/schedule";
 
 // 특정 그룹의 모든 일정 조회
@@ -78,4 +79,22 @@ export async function fetchScheduleDetail(
   scheduleId: number
 ): Promise<ScheduleDetail> {
   return axios.get(`/api/schedules/${scheduleId}`);
+}
+
+// 출석체크 12시간 경과 후에도 종료되지 않은 일정 조회
+export async function fetchPendingSchedule(
+  groupId: number
+): Promise<PendingSchedule | null> {
+  return axios.get(`/api/schedules/groups/${groupId}/pending`);
+}
+
+// 일정 종료 및 일기 자동 생성
+export async function completeSchedule(
+  scheduleId: number,
+  groupId: number,
+  userId: number
+): Promise<{ message: string; diary_id: number | null }> {
+  return axios.patch(`/api/schedules/${scheduleId}/done`, null, {
+    params: { group_id: groupId, user_id: userId },
+  });
 }

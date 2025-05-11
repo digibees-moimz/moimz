@@ -2,16 +2,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { IoSettingsOutline } from "react-icons/io5";
 
-interface TabNavProps {
-  groupId: number;
-}
 
-export default function TabNav({ groupId }: TabNavProps) {
+export default function TabNav() {
   const pathname = usePathname();
+  const { groupId } = useParams();
 
   const base = `/groups/${groupId}`;
   const tabs = [

@@ -385,7 +385,7 @@ def generate_qr_for_attendance(session: Session, attendance_id: int) -> str:
 
 
 # 모임 종료 처리
-def close_attendance_by_schedule_id(session: Session, schedule_id: int):
+def close_attendance_by_schedule_id(session: Session, schedule_id: int) -> int | None:
     record = (
         session.execute(
             select(AttendanceRecord).where(AttendanceRecord.schedule_id == schedule_id)
@@ -397,3 +397,7 @@ def close_attendance_by_schedule_id(session: Session, schedule_id: int):
         record.is_closed = True
         session.add(record)
         session.commit()
+        return record.id
+    elif record:
+        return record.id
+    return None

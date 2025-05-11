@@ -97,17 +97,28 @@ def auto_generate_diary(
 
     # 응답 정제 및 JSON 파싱
     if isinstance(diary_response, list):
-        diary_response_str = "\n".join([b.text for b in diary_response])
+        diary_response_str = "\n".join([block.text for block in diary_response])
+    elif hasattr(diary_response, "text"):
+        diary_response_str = diary_response.text
     elif isinstance(diary_response, str):
         diary_response_str = diary_response
     else:
         raise ValueError("Claude 응답 형식이 예상과 다릅니다.")
 
+    # ```json ... ``` 감싸진 부분 제거
     diary_response_str = clean_json_text(diary_response_str)
+
     parsed = json.loads(diary_response_str)
 
-    print("Claude 응답 원문 ↓↓↓")
+    # 디버깅 출력
+    print("📦 Claude 응답 정제 후 ↓↓↓")
     print(diary_response_str)
+
+    # JSON 파싱
+    try:
+        parsed = json.loads(diary_response_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON 파싱 오류: {e}")
 
     diary = Diary(
         group_id=group_id,
@@ -117,7 +128,7 @@ def auto_generate_diary(
         title=parsed["title"],
         diary_text=parsed["body"],
         summary=parsed.get("summary", None),
-        hashtags=parsed.get("hashtags", []),
+        hashtags=parsed.get("hashtags", None),
         created_at=datetime.utcnow(),
     )
     session.add(diary)

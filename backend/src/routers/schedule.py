@@ -1,6 +1,6 @@
 # src/routers/schedule.py
 from fastapi import APIRouter, HTTPException, status, Depends, Query
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from sqlmodel import Session, select
 from src.core.database import get_session
@@ -8,15 +8,18 @@ from sqlalchemy.orm import selectinload
 from src.models.group import Member
 from src.models.transaction import Transaction
 from src.models.schedule import Schedule, ScheduleComment
+from src.models.attendance import AttendanceRecord
 from src.schemas.schedule import (
     ScheduleCreate,
     ScheduleRead,
+    PendingScheduleRead,
     ScheduleUpdate,
     ScheduleCommentCreate,
     ScheduleCommentRead,
     ScheduleCalendarRead,
     AllScheduleCalendarRead,
 )
+from src.schemas.attendance import AttendanceRead
 from src.services.attendance.services import close_attendance_by_schedule_id
 
 router = APIRouter(prefix="/schedules", tags=["Schedules"])
@@ -188,10 +191,10 @@ def get_schedule(schedule_id: int, session: Session = Depends(get_session)):
             selectinload(Schedule.user),  # 주최자 정보 포함
             selectinload(Schedule.comments).selectinload(
                 ScheduleComment.user
-                ),  # 댓글 작성자 정보 포함
+            ),  # 댓글 작성자 정보 포함
             selectinload(Schedule.transactions).selectinload(
                 Transaction.participants
-                ),  # ✅ 이 줄 추가!
+            ),  # ✅ 이 줄 추가!
         )
     )
     schedule = session.execute(stmt).scalars().first()
@@ -230,25 +233,6 @@ def delete_schedule(schedule_id: int, session: Session = Depends(get_session)):
     session.delete(schedule)
     session.commit()
     return {"message": "일정이 삭제되었습니다."}
-
-
-@router.patch(
-    "/{schedule_id}/done",
-    status_code=status.HTTP_200_OK,
-    summary="일정 완료 처리",
-    description="특정 일정을 완료 상태로 표시합니다.",
-)
-def mark_schedule_done(schedule_id: int, session: Session = Depends(get_session)):
-    schedule = get_schedule_or_404(session, schedule_id)
-    schedule.is_done = True
-
-    # 연결된 출석 기록 종료
-    close_attendance_by_schedule_id(session, schedule_id)
-
-    session.add(schedule)
-    session.commit()
-    session.refresh(schedule)
-    return {"message": "일정을 완료 처리했습니다.", "schedule_id": schedule.id}
 
 
 @router.post(
@@ -292,6 +276,27 @@ def get_comments(schedule_id: int, session: Session = Depends(get_session)):
         .scalars()
         .all()
     )
+
+
+@router.get(
+    "/{schedule_id}/attendance",
+    response_model=AttendanceRead,
+    summary="일정에 연결된 출석 정보 조회",
+    description="특정 일정(schedule_id)에 연결된 출석 기록을 반환합니다.",
+)
+def get_attendance_of_schedule(
+    schedule_id: int, session: Session = Depends(get_session)
+):
+    record = (
+        session.execute(
+            select(AttendanceRecord).where(AttendanceRecord.schedule_id == schedule_id)
+        )
+        .scalars()
+        .first()
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="출석 기록이 없습니다.")
+    return record
 
 
 @router.get(
@@ -345,3 +350,96 @@ def get_upcoming_schedule_by_group(
     if not schedule:
         raise HTTPException(404, detail="이 그룹에는 예정된 일정이 없습니다.")
     return ScheduleCalendarRead.model_validate(schedule)
+
+
+@router.get(
+    "/groups/{group_id}/pending",
+    response_model=PendingScheduleRead | None,
+    summary="종료되지 않은 일정 반환",
+    description="출석 시작 후 12시간이 지났지만 아직 종료되지 않은 일정이 있다면 반환합니다.",
+)
+def get_pending_schedule(group_id: int, session: Session = Depends(get_session)):
+    twelve_hours_ago = datetime.utcnow() - timedelta(hours=12)
+
+    # 1. 12시간 이상 경과한 출석 중 아직 종료되지 않은 것
+    record = (
+        session.execute(
+            select(AttendanceRecord).where(
+                AttendanceRecord.group_id == group_id,
+                AttendanceRecord.created_at < twelve_hours_ago,
+                AttendanceRecord.is_closed == False,
+            )
+        )
+        .scalars()
+        .first()
+    )
+
+    if not record or not record.schedule_id:
+        return None
+
+    # 2. 연결된 일정이 완료되지 않았는지 확인
+    schedule = session.get(Schedule, record.schedule_id)
+    if not schedule or schedule.is_done:
+        return None
+
+    return schedule
+
+
+@router.patch(
+    "/{schedule_id}/done",
+    status_code=status.HTTP_200_OK,
+    summary="일정 완료 처리 + 일기 자동 생성",
+    description="특정 일정을 완료 상태로 표시하고 출석 정보가 있으면 일기를 자동 생성합니다.",
+)
+def mark_schedule_done(
+    schedule_id: int,
+    group_id: int,
+    user_id: int,
+    session: Session = Depends(get_session),
+):
+    # 1. 일정 가져오기
+    schedule = get_schedule_or_404(session, schedule_id)
+    if schedule.is_done:
+        raise HTTPException(status_code=400, detail="이미 종료된 일정입니다.")
+
+    # 2. 일정 종료 처리
+    schedule.is_done = True
+    session.add(schedule)
+
+    # 3. 연결된 출석 기록 종료 + attendance_id 반환
+    attendance_id = close_attendance_by_schedule_id(session, schedule_id)
+
+    session.commit()
+    session.refresh(schedule)
+
+    # 4. 출석 기록이 있다면 일기 생성
+    if attendance_id:
+        from src.models.attendance import AttendanceRecord
+
+        record = session.get(AttendanceRecord, attendance_id)
+        if record and record.attendee_user_ids:
+            try:
+                from src.services.diary.service import auto_generate_diary
+
+                diary = auto_generate_diary(
+                    session=session,
+                    group_id=group_id,
+                    schedule_id=schedule_id,
+                    attendance_id=record.id,
+                    user_id=user_id,
+                )
+                return {
+                    "message": "일정 종료 및 일기 생성 완료",
+                    "schedule_id": schedule.id,
+                    "diary_id": diary.id,
+                }
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500, detail=f"일기 생성 중 오류: {str(e)}"
+                )
+
+    return {
+        "message": "일정은 종료되었지만 출석자가 없어 일기는 생성되지 않았습니다.",
+        "schedule_id": schedule.id,
+        "diary_id": None,
+    }

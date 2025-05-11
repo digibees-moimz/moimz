@@ -7,6 +7,7 @@ import {
   fetchAttendanceRecord,
   updateAttendanceRecord,
   generateQrForAttendance,
+  fetchAttendanceBySchedule,
 } from "@/api/attendance";
 import {
   ManualAttendanceRequest,
@@ -14,6 +15,7 @@ import {
   ManualAttendanceResponse,
   PhotoAttendanceResponse,
   AttendanceRecordRead,
+  AttendanceRecord,
 } from "@/types/attendance";
 
 export const useAttendance = () => {
@@ -65,6 +67,15 @@ export const useAttendance = () => {
       mutationFn: (attendanceId) => generateQrForAttendance(attendanceId),
     });
 
+  // 일정에 연결된 출석 정보 조회
+  const useAttendanceBySchedule = (scheduleId: number) => {
+    return useQuery<AttendanceRecord>({
+      queryKey: ["attendance-by-schedule", scheduleId],
+      queryFn: () => fetchAttendanceBySchedule(scheduleId),
+      enabled: !!scheduleId,
+    });
+  };
+
   return {
     usePhotoAttendance,
     useManualAttendance,
@@ -72,5 +83,6 @@ export const useAttendance = () => {
     useAttendanceRecord,
     useUpdateAttendance,
     useGenerateQr,
+    useAttendanceBySchedule,
   };
 };
