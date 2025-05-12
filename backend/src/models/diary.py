@@ -26,3 +26,7 @@ class Diary(SQLModel, table=True):
     # 양방향 관계 설정
     group: Optional["Group"] = Relationship(back_populates="diaries")
     user: Optional["User"] = Relationship(back_populates="diaries")
+    schedule: Optional["Schedule"] = Relationship(
+        back_populates="diary",
+        sa_relationship_kwargs={"foreign_keys": "Diary.schedule_id"}
+    )

@@ -1,5 +1,6 @@
 // src/api/schedule.ts
 import axios from "@/lib/axios";
+import { ScheduleCommentCreateInput } from "@/types/comment";
 import {
   ScheduleDetail,
   ScheduleCardItem,
@@ -97,4 +98,12 @@ export async function completeSchedule(
   return axios.patch(`/api/schedules/${scheduleId}/done`, null, {
     params: { group_id: groupId, user_id: userId },
   });
+}
+
+// 스케줄에 댓글 작성 API
+export async function postScheduleComment(
+  scheduleId: number,
+  input: ScheduleCommentCreateInput
+) {
+  return axios.post(`/api/schedules/${scheduleId}/comments`, input);
 }

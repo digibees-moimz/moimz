@@ -12,6 +12,7 @@ export default function SchedulePage() {
     data: schedule,
     isLoading,
     error,
+    refetch,
   } = useScheduleDetail(Number(scheduleId));
 
   if (isLoading) return <div className="p-4 text-center">로딩 중...</div>;
@@ -25,7 +26,7 @@ export default function SchedulePage() {
 
   return (
     <>
-      <ScheduleDetail schedule={schedule} />
+      <ScheduleDetail schedule={schedule} onRefetch={refetch} />
       <TransactionList transactions={schedule.transactions} />
     </>
   );
