@@ -91,6 +91,7 @@ export default function ScheduleForm({ onCreated }: ScheduleFormProps) {
         {/* 입력 폼 */}
         <div className="flex-1">
           <form
+            id="schedule-form"
             className="w-full max-w-md p-6 space-y-6 bg-white rounded-t-3xl h-[calc(100vh-220px)] pt-10"
             onSubmit={handleSubmit}
           >
