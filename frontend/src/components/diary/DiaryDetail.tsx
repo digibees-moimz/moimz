@@ -101,8 +101,7 @@ export default function DiaryDetail({ diary }: DiaryDetailProps) {
           {/* 일기 그림 */}
           <div className="my-2 rounded-sm overflow-hidden">
             <img
-              // src={diary.image_path || "/images/default-diary.png"}
-              src={"/images/groups/default.png"}
+              src={diary.image_path || "/images/default-diary.png"}
               alt="diary image"
               className="w-full h-auto object-cover"
             />

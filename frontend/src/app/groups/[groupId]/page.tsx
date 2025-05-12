@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import GroupDetailSection from "@/components/group/GroupDetailSection";
 import { useUserStore } from "@/stores/userStore";
 import { ScheduleCard } from "@/components/schedule/ScheduleCard";
@@ -13,13 +13,14 @@ import CharacterGenerateButton from "@/components/character/CharacterGenerateBut
 import { useGroups } from "@/hooks/useGroups";
 import { useSchedule } from "@/hooks/schedule/useSchedule";
 import { Container } from "@/components/ui-components/layout/Container";
+import { useGroupColorStore } from "@/stores/useGroupColorStore";
 
 export default function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
   const groupIdNum = Number(groupId);
 
-  const searchParams = useSearchParams();
-  const groupIndex = Number(searchParams.get("i") || 0);
+  const { groupColorMap } = useGroupColorStore();
+  const colorIndex = groupColorMap[groupIdNum] ?? 0;
 
   const { userId } = useUserStore();
   const { data: groups, refetch: refetchGroup } = useGroups(userId);
@@ -35,7 +36,7 @@ export default function GroupDetailPage() {
   return (
     <>
       {/* 모임통장 상세 */}
-      <GroupDetailSection group={group} groupIndex={groupIndex} />
+      <GroupDetailSection group={group} colorIndex={colorIndex} />
       <Container className="py-6 space-y-6">
         <CharacterGenerateButton
           groupId={groupIdNum}

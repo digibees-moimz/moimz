@@ -7,14 +7,14 @@ import { groupColorMap } from "@/constants/groupColorMap";
 
 interface GroupMainCardProps {
   group?: GroupType;
-  groupIndex: number;
+  colorIndex: number;
 }
 
 export default function GroupDetailSection({
   group,
-  groupIndex,
+  colorIndex,
 }: GroupMainCardProps) {
-  const { bg, badge, text } = groupColorMap[groupIndex % groupColorMap.length];
+  const { bg, badge, text } = groupColorMap[colorIndex % groupColorMap.length];
 
   if (!group)
     return <Typography.Body>모임을 찾을 수 없습니다.</Typography.Body>;

@@ -55,7 +55,7 @@ export default function GroupMainCard({
         <Flex.RowBetweenCenter className="gap-3">
           <Flex.ColStartCenter className="items-start gap-1 w-auto h-auto">
             {/* 멤버 수 */}
-            <div className="flex gap-1 bg-white px-2 py-0.5 rounded-full">
+            <div className="flex gap-1 bg-white px-2 py-0.5 rounded-full mb-2">
               <PiCrownSimpleFill color="#F2BB44" />
               <span className="text-xs text-gray-700">{member_count}명</span>
             </div>
