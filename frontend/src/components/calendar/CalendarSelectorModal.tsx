@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import CalendarSelector from "./CalendarSelector";
+import { Button } from "../ui-components/ui/Button";
 
 interface Props {
   onClose: () => void;
@@ -8,6 +9,7 @@ interface Props {
 
 export default function CalendarSelectorModal({ onClose, onSelect }: Props) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // 바깥 클릭 시 닫기
   useEffect(() => {
@@ -21,14 +23,22 @@ export default function CalendarSelectorModal({ onClose, onSelect }: Props) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
-      <div ref={modalRef} className="bg-white rounded-xl shadow-lg p-4">
-        <CalendarSelector
-          onSelectDate={(date) => {
-            onSelect(date);
-            onClose();
+    <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
+      <div ref={modalRef} className="bg-white rounded-2xl w-[80%] p-5">
+        <CalendarSelector onSelectDate={(date) => setSelectedDate(date)} />
+
+        <Button
+          variant="secondary"
+          isDisabled={!selectedDate}
+          onClick={() => {
+            if (selectedDate) {
+              onSelect(selectedDate);
+              onClose();
+            }
           }}
-        />
+        >
+          확인
+        </Button>
       </div>
     </div>
   );

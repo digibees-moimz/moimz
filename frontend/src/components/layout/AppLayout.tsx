@@ -11,7 +11,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMoimMain = !pathname.startsWith("/groups/");
 
-  const isGroupDetailFirst = pathname.match(/^\/groups\/[^/]+\/?$/);
+  const isGroupPageWithoutPadding = [
+    /^\/groups\/[^/]+\/?$/,  // 모임 상세 페이지
+    /^\/groups\/[^/]+\/calendar\/create$/, // 일정 등록 페이지
+  ].some((regex) => regex.test(pathname));
 
   return (
     <div className="flex flex-col w-screen min-h-screen">
@@ -20,7 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="h-[calc(100vh-96px)]">
         <Container
           as="section"
-          className={isGroupDetailFirst ? "p-0" : "py-6 space-y-6"}
+          className={isGroupPageWithoutPadding ? "p-0" : "py-6 space-y-6"}
         >
           {children}
         </Container>

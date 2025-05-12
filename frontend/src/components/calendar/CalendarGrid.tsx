@@ -28,7 +28,7 @@ export default function CalendarGrid({
   getDayClass,
 }: CalendarGridProps) {
   return (
-    <div className="relative min-h-[280px]">
+    <div className="relative min-h-[250px]">
       {isLoading && (
         <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
           <div className="flex flex-col items-center">
