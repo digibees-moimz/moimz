@@ -48,6 +48,7 @@ class ScheduleCommentRead(BaseModel):
 class ScheduleRead(BaseModel):
     id: int
     group_id: int
+    diary_id: Optional[int] = None
     user: UserPublic
     title: str
     date: datetime

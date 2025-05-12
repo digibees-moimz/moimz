@@ -90,3 +90,21 @@ def get_group_diaries(group_id: int):
             result.append(DiaryRead(**diary_dict))
 
         return result
+
+
+@router.get(
+    "/{diary_id}",
+    response_model=DiaryRead,
+    summary="단일 모임 일기 조회",
+    description="다이어리 ID를 기반으로 단일 모임 일기를 조회합니다.",
+)
+def get_diary_by_id(diary_id: int, session: Session = Depends(get_session)):
+    diary = session.get(Diary, diary_id)
+    if not diary:
+        raise HTTPException(status_code=404, detail="일기를 찾을 수 없습니다.")
+
+    attendees = []
+    if diary.attendance_id:
+        attendees = get_attendees_from_attendance(session, diary.attendance_id)
+
+    return DiaryRead(**diary.dict(), attendees=attendees)
