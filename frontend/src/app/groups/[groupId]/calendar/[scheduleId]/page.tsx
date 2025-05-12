@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useScheduleDetail } from "@/hooks/schedule/useScheduleDetail";
 import ScheduleDetail from "@/components/scheduleDetail/ScheduleDetail";
 import TransactionList from "@/components/transaction/TransactionList";
+import ScheduleCommentSection from "@/components/scheduleDetail/ScheduleCommentSection";
 
 export default function SchedulePage() {
   const { scheduleId } = useParams();
@@ -28,6 +29,7 @@ export default function SchedulePage() {
     <>
       <ScheduleDetail schedule={schedule} onRefetch={refetch} />
       <TransactionList transactions={schedule.transactions} />
+      <ScheduleCommentSection schedule={schedule} onRefetch={refetch} />
     </>
   );
 }

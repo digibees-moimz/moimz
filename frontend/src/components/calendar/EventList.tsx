@@ -4,7 +4,6 @@
 
 import { format } from "date-fns";
 import Link from "next/link";
-import { FaClock } from "react-icons/fa";
 import { FaCalendarAlt, FaRegClock, FaMapMarkerAlt } from "react-icons/fa";
 import type { ScheduleItem } from "@/types/schedule";
 import { Button } from "../ui-components/ui/Button";
