@@ -12,6 +12,7 @@ import {
   isSameDay,
   parse,
   startOfToday,
+  isBefore,
 } from "date-fns";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { useMonthlySchedules } from "@/hooks/schedule/useMonthlySchedules";
@@ -98,7 +99,11 @@ export default function CalendarView({ groupId }: { groupId: number }) {
       hasEvent && "bg-[#E3F7F4] cursor-pointer", // 이벤트 있는 날짜는 연한 민트색 배경과 커서 포인터
       isSunday && "text-rose-400", // 일요일은 빨간색
       isSaturday && "text-blue-400", // 토요일은 파란색
-      !isSunday && !isSaturday && !isToday(day) && !hasEvent && "text-gray-400", // 일반 날짜 중 이벤트가 없는 경우만 회색 처리
+      !isSunday &&
+        !isSaturday &&
+        !isToday(day) &&
+        !hasEvent &&
+        (isBefore(day, today) ? "text-gray-400" : "text-gray-700"), // 일반 날짜 중 이벤트가 없는 경우만 회색 처리
       "mx-auto flex h-8 w-8 items-center justify-center rounded-full",
     ]
       .filter(Boolean)
@@ -169,7 +174,7 @@ export default function CalendarView({ groupId }: { groupId: number }) {
         />
 
         {/* 선택된 날짜의 일정 목록 */}
-        <div className="mt-4 border-t pt-4">
+        <div className="mt-4 border-t border-gray-200 py-10">
           <EventList
             events={getSelectedDateEvents()}
             date={selectedDate}
@@ -177,6 +182,6 @@ export default function CalendarView({ groupId }: { groupId: number }) {
           />
         </div>
       </div>
-    </div> // ✅ 추가
+    </div>
   );
 }

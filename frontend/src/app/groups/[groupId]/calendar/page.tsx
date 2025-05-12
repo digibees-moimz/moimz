@@ -8,9 +8,5 @@ export default function CalendarPage() {
   const { groupId } = useParams();
   const gid = Number(groupId);
 
-  return (
-    <div className="relative max-w-md mx-auto pt-4">
-      <CalendarView groupId={gid} />
-    </div>
-  );
+  return <CalendarView groupId={gid} />;
 }
