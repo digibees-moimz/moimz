@@ -24,7 +24,10 @@ export default function GroupList() {
         return (
           <Link
             key={group.id}
-            href={`/groups/${group.id}`}
+            href={{
+              pathname: `/groups/${group.id}`,
+              query: { i: idx % groupColorMap.length },
+            }}
             className="w-full p-4 rounded-xl hover:shadow transition"
             style={{ backgroundColor: bg }}
           >

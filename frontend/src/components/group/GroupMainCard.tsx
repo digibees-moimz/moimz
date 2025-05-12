@@ -7,12 +7,22 @@ import Link from "next/link";
 import LockInManagerModal from "../lockin/LockInManagerModal"; // 🔥 모달 import
 import { useUserStore } from "@/stores/userStore";
 import { useGroups } from "@/hooks/useGroups";
+import { PiCrownSimpleFill } from "react-icons/pi";
+import Image from "next/image";
 
 interface GroupMainCardProps {
   group: GroupType;
+  backgroundColor: string;
+  badgeColor: string;
+  textColor: string;
 }
 
-export default function GroupMainCard({ group }: GroupMainCardProps) {
+export default function GroupMainCard({
+  group,
+  backgroundColor,
+  badgeColor,
+  textColor,
+}: GroupMainCardProps) {
   const {
     id,
     name,
@@ -38,63 +48,91 @@ export default function GroupMainCard({ group }: GroupMainCardProps) {
 
   return (
     <>
-      <Flex.RowBetweenCenter className="w-full bg-[#EEFAF7] p-6 rounded-xl">
-        {/* Left */}
-        <Flex.ColStartCenter className="items-start gap-2 w-auto h-auto">
-          <Flex.RowStartCenter className="gap-2 w-auto h-auto">
-            <div className="text-xs bg-yellow-400 px-2 py-0.5 rounded-full">
-              {member_count}명
+      <div
+        className="w-full p-6 text-gray-700"
+        style={{ backgroundColor: backgroundColor }}
+      >
+        <Flex.RowBetweenCenter className="gap-3">
+          <Flex.ColStartCenter className="items-start gap-1 w-auto h-auto">
+            {/* 멤버 수 */}
+            <div className="flex gap-1 bg-white px-2 py-0.5 rounded-full">
+              <PiCrownSimpleFill color="#F2BB44" />
+              <span className="text-xs text-gray-700">{member_count}명</span>
             </div>
-            <div className="text-xs bg-emerald-400 text-white px-2 py-0.5 rounded-full">
-              {category}
+
+            {/* 제목 + 카테고리 */}
+            <Flex.RowStartCenter className="gap-2 mb-0">
+              <Typography.Heading3>{name}</Typography.Heading3>
+              <div
+                className="text-xs px-2 py-0.5 rounded-full font-black"
+                style={{ backgroundColor: badgeColor, color: textColor }}
+              >
+                {category}
+              </div>
+            </Flex.RowStartCenter>
+
+            {/* 모임통장 계좌번호 */}
+            <Typography.Body className="text-gray-500">
+              {account_number}
+            </Typography.Body>
+
+            <div className="mt-5">
+              <Typography.Heading2>
+                {group_balance.toLocaleString()}원
+              </Typography.Heading2>
+
+              <Typography.BodySmall className="text-gray-500 pt-1">
+                내 락인 금액 |{" "}
+                <span className="font-bold">
+                  {locked_amount.toLocaleString()}원
+                </span>
+              </Typography.BodySmall>
             </div>
-          </Flex.RowStartCenter>
+          </Flex.ColStartCenter>
 
-          <Typography.Heading2>{name}</Typography.Heading2>
-          <Typography.BodySmall className="text-gray-400">
-            {account_number}
-          </Typography.BodySmall>
-
-          <Typography.Display className="text-black">
-            {group_balance.toLocaleString()}원
-          </Typography.Display>
-
-          <Typography.BodySmall className="text-gray-500">
-            내 락인 금액{" "}
-            <span className="font-bold text-black">
-              {locked_amount.toLocaleString()}원
-            </span>
-          </Typography.BodySmall>
-
-          {/* 👇 버튼 2개 */}
-          <Flex.RowStartCenter className="gap-2 mt-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              fullWidth={false}
-              onClick={() => setModalOpen(true)}
-            >
-              락인 관리
-            </Button>
-            <Link href={`/groups/${id}/account`}>
-              <Button variant="white" size="sm" fullWidth={false}>
-                모임비 현황
-              </Button>
-            </Link>
-          </Flex.RowStartCenter>
-        </Flex.ColStartCenter>
-
-        {/* Right */}
-        <Flex.ColCenter className="w-auto h-auto">
+          {/* 캐릭터 */}
           <img
             src={displayImage}
             alt="캐릭터"
-            className="w-56 h-56 object-contain"
+            width={100}
+            height={100}
+            className="w-[50%] object-contain"
           />
-        </Flex.ColCenter>
-      </Flex.RowBetweenCenter>
+        </Flex.RowBetweenCenter>
 
-      {/* 🔥 락인 모달 */}
+        {/* 버튼 */}
+        <Flex.RowStartCenter className="w-full gap-3 mt-5">
+          <Button
+            variant="white"
+            className="text-sm flex-grow"
+            fullWidth={false}
+            onClick={() => setModalOpen(true)}
+          >
+            락인 관리
+          </Button>
+          <Link href={`/groups/${id}/account`} className="flex-grow">
+            <Button
+              variant="white"
+              fullWidth={false}
+              className="text-sm w-full"
+            >
+              모임비 현황
+            </Button>
+          </Link>
+
+          <Link href={`/groups/${id}/account`} className="flex-grow">
+            <Button
+              variant="white"
+              fullWidth={false}
+              className="text-sm w-full"
+            >
+              결제 내역
+            </Button>
+          </Link>
+        </Flex.RowStartCenter>
+      </div>
+
+      {/* 락인 모달 */}
       {groups && (
         <LockInManagerModal
           userId={userId}

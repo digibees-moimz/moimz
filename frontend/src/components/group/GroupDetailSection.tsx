@@ -3,15 +3,30 @@
 import { GroupType } from "@/types/group";
 import { Typography } from "../ui-components/typography/Typography";
 import GroupMainCard from "./GroupMainCard";
-import { Flex } from "../ui-components/layout/Flex";
+import { groupColorMap } from "@/constants/groupColorMap";
 
-export default function GroupDetailSection({ group }: { group?: GroupType }) {
+interface GroupMainCardProps {
+  group?: GroupType;
+  groupIndex: number;
+}
+
+export default function GroupDetailSection({
+  group,
+  groupIndex,
+}: GroupMainCardProps) {
+  const { bg, badge, text } = groupColorMap[groupIndex % groupColorMap.length];
+
   if (!group)
     return <Typography.Body>모임을 찾을 수 없습니다.</Typography.Body>;
 
   return (
-    <Flex.ColCenter>
-      <GroupMainCard group={group} />
-    </Flex.ColCenter>
+    <div>
+      <GroupMainCard
+        group={group}
+        backgroundColor={bg}
+        badgeColor={badge}
+        textColor={text}
+      />
+    </div>
   );
 }
