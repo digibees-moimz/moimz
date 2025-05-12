@@ -43,36 +43,47 @@ export function ScheduleSelector({
             />
             <Flex.ColStartStart>
               {selectedScheduleId ? (
-                <>
-                  <Typography.Heading5>
-                    일정이 선택 되었어요!
-                  </Typography.Heading5>
-                  <Typography.BodySmall className="font-semibold text-[#27937b] pt-1">
-                    {schedules.find((s) => s.id === selectedScheduleId)?.title}
-                  </Typography.BodySmall>
-                  <Flex.RowStartCenter className="gap-12 text-sm text-[#27937b]">
-                    <Flex.RowStartCenter className="gap-1">
-                      <FaRegClock className="text-[#27937b]" />
-                      <span>
-                        {formatKoreanDateCustom(
-                          schedules.find((s) => s.id === selectedScheduleId)!
-                            .date,
-                          { hour: true }
-                        )}
-                      </span>
-                    </Flex.RowStartCenter>
-                    <Flex.RowStartCenter className="gap-1">
-                      <FaMapMarkerAlt className="text-[#27937b]" />
-                      <span>
-                        {schedules.find((s) => s.id === selectedScheduleId)
-                          ?.location || "장소 미정"}
-                      </span>
-                    </Flex.RowStartCenter>
-                  </Flex.RowStartCenter>
-                  <Typography.Caption className="mt-2">
-                    일정이 잘못되었다면 다시 선택해주세요
-                  </Typography.Caption>
-                </>
+                  <>
+                    <div className="bg-[#EEFAF7] p-4 w-full rounded-xl text-gray-700 font-mono">
+                      {/* 일정 제목 - 왼쪽 정렬 */}
+                      <Typography.BodySmall className="font-semibold text-base text-left">
+                        {
+                          schedules.find((s) => s.id === selectedScheduleId)
+                            ?.title
+                        }
+                      </Typography.BodySmall>
+
+                      {/* 시간 및 장소 - 가로 정렬 */}
+                      <div className="flex flex-row items-center justify-start gap-x-6 text-sm pl-1">
+                        <div className="flex items-center gap-2">
+                          <FaRegClock className="text-gray-500" />
+                          <span className="text-gray-500">
+                            {formatKoreanDateCustom(
+                              schedules.find(
+                                (s) => s.id === selectedScheduleId
+                              )!.date,
+                              { hour: true }
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaMapMarkerAlt className="text-gray-500" />
+                          <span>
+                            {schedules.find((s) => s.id === selectedScheduleId)
+                              ?.location || "장소 미정"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Typography.Heading5 className="mt-4">
+                      일정이 선택되었어요!
+                    </Typography.Heading5>
+                    <Typography.Caption>
+                      일정이 잘못되었다면 다시 선택해주세요
+                    </Typography.Caption>
+                  </>
+                  
               ) : (
                 <>
                   <Typography.Heading5 className="pb-1">

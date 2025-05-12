@@ -4,11 +4,13 @@
 
 import { format } from "date-fns";
 import Link from "next/link";
-import { FaCalendarAlt, FaClock } from "react-icons/fa";
+import { FaCalendarAlt, FaRegClock, FaMapMarkerAlt } from "react-icons/fa";
 import type { ScheduleItem } from "@/types/schedule";
 import { Button } from "../ui-components/ui/Button";
 import { useRouter } from "next/navigation";
 import { formatKoreanDateCustom } from "@/utils/formatDate";
+import { Typography } from "../ui-components/typography/Typography";
+import { Flex } from "../ui-components/layout/Flex";
 
 type EventListProps = {
   events: ScheduleItem[];
@@ -20,13 +22,15 @@ export default function EventList({ events, date, groupId }: EventListProps) {
   const formattedDate = format(date, "yyyy년 MM월 dd일");
   const router = useRouter();
 
+  console.log(events);
+
   return (
-    <div className="px-4 pb-4">
+    <>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-medium text-lg flex items-center">
-          <FaCalendarAlt className="mr-2 text-[#22BD9C]" />
+        <Typography.Heading5 className="flex items-center text-gray-600">
+          <FaCalendarAlt className="mr-2 text-[#22BD9C]" size={20} />
           {formattedDate} 일정
-        </h3>
+        </Typography.Heading5>
         <Button
           variant="secondary"
           size="xs"
@@ -50,24 +54,32 @@ export default function EventList({ events, date, groupId }: EventListProps) {
                 href={`/groups/${groupId}/calendar/${event.id}`}
                 className="block p-4 hover:bg-gray-50 transition-colors rounded-lg"
               >
-                <h4 className="font-medium text-[#22BD9C] mb-2">
+                <Typography.Heading5 className="font-medium text-[#22BD9C] mb-2">
                   {event.title}
-                </h4>
+                </Typography.Heading5>
+                <Flex.RowBetweenCenter>
+                  <div className="flex items-center gap-1 mb-1">
+                    <FaRegClock className="text-gray-400" />
+                    <Typography.BodySmall className="text-gray-400">
+                      {formatKoreanDateCustom(event.date, {
+                        hour: true,
+                        minute: true,
+                      })}
+                    </Typography.BodySmall>
+                  </div>
 
-                <div className="text-sm text-gray-600 flex items-center gap-1 mb-1">
-                  <FaClock className="text-gray-400" size={12} />
-                  <span>
-                    {formatKoreanDateCustom(event.date, {
-                      hour: true,
-                      minute: true,
-                    })}
-                  </span>
-                </div>
+                  <div className="flex items-center gap-1 mb-1">
+                    <FaMapMarkerAlt className="text-gray-400" />
+                    <Typography.BodySmall className="text-gray-400">
+                      {event.location || "장소 미정"}
+                    </Typography.BodySmall>
+                  </div>
+                </Flex.RowBetweenCenter>
               </Link>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </>
   );
 }

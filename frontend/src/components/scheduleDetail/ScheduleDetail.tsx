@@ -7,6 +7,7 @@ import { formatKoreanDateCustom } from "@/utils/formatDate";
 import type { ScheduleDetail as ScheduleDetailType } from "@/types/schedule";
 import ScheduleCommentForm from "./ScheduleCommentForm";
 import DiaryLink from "../diary/DiaryLink";
+import { FaCalendarAlt, FaRegClock, FaMapMarkerAlt } from "react-icons/fa";
 
 interface ScheduleDetailProps {
   schedule: ScheduleDetailType;
@@ -18,20 +19,18 @@ export default function ScheduleDetail({
   onRefetch,
 }: ScheduleDetailProps) {
   return (
-    <Flex.ColStartCenter className="bg-white rounded-2xl shadow p-6 max-w-xl mx-auto space-y-6">
-      <Typography.Heading1>모임 상세</Typography.Heading1>
-
+    <Flex.ColStartCenter className="bg-white rounded-2xl max-w-xl mx-auto space-y-6">
       <Flex.RowStartStart className="w-full">
         <Flex.ColStartStart className="w-full">
           <Flex.RowBetweenCenter className="w-full">
-            <Typography.Heading2>{schedule.title}</Typography.Heading2>
+            <Typography.Heading3>{schedule.title}</Typography.Heading3>
             {schedule.diary_id && (
               <DiaryLink
                 diaryId={schedule.diary_id}
                 groupId={schedule.group_id}
               />
             )}
-          </Flex.RowBetweenCenter>{" "}
+          </Flex.RowBetweenCenter>
           <Flex.RowStartCenter className="gap-3 mt-2">
             <img
               src={
@@ -68,59 +67,24 @@ export default function ScheduleDetail({
         <Typography.BodyLarge>
           {schedule.description || "모임 일정입니다"}
         </Typography.BodyLarge>
-        <Typography.BodySmall>
-          일시:{" "}
-          {formatKoreanDateCustom(schedule.date, {
-            year: true,
-            month: true,
-            day: true,
-            hour: true,
-            minute: true,
-          })}
-        </Typography.BodySmall>
-        <Typography.BodySmall>
-          장소: {schedule.location || "장소 미정"}
-        </Typography.BodySmall>
-      </div>
 
-      <div className="w-full space-y-4">
-        <ScheduleCommentForm scheduleId={schedule.id} onSuccess={onRefetch} />
-        <Typography.Heading3>댓글</Typography.Heading3>
-        {schedule.comments.length === 0 ? (
-          <Typography.BodySmall>댓글이 없습니다.</Typography.BodySmall>
-        ) : (
-          schedule.comments.map((c) => (
-            <Flex.RowStartCenter
-              key={c.id}
-              className="w-full gap-3 items-start"
-            >
-              <img
-                src="/images/default-avatar.png"
-                alt="user avatar"
-                className="w-10 h-10 rounded-full"
-              />
-              <div className="flex flex-col w-full">
-                <div className="flex items-center gap-2">
-                  <Typography.BodySmall className="font-medium">
-                    {c.user.name}
-                  </Typography.BodySmall>
-                  <span className="text-gray-400 text-xs">
-                    {formatKoreanDateCustom(c.created_at, {
-                      month: true,
-                      day: true,
-                      hour: true,
-                      minute: true,
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-start mt-1">
-                  <div className="bg-gray-300 rounded-sm h-full mt-0.5" />
-                  <Typography.BodySmall>{c.content}</Typography.BodySmall>
-                </div>
-              </div>
-            </Flex.RowStartCenter>
-          ))
-        )}
+        <div className="px-5 p-3 space-y-2 bg-[#F4EFFB] rounded-lg ">
+          <Typography.BodySmall className="flex items-center gap-1">
+            <FaRegClock color="gray" />
+            일시:{" "}
+            {formatKoreanDateCustom(schedule.date, {
+              year: true,
+              month: true,
+              day: true,
+              hour: true,
+              minute: true,
+            })}
+          </Typography.BodySmall>
+          <Typography.BodySmall className="flex items-center gap-1">
+            <FaMapMarkerAlt color="gray" />
+            장소: {schedule.location || "장소 미정"}
+          </Typography.BodySmall>
+        </div>
       </div>
     </Flex.ColStartCenter>
   );

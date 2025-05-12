@@ -5,10 +5,22 @@ import { useGroupAccountSummary } from "@/hooks/useGroupAccountSummary";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import Image from "next/image";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  LabelList,
+} from "recharts";
+import { useState } from "react";
 
 type Props = { groupId: number };
 
 export default function GroupLockInStatus({ groupId }: Props) {
+  const [viewMode, setViewMode] = useState<"graph" | "table">("graph");
   const { data, isLoading, error } = useGroupAccountSummary(groupId);
 
   if (isLoading)
@@ -30,62 +42,133 @@ export default function GroupLockInStatus({ groupId }: Props) {
   const totalLocked = members.reduce((sum, m) => sum + m.locked_amount, 0);
 
   return (
-    <Flex.ColStartCenter className="w-full gap-4">
-      {/* 멤버 리스트 */}
-      <div className="rounded-xl overflow-hidden bg-[#EEFAF7] w-full">
-        <table className="min-w-full text-sm">
-          <thead className="sticky top-0 bg-[#d9f4ec]">
-            <tr>
-              <th className="p-2 text-left w-10" />
-              <th className="p-2 text-left">
-                <Typography.Caption>이름</Typography.Caption>
-              </th>
-              <th className="p-2 text-right">
-                <Typography.Caption>락인 금액</Typography.Caption>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((m) => (
-              <tr key={m.user_account_id} className="border-b last:border-none">
-                <td className="p-2">
-                  <Image
-                    src={m.profile_image_url ?? "/images/default-avatar.png"}
-                    alt={m.name}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
+    <div className="">
+      <Flex.RowCenter className="my-4 gap-2">
+        <button
+          onClick={() => setViewMode("graph")}
+          className={`px-4 py-1 rounded-full text-sm border ${
+            viewMode === "graph"
+              ? "bg-[#22BD9C] text-white border-[#22BD9C]"
+              : "bg-white text-gray-600 border-gray-300"
+          }`}
+        >
+          그래프 보기
+        </button>
+        <button
+          onClick={() => setViewMode("table")}
+          className={`px-4 py-1 rounded-full text-sm border ${
+            viewMode === "table"
+              ? "bg-[#22BD9C] text-white border-[#22BD9C]"
+              : "bg-white text-gray-600 border-gray-300"
+          }`}
+        >
+          표로 보기
+        </button>
+      </Flex.RowCenter>
+
+      <div className="relative min-h-[380px] pt-5">
+        {viewMode === "graph" && (
+          <div className="h-[350px] flex items-end justify-center overflow-visible">
+            <ResponsiveContainer width="90%" height="100%">
+              <BarChart
+                data={members.map((m) => ({
+                  name: m.name,
+                  locked: m.locked_amount,
+                }))}
+              >
+                <XAxis dataKey="name" tickLine={false} />
+                <YAxis hide />
+                <Tooltip />
+                <Bar dataKey="locked" radius={[4, 4, 0, 0]}>
+                  <LabelList
+                    dataKey="locked"
+                    position="top"
+                    dy={2}
+                    formatter={(value: number) =>
+                      `${Math.round(value).toLocaleString()}원`
+                    }
                   />
-                </td>
-                <td className="p-2">
-                  <Typography.BodySmall>{m.name}</Typography.BodySmall>
-                </td>
-                <td className="p-2 text-right">
-                  <Typography.BodySmall>
-                    {m.locked_amount.toLocaleString()}원
-                  </Typography.BodySmall>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  {members.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill="#22bd9b9b" />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {viewMode === "table" && (
+          <Flex.ColStartCenter className="w-full">
+            <div className="w-full overflow-hidden rounded-lg bg-[#F9FDFD]">
+              <table className="w-full text-sm text-gray-800">
+                <thead className="bg-[#d9f4ec] text-left text-gray-600">
+                  <tr>
+                    <th className="px-4 py-2 w-12" />
+                    <th className="px-4 py-2" />
+                    <th className="px-4 py-2 text-right">락인 금액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {members.map((m, idx) => (
+                    <tr
+                      key={m.user_account_id}
+                      className={`border-t border-gray-100 transition ${
+                        idx === members.length - 1 ? "rounded-b-xl" : ""
+                      }`}
+                    >
+                      <td className="px-2">
+                        <Image
+                          src={
+                            m.profile_image_url ?? "/images/default-avatar.png"
+                          }
+                          alt={m.name}
+                          width={45}
+                          height={45}
+                          className="rounded-full"
+                        />
+                      </td>
+                      <td className="p-1 py-3">
+                        <Typography.BodySmall className="text-base text-gray-700 font-semibold">
+                          {m.name}
+                        </Typography.BodySmall>
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <Typography.BodySmall className="font-bold text-gray-700">
+                          {Math.round(m.locked_amount).toLocaleString()}원
+                        </Typography.BodySmall>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Flex.ColStartCenter>
+        )}
       </div>
 
-      {/* 요약 박스 */}
-      <div className="bg-white border rounded-xl p-4 space-y-1 text-sm w-full">
-        <Typography.Body>
-          총 인원 <b>{members.length}명</b>
+      {/* 요약 */}
+      <div className="p-5 mt-6 bg-[#EEFAF7] rounded-xl space-y-1 text-sm text-gray-800">
+        <Typography.Body className="font-bold text-[#22BD9C]">
+          모임 멤버 - {members.length}명
         </Typography.Body>
-        <Typography.Body>
-          총 락인 금액 <b>{totalLocked.toLocaleString()}원</b>
-        </Typography.Body>
-        <Typography.Body>
-          최저 락인 금액 <b>{minLocked.toLocaleString()}원</b>
-        </Typography.Body>
-        <Typography.Body>
-          결제 가능 금액 <b>{data.available_to_spend.toLocaleString()}원</b>
-        </Typography.Body>
+
+        <div className="flex justify-between p-1">
+          <span>최저 락인 금액</span>
+          <span>{Math.round(minLocked).toLocaleString()} 원</span>
+        </div>
+
+        <div className="flex justify-between p-1">
+          <span>총 락인 금액</span>
+          <span>{Math.round(totalLocked).toLocaleString()} 원</span>
+        </div>
+
+        <div className="flex justify-between border-t mt-3 pt-2 border-gray-200 font-bold p-1">
+          <span>총 결제 가능 금액</span>
+          <span className="text-[#22BD9C] text-base">
+            {data.available_to_spend.toLocaleString()} 원
+          </span>
+        </div>
       </div>
-    </Flex.ColStartCenter>
+    </div>
   );
 }

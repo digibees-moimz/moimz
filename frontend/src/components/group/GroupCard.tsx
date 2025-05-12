@@ -6,9 +6,15 @@ import { Flex } from "@/components/ui-components/layout/Flex";
 
 interface GroupCardProps {
   group: GroupType;
+  badgeColor?: string;
+  textColor?: string;
 }
 
-export default function GroupCard({ group }: GroupCardProps) {
+export default function GroupCard({
+  group,
+  badgeColor = "#34D399",
+  textColor = "#22BD9C",
+}: GroupCardProps) {
   const {
     name,
     category = "현재 모임",
@@ -28,7 +34,7 @@ export default function GroupCard({ group }: GroupCardProps) {
     : `http://localhost:8000/files${cleanUrl}`;
 
   return (
-    <div className="w-full">
+    <div className={`w-full`}>
       {/* 상단: 이미지 + 그룹명 + 카테고리 + 추가 확인 */}
       <Flex.RowBetweenCenter className="w-full">
         <Flex.RowStartCenter className="gap-4">
@@ -42,7 +48,10 @@ export default function GroupCard({ group }: GroupCardProps) {
               <Typography.BodyLarge className="font-bold">
                 {name}
               </Typography.BodyLarge>
-              <span className="text-xs text-white bg-emerald-400 rounded-full px-2 py-0.5">
+              <span
+                className="text-xs text-white font-bold rounded-full px-2 py-0.5"
+                style={{ backgroundColor: badgeColor, color: textColor }}
+              >
                 {category}
               </span>
             </Flex.RowStartCenter>

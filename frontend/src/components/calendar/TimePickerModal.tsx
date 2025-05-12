@@ -1,6 +1,7 @@
 // src/components/calendar/TimePickerModal.tsx
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Button } from "../ui-components/ui/Button";
 
 const HOUR_ITEMS = Array.from({ length: 12 }, (_, i) =>
   String(i + 1).padStart(2, "0")
@@ -44,7 +45,7 @@ function LoopPicker({
   return (
     <div
       onWheel={handleWheel}
-      className="relative h-40 flex flex-col justify-center items-center text-center border rounded overflow-hidden"
+      className="relative h-40 flex flex-col justify-center items-center text-center border border-gray-300 rounded-lg overflow-hidden"
     >
       <div className="flex flex-col items-center">
         {getDisplayItems().map((item, i) => {
@@ -105,10 +106,10 @@ export default function TimePickerModal({
   }, [onClose]);
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/30 z-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center">
       <div
         ref={modalRef}
-        className="bg-white rounded-xl p-6 shadow-lg w-[300px]"
+        className="bg-white rounded-2xl p-6 shadow-lg w-[80%]"
       >
         <h2 className="text-lg font-bold mb-4">시간 선택</h2>
         <div className="flex gap-2 justify-between mb-4">
@@ -116,7 +117,7 @@ export default function TimePickerModal({
             <div className="text-sm font-medium mb-1 text-center">
               오전 / 오후
             </div>
-            <ul className="h-40 overflow-y-scroll text-center border rounded">
+            <ul className="h-40 overflow-y-scroll text-center border border-gray-300 rounded-lg">
               {MERIDIEM_ITEMS.map((m) => (
                 <li
                   key={m}
@@ -149,12 +150,13 @@ export default function TimePickerModal({
             />
           </div>
         </div>
-        <button
+        <Button
           onClick={handleSelect}
-          className="w-full py-2 bg-[#22BD9C] text-white font-semibold rounded hover:bg-[#1aa88b] transition"
+          variant="secondary"
+          className="transition"
         >
           확인
-        </button>
+        </Button>
       </div>
     </div>,
     document.body

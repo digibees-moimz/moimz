@@ -18,7 +18,7 @@ export default function CharacterGenerateButton({
 
   return (
     <Button
-      variant="secondary"
+      variant="destructive"
       size="sm"
       onClick={() => mutate(groupId)}
       disabled={isPending}

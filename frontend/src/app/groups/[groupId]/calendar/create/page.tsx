@@ -4,9 +4,5 @@
 import ScheduleForm from "@/components/calendar/ScheduleForm";
 
 export default function ScheduleCreatePage() {
-  return (
-    <div className="p-6 max-w-xl mx-auto">
-      <ScheduleForm />
-    </div>
-  );
+  return <ScheduleForm />;
 }

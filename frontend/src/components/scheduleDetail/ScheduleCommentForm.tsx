@@ -35,20 +35,19 @@ export default function ScheduleCommentForm({
   };
 
   return (
-    <Flex.RowStartCenter className="w-full gap-3 px-1">
+    <Flex.RowStartCenter className="w-full gap-3">
       <input
         type="text"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="댓글을 입력하세요"
-        className="flex-1 rounded-full px-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition bg-gray-100"
+        className="flex-8 rounded-full px-4 py-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition bg-gray-100"
       />
       <Button
         onClick={handleSubmit}
         disabled={isPending}
-        size="sm"
-        variant="primary"
-        className="w-24 rounded-full"
+        size="xs"
+        className="flex-1 rounded-full"
       >
         작성
       </Button>

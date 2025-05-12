@@ -66,7 +66,7 @@ export default function CalendarSelector({
   };
 
   return (
-    <div className="w-full max-w-md p-4 bg-white rounded-xl shadow-md">
+    <div className="w-full max-w-md p-4 bg-white rounded-xl">
       {/* 월 네비게이션 */}
       <div className="flex justify-between items-center mb-4">
         <button onClick={previousMonth} className="hover:text-[#22BD9C]">
