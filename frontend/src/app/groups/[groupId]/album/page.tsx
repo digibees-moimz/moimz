@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useUserStore } from "@/stores/userStore";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { AlbumCardSkeleton } from "@/components/skeleton-ui/AlbumCardSkeleton";
 import { FilterToggleGroup } from "@/components/album/FilterToggleGroup";
 import { AddUploadButton } from "@/components/album/AddUploadButton";
 import { GenericAlbum } from "@/components/album/GenericAlbum";
@@ -28,18 +29,22 @@ export default function AlbumPage() {
       <Typography.Heading3>모임 앨범</Typography.Heading3>
 
       {/* 전체 앨범 카드 */}
-      <div className="flex gap-4 mb-8">
-        {!summaryLoading && summary && (
+      <div className="w-32 min-h-[8rem]">
+        {summaryLoading ? (
+          <AlbumCardSkeleton />
+        ) : summary ? (
           <AllAlbum summary={summary} groupId={Number(groupId)} />
-        )}
+        ) : null}
       </div>
 
       {/* 탭 */}
-      <FilterToggleGroup
-        options={tabs}
-        selected={selectedTab}
-        onChange={(val) => setSelectedTab(val)}
-      />
+      <div className="sticky top-0 z-20 bg-white py-2">
+        <FilterToggleGroup
+          options={tabs}
+          selected={selectedTab}
+          onChange={(val) => setSelectedTab(val)}
+        />
+      </div>
 
       <GenericAlbum tab={selectedTab} groupId={Number(groupId)} />
 
