@@ -14,6 +14,10 @@ import {
   fetchPersons,
   fetchPersonFaces,
   updatePersonName,
+  fetchPhotoDetail,
+  fetchAlbumSummary,
+  fetchGroupPhotos,
+  mergePersons,
 } from "@/api/album";
 
 export const useAlbum = () => {
@@ -68,11 +72,50 @@ export const useAlbum = () => {
       },
     });
 
+  // 5. 사진 상세 조회
+  const usePhotoDetail = (photoId: number) =>
+    useQuery({
+      queryKey: ["photo", photoId],
+      queryFn: () => fetchPhotoDetail(photoId),
+      enabled: !!photoId,
+    });
+
+  // 6. 전체 사진 썸네일
+  const useAlbumSummary = (groupId: number) =>
+    useQuery({
+      queryKey: ["album-summary", groupId],
+      queryFn: () => fetchAlbumSummary(groupId),
+      enabled: !!groupId,
+    });
+
+  // 7. 전체 사진 목록 조회
+  const useGroupPhotos = (groupId: number) =>
+    useQuery<Photo[]>({
+      queryKey: ["groupPhotos", groupId],
+      queryFn: () => fetchGroupPhotos(groupId),
+      enabled: !!groupId,
+    });
+
+  // 8. 인물 병합
+  const useMergePersons = () =>
+    useMutation<
+      { message: string; final_person_id: number },
+      Error,
+      { groupId: number; personId1: number; personId2: number }
+    >({
+      mutationFn: ({ groupId, personId1, personId2 }) =>
+        mergePersons(groupId, personId1, personId2),
+    });
+
   return {
     usePhotoUpload,
     usePersons,
     usePersonFaces,
     useUpdatePersonName,
+    usePhotoDetail,
+    useAlbumSummary,
+    useGroupPhotos,
+    useMergePersons,
   };
 };
 

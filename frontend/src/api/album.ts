@@ -5,6 +5,7 @@ import {
   PersonFacesResponse,
   UpdatePersonNamePayload,
   UpdatePersonNameResponse,
+  AlbumSummary,
 } from "@/types/album";
 
 // 1. 사진 업로드
@@ -27,7 +28,7 @@ export const uploadPhotos = async (
   return uploaded;
 };
 
-// 2. 인물 목록 조회
+// 2. 인물 목록 조회 (썸네일)
 export const fetchPersons = async (groupId: number): Promise<Person[]> => {
   const { persons } = (await axios.get(
     `/api/photos/groups/${groupId}/persons`
@@ -36,7 +37,7 @@ export const fetchPersons = async (groupId: number): Promise<Person[]> => {
   return persons;
 };
 
-// 3. 인물 얼굴 목록 조회
+// 3. 인물별 앨범 상세 조회
 export const fetchPersonFaces = async (
   groupId: number,
   personId: number
@@ -60,3 +61,32 @@ export const updatePersonName = async ({
     }
   );
 };
+
+// 5. 사진 상세 조회
+export const fetchPhotoDetail = (photoId: number): Promise<Photo> =>
+  axios.get(`/api/photos/${photoId}`);
+
+// 6. 전체 사진 썸네일 조회
+export const fetchAlbumSummary = (groupId: number): Promise<AlbumSummary> =>
+  axios.get(`/api/photos/groups/${groupId}/all`);
+
+// 7. 전체 사진 목록 조회
+export const fetchGroupPhotos = (groupId: number): Promise<Photo[]> =>
+  axios.get(`/api/photos/groups/${groupId}`);
+
+// 8. 인물 병합
+export const mergePersons = (
+  groupId: number,
+  personId1: number,
+  personId2: number
+): Promise<{ message: string; final_person_id: number }> =>
+  axios.post(`/api/photos/groups/${groupId}/merge`, null, {
+    params: {
+      person_id_1: personId1,
+      person_id_2: personId2,
+    },
+  });
+
+// 9. 인물별 대표벡터 기반 썸네일 반환
+export const getThumbnailUrl = (groupId: number, personId: number) =>
+  `/api/photos/groups/${groupId}/thumbnails/${personId}`;
