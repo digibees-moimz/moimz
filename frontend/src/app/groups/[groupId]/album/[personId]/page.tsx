@@ -96,7 +96,7 @@ export default function PersonAlbumDetailPage() {
         <Grid.Col3 className="gap-1">
           {faces.map((face) => (
             <Link
-              href={`/groups/${groupId}/album/photo/${face.photo_id}`}
+              href={`/groups/${groupId}/album/photo/${face.photo_id}?from=person&personId=${personId}&name=${name}`}
               key={face.face_id}
             >
               <div
