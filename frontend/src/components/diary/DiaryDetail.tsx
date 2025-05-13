@@ -94,16 +94,16 @@ export default function DiaryDetail({ diary }: DiaryDetailProps) {
               alt="단디"
               width={60}
               height={60}
-              className="ml-4"
+              className="ml-4 translate-y-1/10 z-10"
             />
           </div>
 
           {/* 일기 그림 */}
-          <div className="my-2 rounded-sm overflow-hidden">
+          <div className="w-full aspect-[16/12] overflow-hidden relative rounded-2xl">
             <img
               src={diary.image_path || "/images/default-diary.png"}
               alt="diary image"
-              className="w-full h-auto object-cover"
+              className="absolute inset-0 w-full h-full object-cover object-center"
             />
           </div>
 

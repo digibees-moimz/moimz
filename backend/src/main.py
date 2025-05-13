@@ -15,6 +15,7 @@ from src.routers import (
     diary,
     face,
     schedule,
+    schedule_image,
     attendance,
 )
 
@@ -53,6 +54,7 @@ app.include_router(photo.router, prefix="/api")
 app.include_router(diary.router, prefix="/api")
 app.include_router(face.router, prefix="/api")
 app.include_router(schedule.router, prefix="/api")
+app.include_router(schedule_image.router, prefix="/api")
 app.include_router(attendance.router, prefix="/api")
 
 

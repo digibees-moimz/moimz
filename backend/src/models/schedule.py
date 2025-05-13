@@ -22,6 +22,7 @@ class Schedule(SQLModel, table=True):
     group: Optional["Group"] = Relationship(back_populates="schedules")
     user: Optional["User"] = Relationship(back_populates="schedules")
     transactions: List["Transaction"] = Relationship(back_populates="schedule")
+    images: List["ScheduleImage"] = Relationship(back_populates="schedule")
     diary: Optional["Diary"] = Relationship(
         back_populates="schedule",
         sa_relationship_kwargs={"uselist": False, "foreign_keys": "Diary.schedule_id"}
@@ -37,3 +38,11 @@ class ScheduleComment(SQLModel, table=True):
     # 양방향 관계 설정
     schedule: Optional["Schedule"] = Relationship(back_populates="comments")
     user: Optional["User"] = Relationship(back_populates="schedule_comments")
+
+class ScheduleImage(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    schedule_id: int = Field(foreign_key="schedule.id")
+    image_url: str  # 또는 file_path
+    uploaded_at: datetime = Field(default_factory=datetime.utcnow)
+
+    schedule: Optional["Schedule"] = Relationship(back_populates="images")

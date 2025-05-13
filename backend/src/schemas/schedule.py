@@ -44,6 +44,12 @@ class ScheduleCommentRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class ScheduleImageRead(BaseModel):
+    id: int
+    image_url: str
+    uploaded_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 class ScheduleRead(BaseModel):
     id: int
@@ -51,6 +57,7 @@ class ScheduleRead(BaseModel):
     diary_id: Optional[int] = None
     user: UserPublic
     title: str
+    images: Optional[list[ScheduleImageRead]] = None
     date: datetime
     location: Optional[str]
     is_done: bool
@@ -74,6 +81,9 @@ class ScheduleCommentCreate(BaseModel):
     user_id: int
     content: str
 
+class ScheduleImageCreate(BaseModel):
+    schedule_id: int
+    image_url: str
 
 class PendingScheduleRead(BaseModel):
     id: int
