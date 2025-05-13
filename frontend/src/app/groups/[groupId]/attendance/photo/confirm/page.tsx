@@ -1,3 +1,4 @@
+// src/app/groups/group[Id]/attendance/photo/confirm/page.tsx
 "use client";
 
 import { useAttendance } from "@/hooks/useAttendance";
