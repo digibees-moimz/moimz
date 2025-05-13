@@ -74,8 +74,44 @@ def upload_photo(
 )
 def get_group_photos(group_id: int):
     with Session(engine) as session:
-        photos = session.execute(select(Photo).where(Photo.group_id == group_id)).scalars().all()
+        photos = (
+            session.execute(select(Photo).where(Photo.group_id == group_id))
+            .scalars()
+            .all()
+        )
         return photos
+
+
+@router.get("/groups/{group_id}/all")
+def get_album_summary(group_id: int):
+    with Session(engine) as session:
+        # 전체 사진 수
+        total_count = session.execute(
+            select(func.count()).where(Photo.group_id == group_id)
+        ).scalar_one()
+
+        # 최신 사진 썸네일
+        latest_photo = (
+            session.execute(
+                select(Photo)
+                .where(Photo.group_id == group_id)
+                .order_by(Photo.uploaded_at.desc())
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+
+        thumbnail_url = None
+        if latest_photo:
+            thumbnail_url = f"/files/{latest_photo.file_name}"
+
+        return {
+            "type": "all",
+            "title": "전체 사진",
+            "count": total_count,
+            "thumbnail_url": thumbnail_url,
+        }
 
 
 @router.get(
@@ -166,11 +202,15 @@ def get_face_thumbnail(person_id: int, group_id: int):
 
     # 없으면 새로 생성
     with Session(engine) as session:
-        valid = session.execute(
-            select(Face)
-            .join(Photo, Photo.id == Face.photo_id)
-            .where(Face.person_id == person_id, Photo.group_id == group_id)
-        ).scalars().first()
+        valid = (
+            session.execute(
+                select(Face)
+                .join(Photo, Photo.id == Face.photo_id)
+                .where(Face.person_id == person_id, Photo.group_id == group_id)
+            )
+            .scalars()
+            .first()
+        )
 
         if not valid:
             return
@@ -184,11 +224,15 @@ def get_face_thumbnail(person_id: int, group_id: int):
             rep_vec = pickle.loads(rep.vector)
 
             # 해당 person_id의 얼굴들 조회
-            faces = session.execute(
-                select(Face)
-                .join(Photo, Face.photo_id == Photo.id)
-                .where(Face.person_id == person_id, Photo.group_id == group_id)
-            ).scalars().all()
+            faces = (
+                session.execute(
+                    select(Face)
+                    .join(Photo, Face.photo_id == Photo.id)
+                    .where(Face.person_id == person_id, Photo.group_id == group_id)
+                )
+                .scalars()
+                .all()
+            )
 
             best_face = None
             best_sim = -1.0
@@ -215,12 +259,16 @@ def get_face_thumbnail(person_id: int, group_id: int):
 
         else:
             # 최근 얼굴
-            face = session.execute(
-                select(Face)
-                .join(Photo, Face.photo_id == Photo.id)
-                .where(Face.person_id == person_id, Photo.group_id == group_id)
-                .order_by(Face.id.desc())
-            ).scalars().first()
+            face = (
+                session.execute(
+                    select(Face)
+                    .join(Photo, Face.photo_id == Photo.id)
+                    .where(Face.person_id == person_id, Photo.group_id == group_id)
+                    .order_by(Face.id.desc())
+                )
+                .scalars()
+                .first()
+            )
 
             if not face:
                 return FileResponse(fallback_path, media_type="image/png")
@@ -293,11 +341,15 @@ def merge_persons(
             target, source = person_id_1, person_id_2
 
         # Face.person_id 갱신
-        faces = session.execute(
-            select(Face)
-            .join(Photo)
-            .where(Photo.group_id == group_id, Face.person_id == source)
-        ).scalars().all()
+        faces = (
+            session.execute(
+                select(Face)
+                .join(Photo)
+                .where(Photo.group_id == group_id, Face.person_id == source)
+            )
+            .scalars()
+            .all()
+        )
         for face in faces:
             face.person_id = target
             session.add(face)
