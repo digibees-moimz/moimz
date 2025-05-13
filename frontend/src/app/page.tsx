@@ -10,11 +10,13 @@ import {
   useTodaySchedule,
   useUpcomingSchedule,
 } from "@/hooks/schedule/useUpcomingSchedule";
+import { useGroups } from "@/hooks/useGroups";
 
 export default function HomePage() {
   const { userId } = useUserStore();
   const { data: today } = useTodaySchedule(userId);
   const { data: next } = useUpcomingSchedule(userId);
+  const { data: groups, isLoading, error } = useGroups(userId);
 
   return (
     <>
@@ -41,7 +43,15 @@ export default function HomePage() {
         )}
       </div>
       <Typography.Heading3 className="m-2">내 모임통장</Typography.Heading3>
-      <GroupList />
+      {isLoading ? (
+        <p>로딩 중...</p>
+      ) : error ? (
+        <p>에러: {error.message}</p>
+      ) : groups ? (
+        <GroupList groups={groups} />
+      ) : (
+        <p>모임 없음</p>
+      )}{" "}
     </>
   );
 }

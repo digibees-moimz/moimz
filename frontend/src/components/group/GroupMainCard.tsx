@@ -4,7 +4,6 @@ import { Typography } from "@/components/ui-components/typography/Typography";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { Button } from "@/components/ui-components/ui/Button";
 import Link from "next/link";
-import LockInManagerModal from "../lockin/LockInManagerModal"; // 🔥 모달 import
 import { useUserStore } from "@/stores/userStore";
 import { useGroups } from "@/hooks/useGroups";
 import { PiCrownSimpleFill } from "react-icons/pi";
@@ -102,14 +101,15 @@ export default function GroupMainCard({
 
         {/* 버튼 */}
         <Flex.RowStartCenter className="w-full gap-3 mt-5">
-          <Button
-            variant="white"
-            className="text-sm flex-grow"
-            fullWidth={false}
-            onClick={() => setModalOpen(true)}
-          >
-            락인 관리
-          </Button>
+          <Link href={`/groups/${id}/lockin`} className="flex-grow">
+            <Button
+              variant="white"
+              className="text-sm w-full"
+              fullWidth={false}
+            >
+              락인 관리
+            </Button>
+          </Link>
           <Link href={`/groups/${id}/account`} className="flex-grow">
             <Button
               variant="white"
@@ -131,16 +131,6 @@ export default function GroupMainCard({
           </Link>
         </Flex.RowStartCenter>
       </div>
-
-      {/* 락인 모달 */}
-      {groups && (
-        <LockInManagerModal
-          userId={userId}
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          groups={groups}
-        />
-      )}
     </>
   );
 }
