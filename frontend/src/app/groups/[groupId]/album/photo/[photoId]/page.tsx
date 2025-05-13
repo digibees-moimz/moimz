@@ -8,6 +8,7 @@ export default function PhotoDetailPage() {
   const { groupId, photoId } = useParams();
   const searchParams = useSearchParams();
   const from = searchParams.get("from"); // "person" 또는 null
+  const name = searchParams.get("name") ?? "";
 
   const router = useRouter();
   const groupIdNum = Number(groupId);
@@ -49,7 +50,9 @@ export default function PhotoDetailPage() {
   const goToPhoto = (id: number) => {
     if (isFromPerson) {
       router.push(
-        `/groups/${groupId}/album/photo/${id}?from=person&personId=${personId}`
+        `/groups/${groupId}/album/photo/${id}?from=person&personId=${personId}&name=${encodeURIComponent(
+          name
+        )}`
       );
     } else {
       router.push(`/groups/${groupId}/album/photo/${id}`);
@@ -69,10 +72,19 @@ export default function PhotoDetailPage() {
         <>
           <div className="relative max-w-3xl w-full shadow rounded overflow-hidden">
             {/* 오버레이된 날짜 텍스트 */}
-            <div className="absolute w-full h-[60px] bg-black/70 text-white px-3 py-1 rounded z-10">
-              <p className="text-center mt-4 font-bold">
-                {new Date(photo.uploaded_at).toLocaleString()}
-              </p>
+            <div className="absolute w-full h-[60px] bg-black/70 text-white px-3 py-1 rounded z-10 text-center font-bold">
+              {name ? (
+                <>
+                  <p className="mt-1">{name}</p>
+                  <p className="text-sm">
+                    {new Date(photo.uploaded_at).toLocaleString()}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-4">
+                  {new Date(photo.uploaded_at).toLocaleString()}
+                </p>
+              )}
             </div>
 
             {/* 이미지 */}
