@@ -19,10 +19,10 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
         )}`}
       >
         <div className="cursor-pointer">
-          <div className="bg-white h-25 rounded-xl shadow-md overflow-hidden">
-            <div className="w-full h-25 relative">
+          <div className="bg-white h-28 rounded-xl shadow-md overflow-hidden">
+            <div className="w-full h-28 relative">
               <img
-                alt={name}
+                alt={`${name} 썸네일` || "인물 앨범 썸네일"}
                 className="mb-2 w-full h-34 object-cover object-top"
                 src={`http://localhost:8000${thumbnail_url}`}
               />
