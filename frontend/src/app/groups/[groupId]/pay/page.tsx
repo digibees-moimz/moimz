@@ -1,34 +1,81 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { useAttendance } from "@/hooks/useAttendance";
 import { AttendanceSummaryCard } from "@/components/attendance/AttendanceSummaryCard";
+import { Button } from "@/components/ui-components/ui/Button";
+import { isQrTokenValid, getTokenRemainingSeconds } from "@/utils/isQrValid";
 
 export default function PayPage() {
-  const { attendanceId } = useAttendanceStore();
-  const { useAttendanceRecord } = useAttendance();
-
+  const router = useRouter();
+  const { attendanceId, qrToken, qrTokenCreatedAt, set } = useAttendanceStore();
+  const { useAttendanceRecord, useGenerateQr } = useAttendance();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const urlToken = searchParams.get("token");
 
-  if (!token || !attendanceId) {
+  const token = urlToken || qrToken;
+  const createdAt = qrTokenCreatedAt;
+
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  const { data, isLoading } = useAttendanceRecord(attendanceId ?? -1);
+  const { mutate: generateQr, isPending } = useGenerateQr();
+
+  useEffect(() => {
+    setHasMounted(true); // hydration-safe 렌더링
+  }, []);
+
+  useEffect(() => {
+    if (!createdAt) return;
+    const updateRemaining = () => {
+      const secs = getTokenRemainingSeconds(createdAt);
+      setRemaining(secs > 0 ? secs : 0);
+    };
+    updateRemaining();
+    const interval = setInterval(updateRemaining, 1000);
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  const handleRegen = () => {
+    if (!attendanceId) return;
+    generateQr(attendanceId, {
+      onSuccess: (res) => {
+        const newToken = res.qr_token;
+        const now = new Date().toISOString();
+        set({ qrToken: newToken, qrTokenCreatedAt: now, attendanceId });
+        router.replace(`/groups/${data?.group_id}/pay?token=${newToken}`);
+      },
+      onError: () => alert("QR 재생성 실패"),
+    });
+  };
+
+  if (!hasMounted) return null; // hydration mismatch 방지
+  if (!token || !attendanceId)
     return <div className="p-4">잘못된 접근입니다.</div>;
-  }
-
-  const { data, isLoading } = useAttendanceRecord(attendanceId);
-
-  if (isLoading || !data) {
-    return <div className="p-4">로딩 중입니다...</div>;
-  }
-
-  if (!token) return <div className="p-4">잘못된 접근입니다.</div>;
+  if (isLoading || !data) return <div className="p-4">로딩 중입니다...</div>;
 
   const qrImageUrl = `http://localhost:8000/api/attendance/qr/image/${token}`; // API URL
+  const isExpired = remaining === 0;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="pt-4 space-y-4 pb-32">
       <h1 className="text-xl font-bold text-center">N등분 결제 QR</h1>
+
+      <div className="text-center text-sm text-gray-600">
+        {remaining !== null && remaining > 0 ? (
+          <>
+            만료까지 남은 시간:{" "}
+            <span className="text-[#22BD9C]">
+              {Math.floor(remaining / 60)}분 {remaining % 60}초
+            </span>
+          </>
+        ) : (
+          "QR 코드가 만료되었습니다."
+        )}
+      </div>
 
       <div className="flex justify-center">
         <img src={qrImageUrl} alt="QR 이미지" className="w-48 h-48" />
@@ -43,6 +90,14 @@ export default function PayPage() {
         count={data.count}
         availableToSpend={data.available_to_spend}
       />
+
+      {!remaining && (
+        <div className="fixed bottom-0 left-0 w-full bg-white p-4">
+          <Button onClick={handleRegen} disabled={!isExpired || isPending}>
+            QR 코드 재생성
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
