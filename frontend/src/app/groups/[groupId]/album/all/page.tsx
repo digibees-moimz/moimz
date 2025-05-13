@@ -5,6 +5,7 @@ import { useAlbum } from "@/hooks/useAlbum";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Grid } from "@/components/ui-components/layout/Grid";
 import { Flex } from "@/components/ui-components/layout/Flex";
+import { PhotoCardSkeleton } from "@/components/skeleton-ui/PhotoCardSkeleton";
 
 export default function AllPhotoPage() {
   const { groupId } = useParams();
@@ -23,9 +24,11 @@ export default function AllPhotoPage() {
       </Flex.RowBetweenCenter>
 
       {isLoading && (
-        <Flex.RowCenter className="h-180">
-          <p>로딩 중...</p>
-        </Flex.RowCenter>
+        <Grid.Col3 className="gap-1">
+          {Array.from({ length: 18 }).map((_, i) => (
+            <PhotoCardSkeleton key={i} />
+          ))}
+        </Grid.Col3>
       )}
 
       {error && (

@@ -7,6 +7,7 @@ import { Typography } from "@/components/ui-components/typography/Typography";
 import { Grid } from "@/components/ui-components/layout/Grid";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { FiEdit2 } from "react-icons/fi";
+import { PhotoCardSkeleton } from "@/components/skeleton-ui/PhotoCardSkeleton";
 
 export default function PersonAlbumDetailPage() {
   const params = useParams();
@@ -68,7 +69,7 @@ export default function PersonAlbumDetailPage() {
             >
               <Flex.RowCenter className="gap-3">
                 <Typography.Heading3>{name}</Typography.Heading3>
-                <FiEdit2 size={15} color="#adadad" />
+                <FiEdit2 size={18} color="#adadad" />
               </Flex.RowCenter>
             </button>
           )}
@@ -77,9 +78,11 @@ export default function PersonAlbumDetailPage() {
       </Flex.RowBetweenCenter>
 
       {loading && (
-        <Flex.RowCenter className="h-180">
-          <p>로딩 중...</p>
-        </Flex.RowCenter>
+        <Grid.Col3 className="gap-1">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <PhotoCardSkeleton key={i} />
+          ))}
+        </Grid.Col3>
       )}
 
       {error && (
