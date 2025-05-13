@@ -58,7 +58,8 @@ export default function ScheduleForm({ onCreated }: ScheduleFormProps) {
       {
         onSuccess: (item) => {
           onCreated?.(item);
-          router.push(`/groups/${groupId}/calendar`);
+          // router.push(`/groups/${groupId}/calendar`);
+          router.push(`/groups/${groupId}/calendar/${item.id}/upload-image`);
         },
         onError: (err: unknown) => {
           if (err instanceof Error) {

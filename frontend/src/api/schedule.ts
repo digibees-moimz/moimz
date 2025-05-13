@@ -1,5 +1,5 @@
 // src/api/schedule.ts
-import axios from "@/lib/axios";
+import axios, { uploadFile } from "@/lib/axios";
 import { ScheduleCommentCreateInput } from "@/types/comment";
 import {
   ScheduleDetail,
@@ -68,11 +68,10 @@ export async function createSchedule(
   groupId: number,
   payload: ScheduleCreateInput
 ): Promise<ScheduleItem> {
-  const { data } = await axios.post<ScheduleItem>("/api/schedules", {
+  return axios.post("/api/schedules", {
     group_id: groupId,
     ...payload,
   });
-  return data;
 }
 
 // 일정 상세 조회
@@ -106,4 +105,9 @@ export async function postScheduleComment(
   input: ScheduleCommentCreateInput
 ) {
   return axios.post(`/api/schedules/${scheduleId}/comments`, input);
+}
+
+// 스케줄에 이미지 업로드 API
+export async function uploadScheduleImage(formData: FormData): Promise<void> {
+  await uploadFile("/api/schedule-images", formData);
 }

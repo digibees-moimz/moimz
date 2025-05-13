@@ -8,6 +8,10 @@ import type { ScheduleDetail as ScheduleDetailType } from "@/types/schedule";
 import ScheduleCommentForm from "./ScheduleCommentForm";
 import DiaryLink from "../diary/DiaryLink";
 import { FaCalendarAlt, FaRegClock, FaMapMarkerAlt } from "react-icons/fa";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/pagination";
+import { Pagination } from "swiper/modules";
 
 interface ScheduleDetailProps {
   schedule: ScheduleDetailType;
@@ -55,13 +59,44 @@ export default function ScheduleDetail({
         </Flex.ColStartStart>
       </Flex.RowStartStart>
 
-      <div className="w-full rounded-xl overflow-hidden">
+      {/* <div className="w-full rounded-xl overflow-hidden">
         <img
           src="/images/default-schedule.png"
           alt="schedule image"
           className="w-full h-48 object-cover"
         />
-      </div>
+      </div> */}
+      {/* ✅ 인스타 슬라이드 스타일 이미지 보여주기 */}
+      {schedule.images && schedule.images.length > 0 && (
+        <div className="w-full flex justify-center">
+          <Swiper
+            modules={[Pagination]}
+            spaceBetween={12}
+            slidesPerView={1}
+            pagination={{ clickable: true }}
+            className="max-w-[280px] aspect-square rounded-xl"
+          >
+            {schedule.images.map((img) => {
+              const cleanUrl = img.image_url
+                .replace(/\\/g, "/")
+                .replace("/media", "");
+              const displayImage = `http://localhost:8000${cleanUrl}`;
+
+              return (
+                <SwiperSlide key={img.id}>
+                  <div className="aspect-square w-full rounded-xl overflow-hidden">
+                    <img
+                      src={displayImage}
+                      alt="schedule"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </SwiperSlide>
+              );
+            })}
+          </Swiper>
+        </div>
+      )}
 
       <div className="w-full space-y-2">
         <Typography.BodyLarge>

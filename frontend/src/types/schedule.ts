@@ -12,6 +12,12 @@ export interface ScheduleItem {
   description?: string; // 추가
 }
 
+export interface ScheduleImage {
+  id: number;
+  image_url: string;
+  uploaded_at: string;
+}
+
 export interface ScheduleComment {
   id: number;
   user: {
@@ -35,6 +41,7 @@ export interface ScheduleDetail extends ScheduleItem {
   comments: ScheduleComment[];
   transactions: TransactionRead[]; // ✅ 이 줄 추가!
   diary_id?: number | null; // ✅ 이 줄 추가
+  images?: ScheduleImage[]; // ✅ 이 줄 추가
 }
 
 export interface ScheduleCreateInput {
