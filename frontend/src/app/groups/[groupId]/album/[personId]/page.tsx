@@ -93,7 +93,7 @@ export default function PersonAlbumDetailPage() {
           {faces.map((face) => (
             <div
               key={face.face_id}
-              className="w-full aspect-square overflow-hidden rounded-sm"
+              className="aspect-square overflow-hidden rounded-sm"
             >
               <img
                 src={`http://localhost:8000${face.image_url}`}

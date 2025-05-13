@@ -8,6 +8,7 @@ export const AllAlbum = ({
   summary: AlbumSummary;
   groupId: number;
 }) => {
+  console.log(summary.thumbnail_url);
   return (
     <Link href={`/groups/${groupId}/album/all`}>
       <div className="w-32">

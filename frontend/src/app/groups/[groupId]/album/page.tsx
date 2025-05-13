@@ -28,7 +28,7 @@ export default function AlbumPage() {
       <Typography.Heading3>모임 앨범</Typography.Heading3>
 
       {/* 전체 앨범 카드 */}
-      <div className="flex gap-4 my-2 mb-8">
+      <div className="flex gap-4 mb-8">
         {!summaryLoading && summary && (
           <AllAlbum summary={summary} groupId={Number(groupId)} />
         )}
