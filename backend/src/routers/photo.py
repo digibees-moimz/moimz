@@ -68,6 +68,20 @@ def upload_photo(
 
 
 @router.get(
+    "/{photo_id}",
+    response_model=PhotoRead,
+    summary="사진 상세 조회",
+    description="특정 사진의 상세 정보를 조회합니다.",
+)
+def get_photo_detail(photo_id: int):
+    with Session(engine) as session:
+        photo = session.get(Photo, photo_id)
+        if not photo:
+            raise HTTPException(404, detail="해당 사진을 찾을 수 없습니다.")
+        return photo
+
+
+@router.get(
     "/groups/{group_id}",
     summary="그룹 사진 목록 조회",
     description="특정 그룹의 사진 목록을 조회합니다.",
@@ -135,7 +149,7 @@ def get_persons_in_group(group_id: int):
         )
 
         person_ids = session.execute(stmt).all()  # List[Tuple[int, int]]
-        
+
         persons = []
         for person_id, count in person_ids:
             info = session.get(PersonInfo, (group_id, person_id))
