@@ -4,7 +4,7 @@ import axios, { AxiosResponse, AxiosError } from "axios";
 // baseURL은 환경변수에서 가져오되 fallback 도 설정
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
-  timeout: 15000, // 15초
+  timeout: 45000, // 45초
   headers: {
     "Content-Type": "application/json",
   },
@@ -25,14 +25,21 @@ axiosInstance.interceptors.response.use(
 export const uploadFile = <T = any>(
   url: string,
   formData: FormData,
-  config = {}
+  config: {
+    method?: "post" | "patch" | "put";
+    headers?: Record<string, string>;
+  } = {}
 ): Promise<T> => {
-  return axiosInstance.post<T>(url, formData, {
+  const method = config.method ?? "post";
+
+  return axiosInstance.request<T>({
+    url,
+    method,
+    data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
+      ...config.headers,
     },
-    ...config,
   }) as Promise<T>;
 };
-
 export default axiosInstance;

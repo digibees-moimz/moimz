@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { usePhotoUpload } from "@/hooks/useAlbum";
+import { useAlbum } from "@/hooks/useAlbum";
 import {
   showSuccessToast,
   showErrorToast,
@@ -13,14 +13,16 @@ interface UploadPhotsProps {
 
 export const AddUploadButton = ({ userId, groupId }: UploadPhotsProps) => {
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const { upload } = usePhotoUpload();
+
+  const { usePhotoUpload } = useAlbum();
+  const { mutateAsync: upload } = usePhotoUpload();
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const files = Array.from(e.target.files);
 
     try {
-      await upload(groupId, userId, files);
+      await upload({ groupId, userId, files });
       showSuccessToast(`사진 ${files.length}장을 앨범에 추가했어요`);
     } catch (err: unknown) {
       console.error("업로드 실패:", err); // ✅ err 사용

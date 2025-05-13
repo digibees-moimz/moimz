@@ -1,6 +1,6 @@
 "use client";
 
-import { useSchedules } from "@/hooks/schedule/useSchedules"; // 경로 확인!
+import { useSchedules } from "@/hooks/schedule/useSchedules";
 import { useParams } from "next/navigation";
 import { format, differenceInDays } from "date-fns";
 import { ko } from "date-fns/locale";

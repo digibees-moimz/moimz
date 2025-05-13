@@ -32,6 +32,7 @@ export interface Person {
   person_id: number;
   name: string;
   thumbnail_url: string;
+  count: number;
 }
 
 export interface UpdatePersonNamePayload {
@@ -45,4 +46,11 @@ export interface UpdatePersonNameResponse {
   group_id: number;
   person_id: number;
   name: string;
+}
+
+export interface AlbumSummary {
+  type: "all";
+  title: string;
+  count: number;
+  thumbnail_url: string | null;
 }

@@ -57,8 +57,7 @@ export const getQrImageUrl = (token: string) =>
   `/api/attendance/qr/image/${token}`;
 
 // 일정에 연결된 출석 정보 조회
-export async function fetchAttendanceBySchedule(
+export const fetchAttendanceBySchedule = async (
   scheduleId: number
-): Promise<AttendanceRecord> {
-  return axios.get(`/api/schedules/${scheduleId}/attendance`);
-}
+): Promise<AttendanceRecord> =>
+  axios.get(`/api/schedules/${scheduleId}/attendance`);
