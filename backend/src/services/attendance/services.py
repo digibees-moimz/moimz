@@ -1,7 +1,7 @@
 # backend/src/services/attendance/services.py
 import qrcode
 import os, uuid, time, cv2, pickle
-from datetime import datetime, timedelta
+from datetime import datetime
 import numpy as np
 from typing import List, Optional
 
@@ -27,6 +27,7 @@ from src.schemas.attendance import (
     SavedAttendanceItem,
     AttendanceRecordRead,
 )
+from src.services.photo.service import save_uploaded_photo_to_album
 
 ATTEND_DIR = os.path.join(BASE_DIR, "media", "attendance")
 os.makedirs(ATTEND_DIR, exist_ok=True)
@@ -63,6 +64,10 @@ async def run_photo_attendance(
 
         # 2) 이미지 로드
         img_bytes = await file.read()
+
+        # 파일 저장 + DB 저장
+        _ = save_uploaded_photo_to_album(session, img_bytes, group_id)
+
         img = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
 
         # 3) 얼굴 감지 및 임베딩 추출
@@ -179,12 +184,17 @@ async def run_photo_attendance(
 
         # 한글 폰트 설정
         FONT_PATH = os.path.join(BASE_DIR, "fonts", "Pretendard-SemiBold.otf")
-        font = ImageFont.truetype(FONT_PATH, size=36)
 
         for idx, face in enumerate(faces):
             x1, y1, x2, y2 = map(int, face.bbox)
             uid = recognition_map.get(idx)
             label = name_map.get(uid) or "알 수 없음"
+
+            # 얼굴 크기 기반 폰트 크기 조절
+            face_height = y2 - y1
+            scale = 200 / max(face_height, 1)
+            dynamic_font_size = max(36, min(60, int(scale * 36)))
+            font = ImageFont.truetype(FONT_PATH, size=dynamic_font_size)
 
             # 출석자로 체크되었으면 초록, 아니면 빨강
             color = (0, 255, 0) if uid else (0, 0, 255)
