@@ -89,7 +89,11 @@ def get_photo_detail(photo_id: int):
 def get_group_photos(group_id: int):
     with Session(engine) as session:
         photos = (
-            session.execute(select(Photo).where(Photo.group_id == group_id))
+            session.execute(
+                select(Photo)
+                .where(Photo.group_id == group_id)
+                .order_by(Photo.uploaded_at.desc())  # 최신순 정렬
+            )
             .scalars()
             .all()
         )
@@ -176,6 +180,7 @@ def get_faces_by_person(group_id: int, person_id: int):
             select(Face, Photo)
             .join(Photo, Photo.id == Face.photo_id)
             .where(Photo.group_id == group_id, Face.person_id == person_id)
+            .order_by(Photo.uploaded_at.desc())  # 최신순 정렬
         )
         results = session.execute(stmt).all()
 
@@ -249,6 +254,7 @@ def get_face_thumbnail(person_id: int, group_id: int):
                     select(Face)
                     .join(Photo, Face.photo_id == Photo.id)
                     .where(Face.person_id == person_id, Photo.group_id == group_id)
+                    .order_by(Photo.uploaded_at.desc())  # 최신순 정렬
                 )
                 .scalars()
                 .all()
@@ -366,6 +372,7 @@ def merge_persons(
                 select(Face)
                 .join(Photo)
                 .where(Photo.group_id == group_id, Face.person_id == source)
+                .order_by(Photo.uploaded_at.desc())
             )
             .scalars()
             .all()
@@ -424,6 +431,7 @@ def debug_face_counts(group_id: int):
             .join(Photo, Photo.id == Face.photo_id)
             .where(Photo.group_id == group_id, Face.person_id != 0)
             .group_by(Face.person_id)
+            .order_by(func.max(Photo.uploaded_at).desc())
         )
         results = session.execute(stmt).all()
         return [{"person_id": pid, "count": cnt} for pid, cnt in results]
