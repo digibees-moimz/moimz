@@ -1,11 +1,10 @@
 // src/hooks/usePhotoUpload.ts
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Photo,
   Person,
-  Face,
   PersonFacesResult,
   UpdatePersonNamePayload,
   UpdatePersonNameResponse,
@@ -17,103 +16,77 @@ import {
   updatePersonName,
 } from "@/api/album";
 
-export function usePhotoUpload() {
-  const [uploadedPhotos, setUploadedPhotos] = useState<Photo[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export const useAlbum = () => {
+  const queryClient = useQueryClient();
 
-  const upload = async (
+  // 1. 사진 업로드
+  const usePhotoUpload = () =>
+    useMutation<
+      Photo[],
+      Error,
+      { groupId: number; userId: number | null; files: File[] }
+    >({
+      mutationFn: ({ groupId, userId, files }) =>
+        uploadPhotos(groupId, userId, files),
+      onSuccess: (_, { groupId }) => {
+        queryClient.invalidateQueries({ queryKey: ["persons", groupId] });
+      },
+    });
+
+  // 2. 인물 목록 조회
+  const usePersons = (groupId: number) =>
+    useQuery<Person[]>({
+      queryKey: ["persons", groupId],
+      queryFn: () => fetchPersons(groupId),
+      enabled: !!groupId,
+    });
+
+  // 3. 특정 인물 얼굴 조회
+  const usePersonFaces = (
     groupId: number,
-    userId: number | null,
-    files: File[]
-  ) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await uploadPhotos(groupId, userId, files);
-      setUploadedPhotos(result);
-      return result;
-    } catch (err: any) {
-      setError(err.message || "업로드 중 오류 발생");
-      return [];
-    } finally {
-      setLoading(false);
-    }
+    personId: number
+  ): PersonFacesResult => {
+    const query = useQuery({
+      queryKey: ["personFaces", groupId, personId],
+      queryFn: () => fetchPersonFaces(groupId, personId),
+      enabled: !!groupId && !!personId,
+    });
+    return {
+      faces: query.data?.faces ?? [],
+      count: query.data?.count ?? 0,
+      loading: query.isPending,
+      error: query.error?.message ?? null,
+    };
   };
 
-  return { uploadedPhotos, upload, loading, error };
-}
+  // 4. 인물 이름 수정
+  const useUpdatePersonName = () =>
+    useMutation<UpdatePersonNameResponse, Error, UpdatePersonNamePayload>({
+      mutationFn: updatePersonName,
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: ["persons", data.group_id] });
+      },
+    });
 
-export function usePersons(groupId: number) {
-  const [persons, setPersons] = useState<Person[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!groupId) return;
-
-    fetchPersons(groupId)
-      .then(setPersons)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [groupId]);
-
-  return { persons, loading, error };
-}
+  return {
+    usePhotoUpload,
+    usePersons,
+    usePersonFaces,
+    useUpdatePersonName,
+  };
+};
 
 export function useAlbumData(tab: string, groupId: number) {
-  const { persons, loading: l1 } = usePersons(tab === "인물" ? groupId : 0);
-  // const { events, loading: l2 } = useEvents(tab === "일정" ? groupId : 0);
-  // const { places, loading: l3 } = usePlaces(tab === "지역" ? groupId : 0);
+  const { usePersons } = useAlbum();
+  const { data: persons = [], isPending: loadingPersons } = usePersons(
+    tab === "인물" ? groupId : 0
+  );
 
-  if (tab === "인물") return { data: persons, loading: l1 };
-  // if (tab === "일정") return { data: events, loading: l2 };
-  // if (tab === "지역") return { data: places, loading: l3 };
-  return { data: [], loading: false };
-}
+  // TODO: useEvents, usePlaces로 확장
+  const data = tab === "인물" ? persons : [];
 
-export function usePersonFaces(
-  groupId: number,
-  personId: number
-): PersonFacesResult {
-  const [faces, setFaces] = useState<Face[]>([]);
-  const [count, setCount] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!groupId || !personId) return;
-
-    fetchPersonFaces(groupId, personId)
-      .then((res) => {
-        setFaces(res.faces);
-        setCount(res.count);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [groupId, personId]);
-
-  return { faces, count, loading, error };
-}
-
-export function useUpdatePersonName() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const update = async (
-    payload: UpdatePersonNamePayload
-  ): Promise<UpdatePersonNameResponse | null> => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await updatePersonName(payload);
-    } catch (err: any) {
-      setError(err.message || "이름 수정 중 오류 발생");
-      return null;
-    } finally {
-      setLoading(false);
-    }
+  return {
+    data,
+    loading: tab === "인물" ? loadingPersons : false,
   };
-
-  return { update, loading, error };
 }

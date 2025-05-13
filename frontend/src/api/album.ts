@@ -54,6 +54,9 @@ export const updatePersonName = async ({
 
   return uploadFile<UpdatePersonNameResponse>(
     `/api/photos/groups/${group_id}/persons/${person_id}/name`,
-    formData
+    formData,
+    {
+      method: "patch",
+    }
   );
 };

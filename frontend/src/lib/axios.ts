@@ -25,14 +25,21 @@ axiosInstance.interceptors.response.use(
 export const uploadFile = <T = any>(
   url: string,
   formData: FormData,
-  config = {}
+  config: {
+    method?: "post" | "patch" | "put";
+    headers?: Record<string, string>;
+  } = {}
 ): Promise<T> => {
-  return axiosInstance.post<T>(url, formData, {
+  const method = config.method ?? "post";
+
+  return axiosInstance.request<T>({
+    url,
+    method,
+    data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
+      ...config.headers,
     },
-    ...config,
   }) as Promise<T>;
 };
-
 export default axiosInstance;

@@ -6,7 +6,7 @@ import { useUserStore } from "@/stores/userStore";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { FilterToggleGroup } from "@/components/album/FilterToggleGroup";
 import { AddUploadButton } from "@/components/album/AddUploadButton";
-import { PersonAlbum } from "@/components/album/GenericAlbum";
+import { GenericAlbum } from "@/components/album/GenericAlbum";
 
 const tabs = ["인물", "일정", "지역"] as const;
 type TabType = (typeof tabs)[number];
@@ -26,7 +26,7 @@ export default function AlbumPage() {
         onChange={(val) => setSelectedTab(val)}
       />
 
-      <PersonAlbum groupId={Number(groupId)} />
+      <GenericAlbum tab={selectedTab} groupId={Number(groupId)} />
 
       {/* 추가 버튼 */}
       <AddUploadButton groupId={Number(groupId)} userId={userId} />
