@@ -82,7 +82,11 @@ def get_group_photos(group_id: int):
         return photos
 
 
-@router.get("/groups/{group_id}/all")
+@router.get(
+    "/groups/{group_id}/all",
+    summary="전체사진 앨범 조회 (썸네일 포함)",
+    description="전체사진 앨범을 조회합니다.",
+)
 def get_album_summary(group_id: int):
     with Session(engine) as session:
         # 전체 사진 수
@@ -116,28 +120,30 @@ def get_album_summary(group_id: int):
 
 @router.get(
     "/groups/{group_id}/persons",
-    summary="그룹의 인물별 앨범 목록 조회 (썸네일 포함)",
+    summary="인물별 앨범 목록 조회 (썸네일 포함)",
     description="특정 그룹의 인물별 사진 목록을 조회합니다.",
 )
 def get_persons_in_group(group_id: int):
     with Session(engine) as session:
         # 이 그룹의 모든 person_id 추출
         stmt = (
-            select(Face.person_id)
+            select(Face.person_id, func.count(Face.id).label("count"))
             .join(Photo, Photo.id == Face.photo_id)
             .where(Photo.group_id == group_id, Face.person_id != 0)  # 미분류 제외
             .group_by(Face.person_id)
             .having(func.count(Face.id) >= 5)
         )
 
-        person_ids = session.execute(stmt).scalars().all()  # -> List[int]
+        person_ids = session.execute(stmt).all()  # List[Tuple[int, int]]
+        
         persons = []
-        for person_id in person_ids:
+        for person_id, count in person_ids:
             info = session.get(PersonInfo, (group_id, person_id))
             persons.append(
                 {
                     "person_id": person_id,
                     "name": info.name if info else "",
+                    "count": count,
                     "thumbnail_url": f"/api/photos/groups/{group_id}/thumbnails/{person_id}",
                 }
             )
@@ -147,7 +153,7 @@ def get_persons_in_group(group_id: int):
 
 @router.get(
     "/groups/{group_id}/persons/{person_id}",
-    summary="특정 인물의 얼굴 사진 조회",
+    summary="인물별 앨범 상세 조회",
     description="특정 그룹의 인물별 사진 목록을 조회합니다.",
 )
 def get_faces_by_person(group_id: int, person_id: int):
@@ -394,3 +400,28 @@ def merge_persons(
         session.commit()
 
     return {"message": f"{source} → {target} 병합 완료", "final_person_id": target}
+
+
+@router.get("/groups/{group_id}/debug-faces")
+def debug_face_counts(group_id: int):
+    with Session(engine) as session:
+        stmt = (
+            select(Face.person_id, func.count(Face.id))
+            .join(Photo, Photo.id == Face.photo_id)
+            .where(Photo.group_id == group_id, Face.person_id != 0)
+            .group_by(Face.person_id)
+        )
+        results = session.execute(stmt).all()
+        return [{"person_id": pid, "count": cnt} for pid, cnt in results]
+
+
+@router.get("/groups/{group_id}/persons-debug")
+def get_person_info_debug(group_id: int):
+    with Session(engine) as session:
+        infos = session.exec(
+            select(PersonInfo).where(PersonInfo.group_id == group_id)
+        ).all()
+        return [
+            {"person_id": info.person_id, "name": info.name, "user_id": info.user_id}
+            for info in infos
+        ]
