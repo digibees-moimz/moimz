@@ -6,6 +6,7 @@ import { Typography } from "@/components/ui-components/typography/Typography";
 import { Grid } from "@/components/ui-components/layout/Grid";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { PhotoCardSkeleton } from "@/components/skeleton-ui/PhotoCardSkeleton";
+import Link from "next/link";
 
 export default function AllPhotoPage() {
   const { groupId } = useParams();
@@ -40,16 +41,18 @@ export default function AllPhotoPage() {
       {!isLoading && !error && (
         <Grid.Col3 className="gap-1">
           {photos.map((photo) => (
-            <div
-              key={photo.id}
-              className="aspect-square overflow-hidden rounded-sm"
-            >
-              <img
-                src={`http://localhost:8000/files/${photo.file_name}`}
-                alt={`사진 ${photo.id}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <Link href={`/groups/${groupId}/album/photo/${photo.id}`}>
+              <div
+                key={photo.id}
+                className="aspect-square overflow-hidden rounded-sm"
+              >
+                <img
+                  src={`http://localhost:8000/files/${photo.file_name}`}
+                  alt={`사진 ${photo.id}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </Link>
           ))}
         </Grid.Col3>
       )}

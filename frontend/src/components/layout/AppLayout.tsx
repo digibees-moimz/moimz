@@ -12,8 +12,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isMoimMain = !pathname.startsWith("/groups/");
 
   const isGroupPageWithoutPadding = [
-    /^\/groups\/[^/]+\/?$/,  // 모임 상세 페이지
+    /^\/groups\/[^/]+\/?$/, // 모임 상세 페이지
     /^\/groups\/[^/]+\/calendar\/create$/, // 일정 등록 페이지
+    /^\/groups\/[^/]+\/album\/photo\/[^/]+$/, // 사진 상세 페이지
   ].some((regex) => regex.test(pathname));
 
   return (

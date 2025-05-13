@@ -8,6 +8,7 @@ import { Grid } from "@/components/ui-components/layout/Grid";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import { FiEdit2 } from "react-icons/fi";
 import { PhotoCardSkeleton } from "@/components/skeleton-ui/PhotoCardSkeleton";
+import Link from "next/link";
 
 export default function PersonAlbumDetailPage() {
   const params = useParams();
@@ -94,16 +95,21 @@ export default function PersonAlbumDetailPage() {
       {!loading && !error && (
         <Grid.Col3 className="gap-1">
           {faces.map((face) => (
-            <div
+            <Link
+              href={`/groups/${groupId}/album/photo/${face.photo_id}`}
               key={face.face_id}
-              className="aspect-square overflow-hidden rounded-sm"
             >
-              <img
-                src={`http://localhost:8000${face.image_url}`}
-                alt="얼굴"
-                className="w-full h-full object-cover"
-              />
-            </div>
+              <div
+                key={face.face_id}
+                className="aspect-square overflow-hidden rounded-sm"
+              >
+                <img
+                  src={`http://localhost:8000${face.image_url}`}
+                  alt="얼굴"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </Link>
           ))}
         </Grid.Col3>
       )}
