@@ -33,7 +33,9 @@ export default function AttendanceResultPage() {
           qrTokenCreatedAt: createdAt,
           attendanceId: id,
         });
-        router.push(`/groups/${groupId}/pay?token=${token}`);
+        router.push(
+          `/groups/${groupId}/attendance/result/${attendanceId}/pay?token=${token}`
+        );
       },
       onError: () => {
         alert("QR 코드 생성에 실패했어요. 다시 시도해주세요.");

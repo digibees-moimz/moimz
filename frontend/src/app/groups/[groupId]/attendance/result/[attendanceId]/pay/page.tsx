@@ -1,26 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { useAttendance } from "@/hooks/useAttendance";
 import { AttendanceSummaryCard } from "@/components/attendance/AttendanceSummaryCard";
 import { Button } from "@/components/ui-components/ui/Button";
-import { isQrTokenValid, getTokenRemainingSeconds } from "@/utils/isQrValid";
+import { getTokenRemainingSeconds } from "@/utils/isQrValid";
 
 export default function PayPage() {
   const router = useRouter();
-  const { attendanceId, qrToken, qrTokenCreatedAt, set } = useAttendanceStore();
-  const { useAttendanceRecord, useGenerateQr } = useAttendance();
+  const { qrToken, qrTokenCreatedAt, set } = useAttendanceStore();
+
+  // 출석 및 그룹 ID
+  const params = useParams();
+  const attendanceId = Number(params.attendanceId);
+  const groupId = Number(params.groupId);
+
+  // QR 토큰
   const searchParams = useSearchParams();
   const urlToken = searchParams.get("token");
-
   const token = urlToken || qrToken;
+
   const createdAt = qrTokenCreatedAt;
 
   const [remaining, setRemaining] = useState<number | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
 
+  // 출석 정보 다시 가져오기
+  const { useAttendanceRecord, useGenerateQr } = useAttendance();
   const { data, isLoading, refetch } = useAttendanceRecord(attendanceId ?? -1);
   const { mutate: generateQr, isPending } = useGenerateQr();
 
@@ -45,9 +53,15 @@ export default function PayPage() {
       onSuccess: (res) => {
         const newToken = res.qr_token;
         const now = new Date().toISOString();
-        set({ qrToken: newToken, qrTokenCreatedAt: now, attendanceId });
+        set({
+          qrToken: newToken,
+          qrTokenCreatedAt: now,
+          attendanceId,
+        });
         refetch();
-        router.replace(`/groups/${data?.group_id}/pay?token=${newToken}`);
+        router.replace(
+          `/groups/${groupId}/attendance/result/${attendanceId}/pay?token=${newToken}`
+        );
       },
       onError: () => alert("QR 재생성 실패"),
     });
@@ -58,7 +72,8 @@ export default function PayPage() {
     return <div className="p-4">잘못된 접근입니다.</div>;
   if (isLoading || !data) return <div className="p-4">로딩 중입니다...</div>;
 
-  const qrImageUrl = `http://localhost:8000/api/attendance/qr/image/${token}`; // API URL
+  // QR코드 이미지 조회 API 주소
+  const qrImageUrl = `http://localhost:8000/api/attendance/qr/image/${token}`;
 
   // QR코드 재성성 가능 여부
   const isExpired = remaining === 0;
