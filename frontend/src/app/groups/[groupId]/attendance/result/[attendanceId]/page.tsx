@@ -5,7 +5,6 @@ import { useAttendance } from "@/hooks/useAttendance";
 import { useAttendanceStore } from "@/stores/useAttendanceStore";
 import { Typography } from "@/components/ui-components/typography/Typography";
 import { Button } from "@/components/ui-components/ui/Button";
-import { isQrTokenValid } from "@/utils/isQrValid";
 import { AttendanceSummaryCard } from "@/components/attendance/AttendanceSummaryCard";
 import { ConfirmedAttendeeList } from "@/components/attendance/ConfirmedAttendeeList";
 

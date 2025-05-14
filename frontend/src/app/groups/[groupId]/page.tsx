@@ -10,6 +10,7 @@ import { ScheduleEndBtn } from "@/components/schedule/ScheduleEndBtn";
 import { useGroupUpcomingSchedule } from "@/hooks/schedule/useUpcomingSchedule";
 import { formatTimeOnly, getDdayLabel } from "@/utils/formatDate";
 import CharacterGenerateButton from "@/components/character/CharacterGenerateButton";
+import { FloatingPayButton } from "@/components/pay/FloatingPayButton";
 import { useGroups } from "@/hooks/useGroups";
 import { useSchedule } from "@/hooks/schedule/useSchedule";
 import { Container } from "@/components/ui-components/layout/Container";
@@ -98,6 +99,9 @@ export default function GroupDetailPage() {
           groupId={groupIdNum}
           onGenerated={() => refetchGroup()}
         />
+
+        {/* 결제 버튼 */}
+        <FloatingPayButton />
       </Container>
     </>
   );
