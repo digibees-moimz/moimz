@@ -71,15 +71,13 @@ export default function PayPage() {
       <h1 className="text-xl font-bold text-center">N등분 결제 QR</h1>
 
       <div className="text-center text-sm text-gray-600">
-        {remaining !== null && remaining > 0 ? (
+        {!shouldAllowRegen && remaining !== null && remaining > 0 && (
           <>
             만료까지 남은 시간:{" "}
             <span className="text-[#22BD9C]">
               {Math.floor(remaining / 60)}분 {remaining % 60}초
             </span>
           </>
-        ) : (
-          "QR 코드가 만료되었습니다."
         )}
       </div>
 
