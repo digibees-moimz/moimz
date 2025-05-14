@@ -13,17 +13,12 @@ export default function AttendanceResultPage() {
   const router = useRouter();
   const { attendanceId, groupId } = useParams();
   const id = Number(attendanceId);
-  const { set, qrToken, qrTokenCreatedAt } = useAttendanceStore();
+  const { set } = useAttendanceStore();
   const { useAttendanceRecord, useGenerateQr } = useAttendance();
   const { data, isLoading } = useAttendanceRecord(id);
   const { mutate: generateQr, isPending: isQrGenerating } = useGenerateQr();
 
   const handleGenerateQr = () => {
-    if (qrToken && isQrTokenValid(qrTokenCreatedAt)) {
-      router.push(`/groups/${groupId}/pay?token=${qrToken}`);
-      return;
-    }
-
     generateQr(id, {
       onSuccess: (res) => {
         const token = res.qr_token;
