@@ -110,7 +110,7 @@ export default function LockInPageView({
 
           <Typography.BodySmall className="text-gray-500 mt-2 text-right">
             최대 락인 해제 가능 금액:&nbsp;
-            {currentLockedAmount.toLocaleString()}원
+            {Math.round(currentLockedAmount).toLocaleString()}원
           </Typography.BodySmall>
         </div>
 

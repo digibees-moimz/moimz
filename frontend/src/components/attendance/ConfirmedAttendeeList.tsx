@@ -3,6 +3,7 @@ import { IoMdLock } from "react-icons/io";
 import Image from "next/image";
 
 export const ConfirmedAttendeeList = ({ attendees }: { attendees: any[] }) => {
+  console.log(attendees);
   return (
     <div className="space-y-2">
       {attendees.map((person) => (
@@ -24,7 +25,7 @@ export const ConfirmedAttendeeList = ({ attendees }: { attendees: any[] }) => {
           </div>
 
           <div className="flex items-center gap-1 font-semibold text-gray-600">
-            <p>{person.locked_amount.toLocaleString()}원</p>
+            <p>{Math.round(person.locked_amount).toLocaleString()}원</p>
             <IoMdLock size={18} className="text-[#FDCD6C]" />
           </div>
         </div>

@@ -101,7 +101,7 @@ export default function TransactionList({
                     </Flex.RowBetweenCenter>
                     <Flex.RowBetweenCenter>
                       <span>1인당</span>
-                      <span>{perPerson.toLocaleString()}원</span>
+                      <span>{Math.round(perPerson).toLocaleString()}원</span>
                     </Flex.RowBetweenCenter>
                   </div>
                 </div>

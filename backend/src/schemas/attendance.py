@@ -55,15 +55,29 @@ class SavedAttendanceItem(BaseModel):
     user_id: int
     name: str
     locked_amount: float
+    profile_image_url: Optional[str] = None
 
 
 class AttendanceRecordRead(BaseModel):
-    attendance_id: int
+    attendance_id: int = Field(..., alias="id")
+    group_id: int
+    schedule_id: Optional[int]
+    is_closed: bool
+
     attendees: List[SavedAttendanceItem]
     count: int
     available_to_spend: float
     check_type: str
     image_url: Optional[str] = None
+    attendee_user_ids: List[int]
+
+    # QR 관련 필드
+    qrcode_token: Optional[str]
+    qrcode_used: bool
+    qrcode_created_at: Optional[datetime]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class AttendanceUpdateRequest(BaseModel):

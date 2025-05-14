@@ -96,12 +96,12 @@ export default function PhotoAttendancePage() {
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm px-2 py-4">
         <Flex.ColCenter className="gap-3">
-          <Button variant="secondary" onClick={openFilePicker}>
+          <Button onClick={openFilePicker}>
             {selectedFile ? "다시 선택하기" : "사진 선택하기"}
           </Button>
 
           {selectedFile && (
-            <Button onClick={handleSubmit} disabled={isPending}>
+            <Button onClick={handleSubmit} disabled={isPending} variant="secondary" >
               {isPending ? "출석 진행 중..." : "출석체크 진행하기"}
             </Button>
           )}

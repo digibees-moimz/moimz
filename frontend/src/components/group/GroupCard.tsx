@@ -56,7 +56,7 @@ export default function GroupCard({
               </span>
             </Flex.RowStartCenter>
             <Typography.BodyLarge className="font-bold">
-              {group_balance.toLocaleString()}원
+              {Math.round(group_balance).toLocaleString()}원
             </Typography.BodyLarge>
           </div>
         </Flex.RowStartCenter>
@@ -71,7 +71,7 @@ export default function GroupCard({
           락인 금액
         </Typography.BodySmall>
         <Typography.BodySmall className="text-gray-500">
-          {locked_amount.toLocaleString()}원
+          {Math.round(locked_amount).toLocaleString()}원
         </Typography.BodySmall>
       </Flex.RowBetweenCenter>
     </div>

@@ -324,11 +324,19 @@ def get_attendance_record(session: Session, attendance_id: int) -> AttendanceRec
 
     return AttendanceRecordRead(
         attendance_id=record.id,
+        group_id=record.group_id,
+        schedule_id=record.schedule_id,
+        is_closed=record.is_closed,
+        attendee_user_ids=record.attendee_user_ids,
         attendees=attendees,
         count=len(attendees),
         available_to_spend=available_to_spend,
         check_type=record.check_type,
         image_url=getattr(record, "image_url", None),
+        qrcode_token=record.qrcode_token,
+        qrcode_used=record.qrcode_used,
+        qrcode_created_at=record.qrcode_created_at,
+        created_at=record.created_at,
     )
 
 
