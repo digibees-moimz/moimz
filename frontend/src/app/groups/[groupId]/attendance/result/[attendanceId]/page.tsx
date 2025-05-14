@@ -55,7 +55,7 @@ export default function AttendanceResultPage() {
         availableToSpend={data.available_to_spend}
       />
 
-      <div className="flex gap-2 pt-4">
+      <div className="flex gap-2 pt-4 fixed bottom-0 left-0 w-full bg-white p-4">
         <Button
           className="flex-1"
           onClick={handleGenerateQr}

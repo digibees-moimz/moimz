@@ -21,18 +21,18 @@ export const AttendanceSummaryCard = ({
 
       <div className="flex justify-between p-1">
         <span>출석자 중 최소 금액</span>
-        <span>{minAmount.toLocaleString()} 원</span>
+        <span>{Math.round(minAmount).toLocaleString()} 원</span>
       </div>
 
       <div className="flex justify-between p-1">
         <span>1인당 결제 가능 금액</span>
-        <span>{perPersonAmount.toLocaleString()} 원</span>
+        <span>{Math.round(perPersonAmount).toLocaleString()} 원</span>
       </div>
 
       <div className="flex justify-between border-t mt-3 pt-2 border-gray-200 font-bold p-1">
         <span>총 결제 가능 금액</span>
         <span className="text-[#22BD9C] text-base">
-          {availableToSpend.toLocaleString()} 원
+          {Math.round(availableToSpend).toLocaleString()} 원
         </span>
       </div>
     </div>
