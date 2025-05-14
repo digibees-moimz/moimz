@@ -21,6 +21,7 @@ export default function HomePage() {
 
   return (
     <>
+      {/* 오늘의 모임 / 다음 모임 */}
       <div className="space-y-6">
         {today && (
           <ScheduleCard
@@ -43,6 +44,7 @@ export default function HomePage() {
           />
         )}
       </div>
+
       <Typography.Heading3 className="m-2">내 모임통장</Typography.Heading3>
 
       {isLoading ? (

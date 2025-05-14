@@ -57,16 +57,17 @@ export default function GroupDetailPage() {
 
         {/* 다음 일정 */}
         {next && (
-          <ScheduleCard
-            type="next"
-            groupId={groupIdNum}
-            scheduleTitle={next.title}
-            time={formatTimeOnly(next.date)}
-            dday={getDdayLabel(next.date)}
-          />
+          <>
+            <ScheduleCard
+              type="next"
+              groupId={groupIdNum}
+              scheduleTitle={next.title}
+              time={formatTimeOnly(next.date)}
+              dday={getDdayLabel(next.date)}
+            />
+            <div className="bg-gray-100 h-[12px]" />
+          </>
         )}
-
-        <div className="bg-gray-100 h-[12px]" />
 
         {/* 캐릭터 생성 */}
         <Typography.Heading3>모임 캐릭터 뽑기</Typography.Heading3>

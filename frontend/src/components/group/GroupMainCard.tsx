@@ -77,13 +77,13 @@ export default function GroupMainCard({
 
             <div className="mt-5">
               <Typography.Heading2>
-                {group_balance.toLocaleString()}원
+                {Math.round(group_balance).toLocaleString()}원
               </Typography.Heading2>
 
               <Typography.BodySmall className="text-gray-500 pt-1">
                 내 락인 금액 |{" "}
                 <span className="font-bold">
-                  {locked_amount.toLocaleString()}원
+                  {Math.round(locked_amount).toLocaleString()}원
                 </span>
               </Typography.BodySmall>
             </div>

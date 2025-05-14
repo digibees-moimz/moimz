@@ -102,7 +102,7 @@ export default function ManualAttendancePage() {
         }
       />
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm px-2 py-4 bg-white">
+      <div className="fixed bottom-0 left-0 w-full bg-white p-4">
         <div className="flex flex-col gap-3">
           <Button
             onClick={handleSubmit}
