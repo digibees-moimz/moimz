@@ -294,45 +294,58 @@ def save_attendance(session: Session, dto: AttendanceCompleteRequest) -> int:
 def get_attendance_record(session: Session, attendance_id: int) -> AttendanceRecordRead:
     record = session.get(AttendanceRecord, attendance_id)
     if not record:
-        raise HTTPException(404, "출석 정보가 없습니다.")
+        raise HTTPException(status_code=404, detail="출석 기록이 존재하지 않습니다.")
 
-    stmt = select(User.id, User.name).where(User.id.in_(record.attendee_user_ids))
-    name_map = dict(session.execute(stmt).all())
+    # 사용자 정보 조회 (user_id → (이름, 프로필 URL))
+    stmt = select(User.id, User.name, User.profile_image_url).where(
+        User.id.in_(record.attendee_user_ids)
+    )
+    user_info_map = {
+        row[0]: (row[1], row[2]) for row in session.execute(stmt).fetchall()
+    }
 
+    # user_id → user_account_id 매핑
     stmt = select(UserAccount.user_id, UserAccount.id).where(
         UserAccount.user_id.in_(record.attendee_user_ids)
     )
-    account_map = dict(session.execute(stmt).all())
+    account_map = dict(session.execute(stmt).fetchall())
 
+    # user_account_id → locked_amount 매핑
     locked_map = locked_amounts_by_accounts(
         session,
         user_account_ids=list(account_map.values()),
         group_account_id=record.group_id,
     )
 
-    attendees = [
-        SavedAttendanceItem(
-            user_id=uid,
-            name=name_map.get(uid, "이름 없음"),
-            locked_amount=locked_map.get(account_map.get(uid), 0.0),
-        )
-        for uid in record.attendee_user_ids
-    ]
+    # 참석자 리스트 구성
+    attendees = []
+    for user_id in record.attendee_user_ids:
+        name, profile_image_url = user_info_map.get(user_id, ("", None))
+        account_id = account_map.get(user_id)
+        locked_amount = locked_map.get(account_id, 0)
 
-    min_locked = min((a.locked_amount for a in attendees), default=0.0)
-    available_to_spend = min_locked * len(attendees)
+        attendees.append(
+            SavedAttendanceItem(
+                user_id=user_id,
+                name=name,
+                profile_image_url=profile_image_url,
+                locked_amount=locked_amount,
+            )
+        )
+
+    available_to_spend = min((a.locked_amount for a in attendees), default=0)
 
     return AttendanceRecordRead(
-        attendance_id=record.id,
+        id=record.id,
         group_id=record.group_id,
         schedule_id=record.schedule_id,
         is_closed=record.is_closed,
-        attendee_user_ids=record.attendee_user_ids,
         attendees=attendees,
         count=len(attendees),
         available_to_spend=available_to_spend,
         check_type=record.check_type,
         image_url=getattr(record, "image_url", None),
+        attendee_user_ids=record.attendee_user_ids,
         qrcode_token=record.qrcode_token,
         qrcode_used=record.qrcode_used,
         qrcode_created_at=record.qrcode_created_at,
