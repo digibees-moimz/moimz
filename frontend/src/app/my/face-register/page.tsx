@@ -1,6 +1,5 @@
 "use client";
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { ImArrowLeft, ImArrowRight } from "react-icons/im";
 
 const userId = 1;
 
@@ -134,15 +133,11 @@ export default function FaceRegisterPage() {
         {!isUploading && (
           <div className="absolute top-[200px] w-[90vw] left-1/2 -translate-x-1/2 text-lg font-bold z-20 text-center text-white p-3 bg-black/50 rounded-lg">
             {step === "left" && (
-              <span className="animate-arrow-left text-3xl">
-                <ImArrowLeft />
-              </span>
+              <span className="animate-arrow-left text-3xl">⬅︎ </span>
             )}
             <span>{stepMessage}</span>
             {step === "right" && (
-              <span className="animate-arrow-right text-3xl">
-                <ImArrowRight />
-              </span>
+              <span className="animate-arrow-right text-3xl"> ➡︎</span>
             )}
           </div>
         )}
