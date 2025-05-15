@@ -23,6 +23,7 @@ export interface ScheduleComment {
   user: {
     id: number;
     name: string;
+    profile_image_url?: string | null;
   };
   content: string;
   created_at: string;

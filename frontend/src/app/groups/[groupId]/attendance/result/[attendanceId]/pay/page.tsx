@@ -7,6 +7,7 @@ import { useAttendance } from "@/hooks/useAttendance";
 import { AttendanceSummaryCard } from "@/components/attendance/AttendanceSummaryCard";
 import { Button } from "@/components/ui-components/ui/Button";
 import { getTokenRemainingSeconds } from "@/utils/isQrValid";
+import { LoadingBar } from "@/components/ui-components/shared/LoadingBar";
 
 export default function PayPage() {
   const router = useRouter();
@@ -70,7 +71,7 @@ export default function PayPage() {
   if (!hasMounted) return null; // hydration mismatch 방지
   if (!token || !attendanceId)
     return <div className="p-4">잘못된 접근입니다.</div>;
-  if (isLoading || !data) return <div className="p-4">로딩 중입니다...</div>;
+  if (isLoading || !data) return <LoadingBar />;
 
   // QR코드 이미지 조회 API 주소
   const qrImageUrl = `http://localhost:8000/api/attendance/qr/image/${token}`;

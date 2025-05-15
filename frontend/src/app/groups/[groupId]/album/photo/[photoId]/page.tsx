@@ -3,6 +3,7 @@
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useAlbum } from "@/hooks/useAlbum";
 import { Flex } from "@/components/ui-components/layout/Flex";
+import { LoadingBar } from "@/components/ui-components/shared/LoadingBar";
 
 export default function PhotoDetailPage() {
   const { groupId, photoId } = useParams();
@@ -63,7 +64,7 @@ export default function PhotoDetailPage() {
     <Flex.ColStartCenter>
       {/* 메인 이미지 영역 */}
       {isLoading ? (
-        <Flex.RowCenter className="h-180">로딩 중...</Flex.RowCenter>
+        <LoadingBar />
       ) : error || !photo ? (
         <Flex.RowCenter className="h-180 text-red-500">
           사진 불러오기 실패

@@ -6,6 +6,7 @@ import { useScheduleDetail } from "@/hooks/schedule/useScheduleDetail";
 import ScheduleDetail from "@/components/scheduleDetail/ScheduleDetail";
 import TransactionList from "@/components/transaction/TransactionList";
 import ScheduleCommentSection from "@/components/scheduleDetail/ScheduleCommentSection";
+import { LoadingBar } from "@/components/ui-components/shared/LoadingBar";
 
 export default function SchedulePage() {
   const { scheduleId } = useParams();
@@ -16,7 +17,7 @@ export default function SchedulePage() {
     refetch,
   } = useScheduleDetail(Number(scheduleId));
 
-  if (isLoading) return <div className="p-4 text-center">로딩 중...</div>;
+  if (isLoading) return <LoadingBar />;
 
   if (error || !schedule)
     return (

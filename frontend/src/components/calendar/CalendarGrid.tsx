@@ -1,5 +1,6 @@
 // src/components/calendar/CalendarGrid.tsx
 import { getDay, format } from "date-fns";
+import { LoadingBar } from "@/components/ui-components/shared/LoadingBar";
 
 interface CalendarGridProps {
   days: Date[];
@@ -29,27 +30,7 @@ export default function CalendarGrid({
 }: CalendarGridProps) {
   return (
     <div className="relative min-h-[250px]">
-      {isLoading && (
-        <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
-          <div className="flex flex-col items-center">
-            <div className="flex space-x-1">
-              <div
-                className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
-                style={{ animationDelay: "0s" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
-                style={{ animationDelay: "0.2s" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-[#22BD9C] rounded-full animate-bounce"
-                style={{ animationDelay: "0.4s" }}
-              ></div>
-            </div>
-            <span className="text-sm text-[#22BD9C] mt-2">로딩 중...</span>
-          </div>
-        </div>
-      )}
+      {isLoading && <LoadingBar />}
 
       <ul className="grid grid-cols-7 gap-1 text-sm">
         {days.map((day, idx) => (

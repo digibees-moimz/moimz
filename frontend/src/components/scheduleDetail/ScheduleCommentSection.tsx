@@ -14,6 +14,7 @@ interface Props {
 }
 
 export default function ScheduleCommentSection({ schedule, onRefetch }: Props) {
+  console.log(schedule.comments);
   return (
     <div className="max-w-xl mx-auto space-y-4 mt-4">
       {/* 댓글 */}
@@ -27,8 +28,8 @@ export default function ScheduleCommentSection({ schedule, onRefetch }: Props) {
         schedule.comments.map((c) => (
           <Flex.RowStartCenter key={c.id} className="w-full gap-3 items-start">
             <img
-              src="/images/default-avatar.png"
-              alt="user avatar"
+              src={c.user.profile_image_url || "/images/default-avatar.png"}
+              alt="프로필 이미지"
               className="w-10 h-10 rounded-full"
             />
             <div className="flex flex-col w-full">

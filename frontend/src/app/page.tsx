@@ -5,6 +5,7 @@ import { formatTimeOnly, getDdayLabel } from "@/utils/formatDate";
 import { ScheduleCard } from "@/components/schedule/ScheduleCard";
 import { FloatingPayButton } from "@/components/pay/FloatingPayButton";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { LoadingBar } from "@/components/ui-components/shared/LoadingBar";
 import GroupList from "@/components/group/GroupList";
 import { useUserStore } from "@/stores/userStore";
 import {
@@ -48,7 +49,7 @@ export default function HomePage() {
       <Typography.Heading3 className="m-2">내 모임통장</Typography.Heading3>
 
       {isLoading ? (
-        <p>로딩 중...</p>
+        <LoadingBar />
       ) : error ? (
         <p>에러: {error.message}</p>
       ) : groups ? (

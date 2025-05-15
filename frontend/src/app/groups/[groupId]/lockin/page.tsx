@@ -6,6 +6,7 @@ import { useGroups } from "@/hooks/useGroups";
 import { useUserStore } from "@/stores/userStore";
 import { useLockInMutation } from "@/hooks/useLockIn";
 import LockInPageView from "@/components/lockin/LockInPageView";
+import { LoadingBar } from "@/components/ui-components/shared/LoadingBar";
 
 export default function LockInPage() {
   const { groupId: groupIdParam } = useParams<{ groupId: string }>();
@@ -20,7 +21,7 @@ export default function LockInPage() {
   // 락인/락아웃 mutation 핸들러
   const { lockIn, lockOut } = useLockInMutation(userId);
 
-  if (isLoading || !groups) return <div>로딩중...</div>;
+  if (isLoading || !groups) return <LoadingBar />;
 
   const group = groups.find((g) => g.id === groupId);
   if (!group) return <div>모임을 찾을 수 없습니다.</div>;
