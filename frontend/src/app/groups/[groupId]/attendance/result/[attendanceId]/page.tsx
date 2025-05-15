@@ -7,6 +7,7 @@ import { Typography } from "@/components/ui-components/typography/Typography";
 import { Button } from "@/components/ui-components/ui/Button";
 import { AttendanceSummaryCard } from "@/components/attendance/AttendanceSummaryCard";
 import { ConfirmedAttendeeList } from "@/components/attendance/ConfirmedAttendeeList";
+import { LoadingBar } from "@/components/ui-components/shared/LoadingBar";
 
 export default function AttendanceResultPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function AttendanceResultPage() {
     });
   };
 
-  if (isLoading || !data) return <div className="p-4">로딩 중...</div>;
+  if (isLoading || !data) return <LoadingBar />;
 
   return (
     <div className="p-4 space-y-4">

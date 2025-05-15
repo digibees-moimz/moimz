@@ -3,6 +3,7 @@
 
 import { useGroupAccountSummary } from "@/hooks/useGroupAccountSummary";
 import { Typography } from "@/components/ui-components/typography/Typography";
+import { LoadingBar } from "@/components/ui-components/shared/LoadingBar";
 import { Flex } from "@/components/ui-components/layout/Flex";
 import Image from "next/image";
 import {
@@ -23,12 +24,7 @@ export default function GroupLockInStatus({ groupId }: Props) {
   const [viewMode, setViewMode] = useState<"graph" | "table">("graph");
   const { data, isLoading, error } = useGroupAccountSummary(groupId);
 
-  if (isLoading)
-    return (
-      <Typography.BodySmall className="text-center py-6 text-gray-500">
-        불러오는 중...
-      </Typography.BodySmall>
-    );
+  if (isLoading) return <LoadingBar />;
 
   if (error || !data)
     return (
