@@ -83,12 +83,13 @@ export default function TransactionList({
                     {participants.map((p: TransactionParticipant) => (
                       <img
                         key={p.user_id}
-                        // src={
-                        //   p.profile_image_url ?? "/images/default-avatar.png"
-                        // }
-                        src={"/images/default-avatar.png"}
+                        src={
+                          p.user?.profile_image_url ??
+                          "/images/default-avatar.png"
+                        }
+                        // src={"/images/default-avatar.png"}
                         alt="avatar"
-                        className="w-6 h-6 rounded-full border"
+                        className="w-6 h-6 rounded-full"
                       />
                     ))}
                   </div>

@@ -184,17 +184,12 @@ async def run_photo_attendance(
 
         # 한글 폰트 설정
         FONT_PATH = os.path.join(BASE_DIR, "fonts", "Pretendard-SemiBold.otf")
+        font = ImageFont.truetype(FONT_PATH, size=36)
 
         for idx, face in enumerate(faces):
             x1, y1, x2, y2 = map(int, face.bbox)
             uid = recognition_map.get(idx)
             label = name_map.get(uid) or "알 수 없음"
-
-            # 얼굴 크기 기반 폰트 크기 조절
-            face_height = y2 - y1
-            scale = 200 / max(face_height, 1)
-            dynamic_font_size = max(36, min(60, int(scale * 36)))
-            font = ImageFont.truetype(FONT_PATH, size=dynamic_font_size)
 
             # 출석자로 체크되었으면 초록, 아니면 빨강
             color = (0, 255, 0) if uid else (0, 0, 255)

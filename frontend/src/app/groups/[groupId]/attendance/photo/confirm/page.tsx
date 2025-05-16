@@ -118,7 +118,7 @@ export default function PhotoConfirmPage() {
       />
 
       {/* 하단 버튼 */}
-      <div className="w-full max-w-sm">
+      <div className="w-full flex justify-center mt-6">
         <Button
           onClick={handleSubmit}
           disabled={isPending || selectedIds.length === 0}

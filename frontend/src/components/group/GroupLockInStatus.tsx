@@ -62,15 +62,16 @@ export default function GroupLockInStatus({ groupId }: Props) {
         </button>
       </Flex.RowCenter>
 
-      <div className="relative min-h-[380px] pt-5">
+      <div className="relative min-h-[480px] pt-5">
         {viewMode === "graph" && (
-          <div className="h-[350px] flex items-end justify-center overflow-visible">
+          <div className="h-[450px] flex items-end justify-center overflow-visible">
             <ResponsiveContainer width="90%" height="100%">
               <BarChart
                 data={members.map((m) => ({
                   name: m.name,
                   locked: m.locked_amount,
                 }))}
+                margin={{ top: 50, right: 30, left: 30, bottom: 5 }}
               >
                 <XAxis dataKey="name" tickLine={false} />
                 <YAxis hide />
@@ -79,7 +80,7 @@ export default function GroupLockInStatus({ groupId }: Props) {
                   <LabelList
                     dataKey="locked"
                     position="top"
-                    dy={2}
+                    dy={-15}
                     formatter={(value: number) =>
                       `${Math.round(value).toLocaleString()}원`
                     }

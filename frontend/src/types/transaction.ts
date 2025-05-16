@@ -2,6 +2,10 @@
 export type TransactionParticipant = {
   user_id: number;
   amount: number;
+  user: {
+    name: string;
+    profile_image_url: string | null;
+  };
 };
 
 export interface TransactionRead {
