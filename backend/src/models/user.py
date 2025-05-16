@@ -22,7 +22,7 @@ class User(SQLModel, table=True):
 
     # 모임 멤버
     members: List["Member"] = Relationship(back_populates="user")
-
+    transaction_participations: List["TransactionParticipant"] = Relationship(back_populates="user")
     # 얼굴 등록 및 인물 앨범 관련
     # photos: List["Photo"] = Relationship(back_populates="user")
     # face_videos: List["FaceVideo"] = Relationship(back_populates="user")

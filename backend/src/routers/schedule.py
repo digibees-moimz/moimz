@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 from src.core.database import get_session
 from sqlalchemy.orm import selectinload
 from src.models.group import Member
-from src.models.transaction import Transaction
+from src.models.transaction import Transaction, TransactionParticipant
 from src.models.schedule import Schedule, ScheduleComment
 from src.models.attendance import AttendanceRecord
 from src.schemas.schedule import (
@@ -190,7 +190,9 @@ def get_schedule(schedule_id: int, session: Session = Depends(get_session)):
         .options(
             selectinload(Schedule.user), # 주최자
             selectinload(Schedule.comments).selectinload(ScheduleComment.user), # 댓글, 작성자
-            selectinload(Schedule.transactions).selectinload(Transaction.participants), # 결제, 참여자
+            selectinload(Schedule.transactions)
+                .selectinload(Transaction.participants)
+                .selectinload(TransactionParticipant.user),          
             selectinload(Schedule.diary), # 다이어리 id 같이 조회
         )
     )

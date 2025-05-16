@@ -32,3 +32,4 @@ class TransactionParticipant(SQLModel, table=True):
 
     # 역방향 관계 설정
     transaction: Optional[Transaction] = Relationship(back_populates="participants")
+    user: Optional["User"] = Relationship(back_populates="transaction_participations")
