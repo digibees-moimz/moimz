@@ -188,12 +188,14 @@ def get_schedule(schedule_id: int, session: Session = Depends(get_session)):
         select(Schedule)
         .where(Schedule.id == schedule_id)
         .options(
-            selectinload(Schedule.user), # 주최자
-            selectinload(Schedule.comments).selectinload(ScheduleComment.user), # 댓글, 작성자
+            selectinload(Schedule.user),  # 주최자
+            selectinload(Schedule.comments).selectinload(
+                ScheduleComment.user
+            ),  # 댓글, 작성자
             selectinload(Schedule.transactions)
-                .selectinload(Transaction.participants)
-                .selectinload(TransactionParticipant.user),          
-            selectinload(Schedule.diary), # 다이어리 id 같이 조회
+            .selectinload(Transaction.participants)
+            .selectinload(TransactionParticipant.user),
+            selectinload(Schedule.diary),  # 다이어리 id 같이 조회
         )
     )
     schedule = session.execute(stmt).scalars().first()
@@ -363,11 +365,14 @@ def get_pending_schedule(group_id: int, session: Session = Depends(get_session))
     # 1. 12시간 이상 경과한 출석 중 아직 종료되지 않은 것
     record = (
         session.execute(
-            select(AttendanceRecord).where(
+            select(AttendanceRecord)
+            .where(
                 AttendanceRecord.group_id == group_id,
                 AttendanceRecord.created_at < twelve_hours_ago,
                 AttendanceRecord.is_closed == False,
+                AttendanceRecord.schedule_id != None,
             )
+            .order_by(AttendanceRecord.created_at)
         )
         .scalars()
         .first()
