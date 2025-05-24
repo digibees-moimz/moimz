@@ -60,9 +60,9 @@ export default function GroupCard({
             </Typography.BodyLarge>
           </div>
         </Flex.RowStartCenter>
-        <button className="text-xs px-2 py-0.5 border border-gray-300 rounded-full text-gray-500">
+        {/* <button className="text-xs px-2 py-0.5 border border-gray-300 rounded-full text-gray-500">
           락인 관리
-        </button>
+        </button> */}
       </Flex.RowBetweenCenter>
 
       {/* 하단: 락인 금액 */}

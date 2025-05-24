@@ -23,7 +23,7 @@ export default function DiaryListItem({ diary, groupId }: DiaryListItemProps) {
   return (
     <Link
       href={`/groups/${groupId}/diary/${diary.id}`}
-      className="relative rounded-lg shadow-sm transition-colors group"
+      className="relative rounded-lg shadow-sm transition-colors group block mb-4"
     >
       <Flex.RowStartCenter className="relative bg-[#FFF3F6] group-hover:bg-[#FFE9EF] rounded-lg pl-6 pr-5 py-5 gap-4 overflow-visible">
         {/* 스프링 이미지 */}
