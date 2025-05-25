@@ -31,15 +31,35 @@
 | 📸 인물 앨범        | 모임 사진 자동 인물 분류 및 정리 |
 | 🔒 개인 명의 회계관리 | 개별 락인 시스템 및 계좌 연결 가능 |
 
-> ⏺ 서비스 화면  
-> ![시스템 아키텍처](./images/1_main_overview.gif)  
-> 화면예시 2  
-> 화면예시 3  
-> 화면예시 4  
-> 화면예시 5  
-> 화면예시 6  
-
+> 📱 서비스 화면  
+#### 1. 메인 홈 - 모임통장 상세 - 일정 목록
+> ![메인 흐름](./images/main.gif)  
 ---
+#### 2. 일정 상세
+> ![일정 상세](./images/schedule.gif)    
+---
+#### 3. 일정 생성
+> ![일정 생성](./images/create_schedule.gif)  
+---
+#### 4. 모임비 확인 및 락인
+> ![모임비 확인](./images/lockIn.gif) 
+---
+#### 5. 사진 출석체크 (AI 얼굴 인식)
+> ![사진 출석체크](./images/photo_attendance.gif) 
+---
+#### 6. 출석체크 시 일정 선택
+> ![출석체크 시 일정 선택](./images/selecte_schedule.gif) 
+---
+#### 7. 출석 완료 후 결제 QR 코드 생성
+> ![결제 QR 코드 생성](./images/create_qr.gif) 
+---
+#### 8. 모임 일정 종료
+> ![일정 종료](./images/done_schedule.gif) 
+---
+#### 9. AI 모임 일기
+> ![AI 모임 일기](./images/ai_diary.gif) 
+---
+
 
 ## ⚙️ 기술 스택
 
